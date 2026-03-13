@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta-Cognitive OS v17.6 (Habit-Forming Edition)</title>
+    <title>Meta-Cognitive OS v17.4 (Alarms Active)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121212">
     
@@ -30,34 +30,6 @@
         .auth-links { margin-top: 15px; font-size: 0.85em; color: #aaa; cursor: pointer; text-decoration: underline; } 
         #mainApp { display: none; }
         
-        /* GAMIFICATION HEADER */
-        .gamification-bar { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; border-bottom: 2px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.5); flex-wrap: wrap; gap: 10px;}
-        .gami-stat { display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 0.9em; }
-        .gami-level { color: var(--primary); font-size: 1.2em; }
-        .xp-container { flex-grow: 1; background: #333; height: 12px; border-radius: 6px; margin: 0 15px; position: relative; overflow: hidden; min-width: 150px; }
-        .xp-bar { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .xp-text { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); font-size: 0.7em; font-weight: bold; color: white; text-shadow: 1px 1px 2px black; }
-        
-        /* DIGITAL PET */
-        #digitalPet { position: fixed; bottom: 20px; left: 20px; font-size: 40px; z-index: 8000; cursor: pointer; user-select: none; transition: transform 0.3s; filter: drop-shadow(0 0 10px var(--glow-color)); animation: floatPet 3s ease-in-out infinite; }
-        #digitalPet:hover { transform: scale(1.2) rotate(10deg); }
-        @keyframes floatPet { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-        .pet-speech { position: absolute; bottom: 60px; left: 0; background: white; color: black; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-        .pet-speech::after { content: ''; position: absolute; bottom: -5px; left: 20px; border-width: 5px 5px 0; border-style: solid; border-color: white transparent transparent transparent; }
-        #digitalPet:hover .pet-speech { opacity: 1; }
-
-        /* XP POPUP ANIMATION */
-        .xp-popup { position: fixed; color: var(--secondary); font-weight: bold; font-size: 1.2em; pointer-events: none; z-index: 9999; animation: floatUpXP 1.2s forwards; text-shadow: 0 0 5px rgba(3, 218, 198, 0.8); }
-        @keyframes floatUpXP { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.5); } }
-
-        /* LOOT BOX MODAL */
-        #lootModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10001; justify-content: center; align-items: center; flex-direction: column; }
-        .chest-icon { font-size: 80px; animation: shake 0.5s infinite; cursor: pointer; transition: transform 0.2s; }
-        .chest-icon:hover { transform: scale(1.1); }
-        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 50% { transform: rotate(0deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
-        .loot-rewards { display: none; text-align: center; background: #1e1e1e; padding: 30px; border-radius: 12px; border: 2px solid #F3BA2F; box-shadow: 0 0 40px rgba(243, 186, 47, 0.5); animation: popIn 0.5s; }
-        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
         .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; align-items: stretch; } 
         .tab-btn { flex-grow: 1; padding: 12px 5px; background: #2a2a2a; color: var(--text); border: none; border-radius: 8px 8px 0 0; cursor: grab; font-size: 0.95em; transition: background 0.3s; text-align: center; user-select: none; } 
         .tab-btn.active { background: var(--surface); color: var(--primary); border-bottom: 3px solid var(--primary); font-weight: bold; } 
@@ -151,13 +123,12 @@
         .cmd-results li { padding: 15px 20px; border-bottom: 1px solid #2a2a2a; cursor: pointer; color: #aaa; transition: all 0.2s;}
         .cmd-results li:hover, .cmd-results li.active-cmd { background: var(--primary); color: black; font-weight: bold; }
 
-        .safe-to-spend-box { position: relative; background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%); padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #4CAF50; margin-bottom: 20px; }
-        .safe-to-spend-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.15), transparent); background-size: 200% 100%; animation: sweepBg 3s infinite linear; pointer-events: none; }
-        @keyframes sweepBg { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        
-        .sts-title { color: #aaa; font-size: 0.9em; text-transform: uppercase; letter-spacing: 2px; position: relative; z-index: 10; display: flex; justify-content: center; align-items: center;}
-        .sts-amount { font-size: 2.5em; font-weight: bold; color: #4CAF50; margin: 10px 0; position: relative; z-index: 10;}
-        .sts-subtext { font-size: 0.8em; color: var(--warning); position: relative; z-index: 10;}
+        .safe-to-spend-box { background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%); padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #4CAF50; margin-bottom: 20px; position: relative; overflow: hidden;}
+        .safe-to-spend-box::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(76, 175, 80, 0.2), transparent); animation: sweep 3s infinite; }
+        @keyframes sweep { 100% { left: 200%; } }
+        .sts-title { color: #aaa; font-size: 0.9em; text-transform: uppercase; letter-spacing: 2px; }
+        .sts-amount { font-size: 2.5em; font-weight: bold; color: #4CAF50; margin: 10px 0; }
+        .sts-subtext { font-size: 0.8em; color: var(--warning); }
 
         .heatmap-container { display: flex; flex-direction: column; align-items: center; background: #222; padding: 15px; border-radius: 8px; margin-top: 15px;}
         .heatmap-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-top: 10px; }
@@ -168,28 +139,12 @@
         .zk-link:hover { background: rgba(187, 134, 252, 0.3); }
         #networkGraph { width: 100%; height: 300px; background: #1a1a1a; border: 1px dashed #444; border-radius: 8px; margin-bottom: 15px; display: none;}
 
-        .tooltip { position: relative; display: inline-block; cursor: pointer; color: var(--secondary); margin-left: 5px; font-weight: bold; font-size: 0.85em; background: rgba(3, 218, 198, 0.1); border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; flex-shrink: 0; }
-        .tooltip .tooltiptext { visibility: hidden; width: max-content; max-width: 220px; background-color: #2a2a2a; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 10000; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; font-size: 0.85em; font-weight: normal; border: 1px solid var(--secondary); box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
+        .tooltip { position: relative; display: inline-block; cursor: pointer; color: var(--secondary); margin-left: 5px; font-weight: bold; font-size: 0.85em; background: rgba(3, 218, 198, 0.1); border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2a2a2a; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1000; bottom: 125%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; font-size: 0.85em; font-weight: normal; border: 1px solid var(--secondary); box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
-        @media (max-width: 600px) { .tooltip .tooltiptext { left: auto; right: -10px; transform: none; } }
     </style>
 </head>
 <body>
-
-    <div id="digitalPet">
-        🤖
-        <div class="pet-speech" id="petSpeech">¡Listo para la acción!</div>
-    </div>
-
-    <div id="lootModal">
-        <h1 style="color: white; margin-bottom: 20px;">¡Recompensa Misteriosa!</h1>
-        <div class="chest-icon" id="chestIcon" onclick="openChest()">🎁</div>
-        <div class="loot-rewards" id="lootRewards">
-            <h2 style="color: var(--primary); margin: 0 0 10px 0;" id="lootTitle">¡Cofre Abierto!</h2>
-            <p id="lootDesc" style="font-size: 1.2em; color: white;">Has ganado: +50 XP y 5 🪙</p>
-            <button onclick="closeLootBox()" style="margin-top: 15px; background: var(--secondary);">Genial</button>
-        </div>
-    </div>
 
     <div id="cmdOverlay" onclick="closeCmd(event)">
         <div class="cmd-box">
@@ -200,7 +155,7 @@
 
     <div id="authScreen">
         <div class="auth-container">
-            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.6</span></h1>
+            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.4</span></h1>
             <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia segura</p>
             <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required>
             <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required>
@@ -211,17 +166,6 @@
     </div>
 
     <div id="mainApp">
-
-        <div class="gamification-bar">
-            <div class="gami-stat gami-level">Nivel <span id="uiLevel">1</span></div>
-            <div class="xp-container" title="Gana XP completando tareas, pomodoros y notas">
-                <div class="xp-bar" id="uiXpBar"></div>
-                <div class="xp-text"><span id="uiXp">0</span> / <span id="uiXpNext">100</span> XP</div>
-            </div>
-            <div class="gami-stat" title="Meta-Coins (Monedas)">🪙 <span id="uiCoins">0</span></div>
-            <div class="gami-stat" style="color: #ff9800;" title="Racha Diaria (¡No la rompas!)">🔥 <span id="uiStreak">0</span> Días</div>
-        </div>
-
         <div id="fab-mic" onclick="toggleVoiceNLP()" title="Dictado Inteligente">🎙️</div>
 
         <div id="mdToolbar">
@@ -244,13 +188,13 @@
 
         <div id="actividades" class="tab-content active">
             <div class="container pomodoro">
-                <h2>Bloque de Enfoque <div class="tooltip">?<span class="tooltiptext">Al terminar los 25 mins, recibirás una recompensa variable (Cofre). ¡Concéntrate!</span></div></h2>
+                <h2>Bloque de Enfoque (Pomodoro) <div class="tooltip">?<span class="tooltiptext">Temporizador de 25 minutos. Úsalo para trabajar sin distracciones. Sonará al terminar.</span></div></h2>
                 <div id="timer">25:00</div>
                 <button onclick="startTimer()">Iniciar Enfoque</button>
-                <button onclick="resetTimer()" style="background:#444; color:white;">Restablecer</button>
+                <button onclick="resetTimer()" style="background:#444; color:white;">Reset</button>
             </div>
             <div class="container">
-                <h2>Nueva Actividad <div class="tooltip">?<span class="tooltiptext">Tachar tareas te da XP para subir de nivel y alimenta a tu compañero bot.</span></div> <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
+                <h2>Nueva Actividad <div class="tooltip">?<span class="tooltiptext">Crea tareas sueltas para hoy. Al completarlas y tacharlas se sumarán a tu Mapa de Productividad.</span></div> <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
                 <div class="input-group">
                     <input type="text" id="taskInput" placeholder="¿Qué necesitas lograr hoy?">
                     <input type="date" id="dateInput">
@@ -265,7 +209,7 @@
             </div>
 
             <div class="container">
-                <h2 style="color: #39d353;">Mapa de Productividad <div class="tooltip">?<span class="tooltiptext">Pinta los cuadros de verde. Si dejas un día gris, perderás tu racha de 🔥 (Fuego).</span></div></h2>
+                <h2 style="color: #39d353;">Mapa de Productividad (Heatmap) <div class="tooltip">?<span class="tooltiptext">Al estilo de GitHub. Cada vez que cumples una tarea o registras información, el día de hoy se pintará más verde. ¡No rompas la racha!</span></div></h2>
                 <div class="heatmap-container">
                     <div id="heatmapGrid" class="heatmap-grid"></div>
                     <span style="font-size: 0.7em; color: #aaa; margin-top: 10px;">Menos ← ■ ■ ■ ■ → Más Productivo</span>
@@ -273,7 +217,7 @@
             </div>
 
             <div class="container">
-                <h2 style="color: #ff9800; border-bottom-color: #ff9800;">Hábitos y Rutinas <div class="tooltip">?<span class="tooltiptext">Para tareas que se repiten. Al completarla, la app la recreará mágicamente y te dará XP gratis.</span></div></h2>
+                <h2 style="color: #ff9800; border-bottom-color: #ff9800;">Hábitos y Rutinas <div class="tooltip">?<span class="tooltiptext">Para tareas que se repiten. Si pones 'Tomar agua cada 2 horas', al completarla, la app volverá a crear la tarea automáticamente sumándole 2 horas al reloj.</span></div></h2>
                 <div class="input-group">
                     <input type="text" id="recTaskInput" placeholder="Ej: Tomar agua, Pagar luz...">
                     <input type="datetime-local" id="recTaskStart" title="Fecha y hora de inicio">
@@ -297,7 +241,7 @@
 
         <div id="checklists" class="tab-content">
             <div class="container">
-                <h2>Constructor de Check-list <div class="tooltip">?<span class="tooltiptext">Agrupa múltiples pasos. Completar check-lists otorga Bonus de XP.</span></div></h2>
+                <h2>Constructor de Check-list <div class="tooltip">?<span class="tooltiptext">A diferencia de tareas simples, aquí agrupas muchos pasos en un solo Proyecto. Añade ítems primero y luego guarda la lista entera.</span></div></h2>
                 <div class="input-group" style="flex-direction: column;">
                     <input type="text" id="clTitle" placeholder="Título de la lista (Ej: Viaje a la Playa)">
                     <div style="display: flex; gap: 10px; width: 100%;">
@@ -314,7 +258,7 @@
 
         <div id="recordatorios" class="tab-content">
             <div class="container">
-                <h2>Nuevo Recordatorio Único <div class="tooltip">?<span class="tooltiptext">Una alarma literal. Sonará aunque estés en otra pestaña. Cumplirlos a tiempo da XP.</span></div></h2>
+                <h2>Nuevo Recordatorio Único <div class="tooltip">?<span class="tooltiptext">Una alarma literal. Programa una hora exacta y tu navegador emitirá un sonido y una notificación en pantalla en ese momento.</span></div></h2>
                 <div class="input-group">
                     <input type="text" id="remInput" placeholder="¿Qué debo recordarte?">
                     <input type="datetime-local" id="remDatetime">
@@ -350,7 +294,7 @@
                     </div>
 
                     <div class="safe-to-spend-box">
-                        <div class="sts-title">Gasto Seguro Disponible <div class="tooltip">?<span class="tooltiptext">Cálculo Predictivo: Suma todo tu dinero y le resta las suscripciones automáticas que la IA detecta en tu historial.</span></div></div>
+                        <div class="sts-title">Gasto Seguro Disponible <div class="tooltip">?<span class="tooltiptext">Cálculo Predictivo: Suma todo tu dinero actual y le resta automáticamente los gastos que repetiste idénticos en el mes anterior (Ghost Subs) para decirte cuánto dinero libre de culpa tienes.</span></div></div>
                         <div class="sts-amount" id="stsValue">Calculando...</div>
                         <div class="sts-subtext" id="stsSubs">Analizando suscripciones fantasma...</div>
                     </div>
@@ -377,7 +321,7 @@
                     </div>
                     
                     <div class="container">
-                        <h2>Registrar Nuevo Gasto <div class="tooltip">?<span class="tooltiptext">Si descuentas en Bolívares, se calculará el equivalente en dólares de ese preciso instante. Anotar gastos te da +5 XP.</span></div></h2>
+                        <h2>Registrar Nuevo Gasto <div class="tooltip">?<span class="tooltiptext">Si descuentas en Bolívares, se calculará automáticamente el equivalente en dólares de ese preciso instante usando las tasas del Oráculo, para que nunca pierdas de vista la inflación.</span></div></h2>
                         <div class="input-group">
                             <input type="text" id="expDesc" placeholder="Detalle del gasto">
                             <input type="number" id="expAmount" placeholder="Monto" step="0.01" min="0.01">
@@ -392,7 +336,7 @@
                     </div>
                     
                     <div class="container">
-                        <h2>Historial <div class="tooltip">?<span class="tooltiptext">Filtra tus gastos por día o rango. El gráfico de arriba cambiará automáticamente.</span></div> <button type="button" onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black; margin-left: auto;">📥 Exportar CSV</button></h2>
+                        <h2>Historial <button type="button" onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black;">📥 Exportar CSV</button></h2>
                         <div class="filter-bar">
                             <label>📅 Día exacto: <input type="date" id="filterDate" onchange="window.applyFilters()"></label>
                             <label>🗓️ Rango: <input type="date" id="filterStartDate" onchange="window.applyFilters()"> <span>a</span> <input type="date" id="filterEndDate" onchange="window.applyFilters()"></label>
@@ -404,7 +348,7 @@
                                     <option value="facebank">Solo Facebank</option>
                                 </select>
                             </label>
-                            <button type="button" onclick="window.clearFilters()" style="padding: 5px 10px; font-size: 0.9em; background: #cf6679;">✖ Limpiar</button>
+                            <button type="button" onclick="window.clearFilters()" style="padding: 5px 10px; font-size: 0.9em; background: #cf6679; margin-left: auto;">✖ Limpiar</button>
                         </div>
                         <ul id="expenseList"></ul>
                     </div>
@@ -414,7 +358,7 @@
 
         <div id="notas" class="tab-content">
             <div class="container">
-                <h2>El Segundo Cerebro <div class="tooltip">?<span class="tooltiptext">Crear notas profundas da +20 XP. Usa [[Nombre]] para crear conexiones neuronales en el Grafo Visual.</span></div> <button onclick="toggleNotesGraph()" style="font-size: 0.7em; background: #444; color: white; padding: 5px 10px; margin-left: auto;">🌌 Ver Grafo Visual</button></h2>
+                <h2>El Segundo Cerebro <div class="tooltip">?<span class="tooltiptext">Usa doble corchete [[Como Esto]] para conectar el nombre de dos notas entre sí. Al presionar 'Ver Grafo Visual', se dibujará una red neuronal interactiva con tus ideas.</span></div> <button onclick="toggleNotesGraph()" style="font-size: 0.7em; background: #444; color: white; padding: 5px 10px;">🌌 Ver Grafo Visual</button></h2>
                 <div id="networkGraph"></div>
                 <div class="input-group" style="flex-direction: column; margin-top: 15px;">
                     <input type="text" id="noteTitle" placeholder="Título de la nota (Sirve como etiqueta Zettelkasten)">
@@ -444,6 +388,7 @@
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
+        // CREDENCIALES
         const firebaseConfig = { 
             apiKey: "AIzaSyBa-d5nGmHqiJV0Es9LgT1S3gW4iFRBpyw", 
             authDomain: "activities-app-web.firebaseapp.com", 
@@ -452,6 +397,7 @@
             messagingSenderId: "494543385836", 
             appId: "1:494543385836:web:8774fd9e43948de535e1c9" 
         };
+        
         const app = initializeApp(firebaseConfig); 
         const db = getFirestore(app); 
         const auth = getAuth(app); 
@@ -462,250 +408,159 @@
             return marked.parse(processed);
         };
 
-        // --- ESTADO GLOBAL & GAMIFICATION DATA ---
         let currentUid = null; 
         let unsubSnapshot = null;
         let masterPin = "1234";
-        
         let tasks = [], reminders = [], balances = { facebank: 0, binance: 0, bs: 0 }, expenses = [], notes = [], recurringTasks = [], checklists = [], tabOrder = [], activityLog = {};
-        
-        // Gamification Variables
-        let gamiXp = 0;
-        let gamiLevel = 1;
-        let gamiCoins = 0;
-        let gamiStreak = 0;
-        let gamiLastLogin = "";
-
         window.tempChecklistItems = []; window.rateBcvVal = 0; window.rateBinanceVal = 0; window.rateEuroVal = 0; 
-        window.activeAlarm = null; window.alarmAudioInterval = null; let audioCtx = null;
+        
+        // VARIABLES DEL SISTEMA DE ALARMAS
+        window.activeAlarm = null; 
+        window.alarmAudioInterval = null; 
+        let audioCtx = null;
+        
         window.openChecklists = new Set(); let activeTextarea = null; 
 
         // ==========================================
-        // MOTOR DE GAMIFICACIÓN (NUEVO V17.6)
+        // SISTEMA DE NOTIFICACIONES Y AUDIO (NUEVO)
         // ==========================================
         
-        const XP_REQ = (lvl) => lvl * 100; // Formula de Nivel
-        
-        function renderGamification() {
-            document.getElementById('uiLevel').innerText = gamiLevel;
-            document.getElementById('uiCoins').innerText = gamiCoins;
-            document.getElementById('uiStreak').innerText = gamiStreak;
-            
-            const req = XP_REQ(gamiLevel);
-            document.getElementById('uiXp').innerText = gamiXp;
-            document.getElementById('uiXpNext').innerText = req;
-            
-            const pct = Math.min((gamiXp / req) * 100, 100);
-            document.getElementById('uiXpBar').style.width = `${pct}%`;
-
-            updateCompanion();
-        }
-
-        // Sistema de Recompensas Variables (Loot Box)
-        window.openChest = () => {
-            document.getElementById('chestIcon').style.display = 'none';
-            document.getElementById('lootRewards').style.display = 'block';
-            
-            // Random rewards
-            const bonusXP = Math.floor(Math.random() * 50) + 20;
-            const bonusCoins = Math.floor(Math.random() * 5) + 1;
-            
-            document.getElementById('lootDesc').innerText = `Has ganado: +${bonusXP} XP y ${bonusCoins} 🪙`;
-            
-            gamiXp += bonusXP;
-            gamiCoins += bonusCoins;
-            checkLevelUp();
-            saveDataToCloud();
-        };
-
-        window.closeLootBox = () => {
-            document.getElementById('lootModal').style.display = 'none';
-        };
-
-        window.triggerLootBox = () => {
-            document.getElementById('lootModal').style.display = 'flex';
-            document.getElementById('chestIcon').style.display = 'block';
-            document.getElementById('lootRewards').style.display = 'none';
-        };
-
-        // Micro-animaciones de XP
-        function showFloatingXP(amount, eventOrText) {
-            const popup = document.createElement('div');
-            popup.className = 'xp-popup';
-            popup.innerText = `+${amount} XP`;
-            // Posicionar cerca del mouse o centro si no hay evento
-            if (eventOrText && eventOrText.clientX) {
-                popup.style.left = `${eventOrText.clientX}px`;
-                popup.style.top = `${eventOrText.clientY}px`;
-            } else {
-                popup.style.left = `50%`;
-                popup.style.top = `50%`;
-            }
-            document.body.appendChild(popup);
-            setTimeout(() => popup.remove(), 1200);
-        }
-
-        function checkLevelUp() {
-            let req = XP_REQ(gamiLevel);
-            if (gamiXp >= req) {
-                gamiXp -= req;
-                gamiLevel++;
-                showFloatingXP("LEVEL UP!", null);
-                setTimeout(() => window.triggerLootBox(), 1000); // Recompensa de nivel
-            }
-            renderGamification();
-        }
-
-        window.awardXP = (amount, mouseEvent = null) => {
-            gamiXp += amount;
-            showFloatingXP(amount, mouseEvent);
-            checkLevelUp();
-            saveDataToCloud();
-        };
-
-        // El Compañero Virtual (Tamagotchi Effect)
-        function updateCompanion() {
-            const pet = document.getElementById('digitalPet');
-            const speech = document.getElementById('petSpeech');
-            const today = new Date().toISOString().split('T')[0];
-            const actionsToday = activityLog[today] || 0;
-
-            if (actionsToday === 0) {
-                pet.innerText = '💤';
-                speech.innerText = "Zzz... Haz algo para despertarme.";
-            } else if (actionsToday < 3) {
-                pet.innerText = '🤖';
-                speech.innerText = "¡Vamos! Podemos ser más productivos.";
-            } else if (actionsToday < 7) {
-                pet.innerText = '⚡';
-                speech.innerText = "¡A tope de energía! Sigue así.";
-            } else {
-                pet.innerText = '🔥';
-                speech.innerText = "¡Modo Dios activado! Eres imparable.";
-                pet.style.filter = "drop-shadow(0 0 15px #ff9800)";
-            }
-        }
-
-        // Sistema de Rachas (Aversión a la pérdida)
-        function processDailyStreak() {
-            const today = new Date().toISOString().split('T')[0];
-            if (gamiLastLogin === today) return; // Ya sumó hoy
-            
-            let yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yStr = yesterday.toISOString().split('T')[0];
-            
-            if (gamiLastLogin === yStr) {
-                gamiStreak++; // Días seguidos
-            } else if (gamiLastLogin !== "") {
-                gamiStreak = 1; // Perdió la racha, reinicia
-                alert("Has perdido tu racha diaria 🔥. ¡No vuelvas a dejar el contador en 0!");
-            } else {
-                gamiStreak = 1; // Primer uso
-            }
-            
-            gamiLastLogin = today;
-            // No llamar saveDataToCloud aquí para evitar loops en init, se guarda normal con otros eventos.
-        }
-
-        // ==========================================
-        // SISTEMA DE NOTIFICACIONES Y AUDIO
-        // ==========================================
+        // Solicitar permisos e iniciar el contexto de audio en el primer clic (Políticas de navegadores)
         document.addEventListener('click', () => {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (Notification.permission !== "granted" && Notification.permission !== "denied") Notification.requestPermission();
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
         }, { once: true });
 
+        // Sintetizador de audio (Sin archivos MP3 externos)
         function playBeep() {
             if (!audioCtx) return;
             let osc = audioCtx.createOscillator();
             let gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.type = "sine"; osc.frequency.value = 800; 
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = "sine";
+            osc.frequency.value = 800; // Tono de alarma
             gain.gain.setValueAtTime(1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
         }
 
         window.startAlarmSound = () => {
             if(window.alarmAudioInterval) return;
-            playBeep(); window.alarmAudioInterval = setInterval(playBeep, 2000); 
+            playBeep(); // Suena de inmediato
+            window.alarmAudioInterval = setInterval(playBeep, 2000); // Repite cada 2 segundos
         };
 
         window.stopAlarmSound = () => {
-            if(window.alarmAudioInterval) { clearInterval(window.alarmAudioInterval); window.alarmAudioInterval = null; }
+            if(window.alarmAudioInterval) {
+                clearInterval(window.alarmAudioInterval);
+                window.alarmAudioInterval = null;
+            }
         };
 
         function showNotification(title, body) {
-            if (Notification.permission === "granted") new Notification(title, { body: body });
+            if (Notification.permission === "granted") {
+                new Notification(title, { body: body });
+            }
         }
 
+        // Despliega la interfaz de la alarma y asigna funciones a los botones dinámicamente
         window.triggerModal = (type, text, onComplete, onSnooze) => {
             showNotification(type, text);
             window.startAlarmSound();
+            
             document.getElementById('alarmTypeDesc').innerText = type;
             document.getElementById('alarmText').innerText = text;
             document.getElementById('alarmModal').style.display = 'flex';
 
             const btnC = document.getElementById('btnComplete');
             const btnS = document.getElementById('btnSnooze');
+
+            // Clonamos los botones para eliminar listeners anteriores
             const newBtnC = btnC.cloneNode(true);
             const newBtnS = btnS.cloneNode(true);
             btnC.parentNode.replaceChild(newBtnC, btnC);
             btnS.parentNode.replaceChild(newBtnS, btnS);
 
-            newBtnC.onclick = () => { window.stopAlarmSound(); document.getElementById('alarmModal').style.display = 'none'; if(onComplete) onComplete(); };
-            newBtnS.onclick = () => { window.stopAlarmSound(); document.getElementById('alarmModal').style.display = 'none'; if(onSnooze) onSnooze(); };
+            newBtnC.onclick = () => {
+                window.stopAlarmSound();
+                document.getElementById('alarmModal').style.display = 'none';
+                if(onComplete) onComplete();
+            };
+
+            newBtnS.onclick = () => {
+                window.stopAlarmSound();
+                document.getElementById('alarmModal').style.display = 'none';
+                if(onSnooze) onSnooze();
+            };
         };
 
+        // EL CORAZÓN DE LA APP: Revisa las fechas cada 10 segundos
         window.checkAlarms = () => {
-            if(!currentUid) return; 
+            if(!currentUid) return; // Si no estás logueado, no suena
             const now = new Date();
+
+            // 1. Revisar Recordatorios Únicos
             reminders.forEach((rem, index) => {
                 if (!rem.completed && !rem.notified) {
                     const remTime = new Date(rem.datetime);
                     if (now >= remTime) {
-                        rem.notified = true; 
+                        rem.notified = true; // Evita que dispare múltiples veces
                         window.triggerModal("Recordatorio", rem.text, () => {
+                            // Acción: Completar
                             rem.completed = true;
-                            window.awardXP(10); // Reward
-                            saveDataToCloud(); renderReminders();
+                            saveDataToCloud();
+                            renderReminders();
                         }, () => {
+                            // Acción: Posponer (Suma los minutos de snooze seleccionados)
                             rem.notified = false;
                             const snoozeTime = new Date(now.getTime() + (rem.snoozeMins * 60000));
+                            // Ajuste para evitar bugs de Zona Horaria al re-escribir el datetime local
                             rem.datetime = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                            saveDataToCloud(); renderReminders();
+                            saveDataToCloud();
+                            renderReminders();
                         });
                     }
                 }
             });
 
+            // 2. Revisar Tareas Recurrentes (Hábitos)
             recurringTasks.forEach((rec, index) => {
                 if (!rec.notified) {
                     const recTime = new Date(rec.nextTrigger);
                     if (now >= recTime) {
                         rec.notified = true;
                         window.triggerModal("Hábito / Rutina", rec.text, () => {
+                            // Acción: Completar (Reprograma para la siguiente iteración)
                             window.rescheduleRecurring(rec);
                             recordActivity();
-                            window.awardXP(15); // Reward
-                            saveDataToCloud(); renderRecurringTasks();
+                            saveDataToCloud();
+                            renderRecurringTasks();
                         }, () => {
+                            // Acción: Posponer (Le da 10 minutos de gracia sin afectar la rutina real)
                             rec.notified = false;
                             const snoozeTime = new Date(now.getTime() + (10 * 60000));
                             rec.nextTrigger = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                            saveDataToCloud(); renderRecurringTasks();
+                            saveDataToCloud();
+                            renderRecurringTasks();
                         });
                     }
                 }
             });
         };
 
+        // Inicia el latido del sistema
         setInterval(window.checkAlarms, 10000); 
 
         // ==========================================
-        // AUTH & INIT
-        // ==========================================
+
+
+        // === AUTHENTICATION LOGIC ===
         onAuthStateChanged(auth, (user) => { 
             if (user) { 
                 currentUid = user.uid; 
@@ -731,15 +586,15 @@
         window.appRegister = () => { 
             const e = document.getElementById('authEmail').value;
             const p = document.getElementById('authPassword').value; 
-            if(p.length < 6) return alert("Mínimo 6 caracteres"); 
+            if(p.length < 6) return alert("Min 6 chars"); 
             createUserWithEmailAndPassword(auth, e, p).then(() => {
-                alert("Cuenta creada. Tu PIN Maestro por defecto es 1234.");
+                alert("Cuenta creada. Tu PIN Maestro por defecto para la bóveda es 1234. Cámbialo al ingresar.");
             }).catch(err => alert("Error: " + err.message)); 
         };
 
         window.appResetPassword = () => { 
             const e = prompt("Correo:"); 
-            if(e) sendPasswordResetEmail(auth, e).then(() => alert("¡Enviado!")).catch(err=>alert(err.message)); 
+            if(e) sendPasswordResetEmail(auth, e).then(() => alert("Enviado!")).catch(err=>alert(err.message)); 
         };
 
         window.appLogout = () => { 
@@ -748,19 +603,19 @@
 
         function clearLocalData() { 
             tasks = []; reminders = []; balances = {facebank:0, binance:0, bs:0}; expenses = []; notes = []; recurringTasks = []; checklists = []; tabOrder = []; activityLog = {}; masterPin = "1234";
-            gamiXp = 0; gamiLevel = 1; gamiCoins = 0; gamiStreak = 0; gamiLastLogin = "";
-            renderTasks(); renderRecurringTasks(); renderReminders(); renderBalances(); renderExpenses(); renderNotes(); renderChecklists(); renderGamification();
+            renderTasks(); renderRecurringTasks(); renderReminders(); renderBalances(); renderExpenses(); renderNotes(); renderChecklists(); 
             document.getElementById('vaultOverlay').classList.remove('vault-hidden'); 
             document.getElementById('vaultContent').classList.add('vault-hidden'); 
             document.getElementById('pinInput').value = '';
         }
 
+        // === CLOUD DATA INIT ===
         async function initCloudData(uid) { 
             try { 
                 const docRef = doc(db, "userData", uid); 
                 const docSnap = await getDoc(docRef); 
                 if (!docSnap.exists()) { 
-                    await setDoc(docRef, { tasks: [], reminders: [], balances: {facebank:0,binance:0,bs:0}, expenses: [], notes: [], recurringTasks: [], checklists: [], tabOrder: [], activityLog: {}, masterPin: "1234", gamiXp: 0, gamiLevel: 1, gamiCoins: 0, gamiStreak: 0, gamiLastLogin: "" }); 
+                    await setDoc(docRef, { tasks: [], reminders: [], balances: {facebank:0,binance:0,bs:0}, expenses: [], notes: [], recurringTasks: [], checklists: [], tabOrder: [], activityLog: {}, masterPin: "1234" }); 
                 } 
                 unsubSnapshot = onSnapshot(docRef, (doc) => { 
                     if (doc.exists()) { 
@@ -768,21 +623,12 @@
                         tasks = data.tasks || []; reminders = data.reminders || []; balances = data.balances || {facebank:0,binance:0,bs:0}; expenses = data.expenses || []; notes = data.notes || []; recurringTasks = data.recurringTasks || []; checklists = data.checklists || []; tabOrder = data.tabOrder || []; activityLog = data.activityLog || {}; 
                         masterPin = data.masterPin || "1234";
                         
-                        // Cargar GamiData
-                        gamiXp = data.gamiXp || 0;
-                        gamiLevel = data.gamiLevel || 1;
-                        gamiCoins = data.gamiCoins || 0;
-                        gamiStreak = data.gamiStreak || 0;
-                        gamiLastLogin = data.gamiLastLogin || "";
-
-                        processDailyStreak(); // Check streak on load
-                        
                         if (tabOrder.length > 0) { 
                             const container = document.getElementById('tabContainer'); 
                             tabOrder.forEach(id => { const btn = document.getElementById(id); if (btn) container.appendChild(btn); }); 
                         } 
                         
-                        renderTasks(); renderRecurringTasks(); renderReminders(); renderBalances(); renderExpenses(); renderNotes(); renderChecklists(); renderHeatmap(); window.calculateSafeToSpend(); renderGamification();
+                        renderTasks(); renderRecurringTasks(); renderReminders(); renderBalances(); renderExpenses(); renderNotes(); renderChecklists(); renderHeatmap(); window.calculateSafeToSpend();
                         
                         document.getElementById('syncStatus').innerText = "☁️ Sincronizado"; 
                         document.getElementById('syncStatus').className = "cloud-status cloud-syncing"; 
@@ -798,9 +644,10 @@
         async function saveDataToCloud() { 
             if(!currentUid) return; 
             document.getElementById('syncStatus').innerText = "Subiendo..."; 
-            await updateDoc(doc(db, "userData", currentUid), { tasks, reminders, balances, expenses, notes, recurringTasks, checklists, tabOrder, activityLog, masterPin, gamiXp, gamiLevel, gamiCoins, gamiStreak, gamiLastLogin }); 
+            await updateDoc(doc(db, "userData", currentUid), { tasks, reminders, balances, expenses, notes, recurringTasks, checklists, tabOrder, activityLog, masterPin }); 
         }
 
+        // === CORE HELPER FUNCTIONS ===
         window.switchTab = (tabId) => { 
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); 
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
@@ -809,42 +656,28 @@
             if(tabId === 'finanzas') { renderExpenses(); window.calculateSafeToSpend(); } 
         };
 
-        // PARSER DE FECHAS
         function parseVeDate(dateStr) { 
-            if (!dateStr) return new Date(0); 
-            try {
-                let dStr = dateStr.split(',')[0].trim();
-                if (dStr.includes('/')) {
-                    let parts = dStr.split('/');
-                    if (parts.length === 3) {
-                        let d = parseInt(parts[0], 10);
-                        let m = parseInt(parts[1], 10) - 1; 
-                        let y = parseInt(parts[2], 10);
-                        if (y < 100) y += 2000;
-                        return new Date(y, m, d);
-                    }
-                } else if (dStr.includes('-')) {
-                     let parts = dStr.split('-');
-                     if (parts.length === 3) return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-                }
-                return new Date(dateStr);
-            } catch(e) { return new Date(0); }
+            if(!dateStr) return new Date(0); 
+            const parts = dateStr.split(',')[0].trim().split('/'); 
+            if(parts.length === 3) { 
+                return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T00:00:00`); 
+            } 
+            return new Date(dateStr); 
         }
 
         function getLocalYMD(dateObj) {
-            if (!(dateObj instanceof Date) || isNaN(dateObj)) return "";
+            if (isNaN(dateObj)) return "";
             const y = dateObj.getFullYear();
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
             const d = String(dateObj.getDate()).padStart(2, '0');
             return `${y}-${m}-${d}`;
         }
 
-        // HEATMAP
+        // === GAMIFICATION (HEATMAP) ===
         function recordActivity() { 
             const today = new Date().toISOString().split('T')[0]; 
             activityLog[today] = (activityLog[today] || 0) + 1; 
             renderHeatmap(); 
-            updateCompanion();
         }
         
         function renderHeatmap() { 
@@ -868,8 +701,9 @@
             } 
         }
 
-        // === FINANZAS ===
+        // === FINANZAS & CHARTS ===
         window.applyFilters = () => { renderExpenses(); }; 
+        
         window.clearFilters = () => { 
             document.getElementById('filterDate').value = ''; 
             document.getElementById('filterStartDate').value = ''; 
@@ -879,65 +713,125 @@
         };
 
         function renderExpenses() { 
-            const list = document.getElementById('expenseList'); list.innerHTML = ''; 
+            const list = document.getElementById('expenseList'); 
+            list.innerHTML = ''; 
+            
             const fDate = document.getElementById('filterDate').value; 
             const fStart = document.getElementById('filterStartDate').value; 
             const fEnd = document.getElementById('filterEndDate').value; 
             const fAcc = document.getElementById('filterAccount').value; 
             
             let filtered = expenses.map((exp, originalIndex) => ({...exp, originalIndex})); 
+            
             if(fAcc !== 'all') filtered = filtered.filter(e => e.account === fAcc); 
-            if(fDate) { filtered = filtered.filter(e => getLocalYMD(parseVeDate(e.date)) === fDate); } 
-            else if (fStart && fEnd) { filtered = filtered.filter(e => { const dYMD = getLocalYMD(parseVeDate(e.date)); return dYMD >= fStart && dYMD <= fEnd; }); } 
+            
+            if(fDate) { 
+                filtered = filtered.filter(e => getLocalYMD(parseVeDate(e.date)) === fDate); 
+            } 
+            else if (fStart && fEnd) { 
+                filtered = filtered.filter(e => { 
+                    const dYMD = getLocalYMD(parseVeDate(e.date)); 
+                    return dYMD >= fStart && dYMD <= fEnd; 
+                }); 
+            } 
             
             [...filtered].reverse().forEach((exp) => { 
                 const index = exp.originalIndex; 
-                const li = document.createElement('li'); li.className = `expense-item ex-${exp.account}`; 
+                const li = document.createElement('li'); 
+                li.className = `expense-item ex-${exp.account}`; 
                 let symbol = exp.account === 'facebank' ? '$' : exp.account === 'binance' ? '₮' : 'Bs.'; 
                 let equivHtml = ''; 
-                if (exp.account === 'bs' && (exp.eqUsd || exp.eqUsdt || exp.eqEur)) { equivHtml = `<br><span style="font-size: 0.75em; color: var(--secondary); opacity: 0.9;">≈ $${(exp.eqUsd||0).toFixed(2)} BCV | ₮${(exp.eqUsdt||0).toFixed(2)} BIN | €${(exp.eqEur||0).toFixed(2)} EUR</span>`; } 
-                const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
+                if (exp.account === 'bs' && (exp.eqUsd || exp.eqUsdt || exp.eqEur)) { 
+                    equivHtml = `<br><span style="font-size: 0.75em; color: var(--secondary); opacity: 0.9;">≈ $${(exp.eqUsd||0).toFixed(2)} BCV | ₮${(exp.eqUsdt||0).toFixed(2)} BIN | €${(exp.eqEur||0).toFixed(2)} EUR</span>`; 
+                } 
+                const contentDiv = document.createElement('div'); 
+                contentDiv.className = 'task-content'; 
                 contentDiv.innerHTML = `<strong>${exp.desc}</strong><br><span class="task-date">📅 ${exp.date} | 🏦 ${exp.account.toUpperCase()}</span>${equivHtml}`; 
-                const amountSpan = document.createElement('span'); amountSpan.className = 'expense-amount'; amountSpan.innerText = `-${symbol}${parseFloat(exp.amount).toFixed(2)}`; 
-                const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'Deshacer'; deleteBtn.style.background = '#444'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; 
-                deleteBtn.onclick = () => { if(confirm("¿Devolver gasto al saldo?")) { balances[exp.account] += parseFloat(exp.amount); expenses.splice(index, 1); saveDataToCloud(); renderExpenses(); window.calculateSafeToSpend(); } }; 
-                li.append(contentDiv, amountSpan, deleteBtn); list.appendChild(li); 
+                const amountSpan = document.createElement('span'); 
+                amountSpan.className = 'expense-amount'; 
+                amountSpan.innerText = `-${symbol}${parseFloat(exp.amount).toFixed(2)}`; 
+                const deleteBtn = document.createElement('button'); 
+                deleteBtn.innerText = 'Deshacer'; 
+                deleteBtn.style.background = '#444'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; 
+                deleteBtn.onclick = () => { 
+                    if(confirm("¿Devolver gasto al saldo?")) { 
+                        balances[exp.account] += parseFloat(exp.amount); 
+                        expenses.splice(index, 1); 
+                        saveDataToCloud(); renderExpenses(); window.calculateSafeToSpend(); 
+                    } 
+                }; 
+                li.append(contentDiv, amountSpan, deleteBtn); 
+                list.appendChild(li); 
             }); 
             if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos en este rango o cuenta.</li>'; 
             
             let sumFb = 0, sumBin = 0, sumBs = 0; 
-            filtered.forEach(e => { let amt = parseFloat(e.amount) || 0; if(e.account === 'facebank') sumFb += amt; if(e.account === 'binance') sumBin += amt; if(e.account === 'bs') sumBs += amt; }); 
+            filtered.forEach(e => { 
+                if(e.account === 'facebank') sumFb += parseFloat(e.amount); 
+                if(e.account === 'binance') sumBin += parseFloat(e.amount); 
+                if(e.account === 'bs') sumBs += parseFloat(e.amount); 
+            }); 
             
             const ctx = document.getElementById('financeChart'); 
             if(!ctx || document.getElementById('finanzas').style.display === 'none' && !document.getElementById('tab-finanzas').classList.contains('active')) return; 
+            
             if(financeChartInstance) financeChartInstance.destroy(); 
-            let hasData = sumFb > 0 || sumBin > 0 || sumBs > 0;
-
             financeChartInstance = new Chart(ctx, { 
                 type: 'doughnut', 
-                data: { labels: hasData ? ['Facebank ($)', 'Binance (USDT)', 'Bolívares (Bs)'] : ['Sin Gastos'], datasets: [{ data: hasData ? [sumFb, sumBin, sumBs] : [1], backgroundColor: hasData ? ['#2196F3', '#F3BA2F', '#4CAF50'] : ['#333333'], borderWidth: 0, hoverOffset: 4 }] }, 
-                options: { plugins: { legend: { labels: { color: 'white' } }, tooltip: { enabled: hasData } } } 
+                data: { labels: ['Facebank ($)', 'Binance (USDT)', 'Bolívares (Bs)'], datasets: [{ data: [sumFb, sumBin, sumBs], backgroundColor: ['#2196F3', '#F3BA2F', '#4CAF50'], borderWidth: 0, hoverOffset: 4 }] }, 
+                options: { plugins: { legend: { labels: { color: 'white' } } } } 
             }); 
         }
 
         window.calculateSafeToSpend = () => { 
-            let ghostSubsSum = 0; const subsMap = {}; const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); 
-            expenses.forEach(e => { const d = parseVeDate(e.date); if(d >= thirtyDaysAgo) { const key = e.desc.toLowerCase().trim(); if(!subsMap[key]) subsMap[key] = { count: 0, amount: parseFloat(e.amount), account: e.account }; subsMap[key].count++; } }); 
-            let subTexts = []; for(let key in subsMap) { if(subsMap[key].count > 1) { ghostSubsSum += subsMap[key].amount; subTexts.push(`${key} (${subsMap[key].amount})`); } } 
+            let ghostSubsSum = 0; 
+            const subsMap = {}; 
+            const thirtyDaysAgo = new Date(); 
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); 
+            expenses.forEach(e => { 
+                const d = parseVeDate(e.date); 
+                if(d >= thirtyDaysAgo) { 
+                    const key = e.desc.toLowerCase().trim(); 
+                    if(!subsMap[key]) subsMap[key] = { count: 0, amount: parseFloat(e.amount), account: e.account }; 
+                    subsMap[key].count++; 
+                } 
+            }); 
+            let subTexts = []; 
+            for(let key in subsMap) { 
+                if(subsMap[key].count > 1) { 
+                    ghostSubsSum += subsMap[key].amount; 
+                    subTexts.push(`${key} (${subsMap[key].amount})`); 
+                } 
+            } 
             let totalUsdEquiv = balances.facebank + balances.binance; 
-            if (window.rateBinanceVal > 0) totalUsdEquiv += (balances.bs / window.rateBinanceVal); else if (window.rateBcvVal > 0) totalUsdEquiv += (balances.bs / window.rateBcvVal); 
+            if (window.rateBinanceVal > 0) totalUsdEquiv += (balances.bs / window.rateBinanceVal); 
+            else if (window.rateBcvVal > 0) totalUsdEquiv += (balances.bs / window.rateBcvVal); 
+            
             let safeToSpend = totalUsdEquiv - ghostSubsSum; 
             document.getElementById('stsValue').innerText = `≈ $${safeToSpend.toFixed(2)} USD`; 
-            if (subTexts.length > 0) { document.getElementById('stsSubs').innerText = `👻 Peligro detectado: -${ghostSubsSum} reservados para: ${subTexts.join(', ')}`; document.getElementById('stsSubs').style.color = "var(--warning)"; } else { document.getElementById('stsSubs').innerText = `✅ No detecto suscripciones inminentes este mes.`; document.getElementById('stsSubs').style.color = "#4CAF50"; } 
+            if (subTexts.length > 0) { 
+                document.getElementById('stsSubs').innerText = `👻 Peligro detectado: -${ghostSubsSum} reservados para: ${subTexts.join(', ')}`; 
+                document.getElementById('stsSubs').style.color = "var(--warning)"; 
+            } else { 
+                document.getElementById('stsSubs').innerText = `✅ No detecto suscripciones inminentes este mes.`; 
+                document.getElementById('stsSubs').style.color = "#4CAF50"; 
+            } 
         };
 
         window.updateBalance = (accKey, accName) => { 
             const input = prompt(`Ingresa tu pool real actual en ${accName}:\n(Usa punto para decimales)`); 
-            if (input !== null && !isNaN(input)) { balances[accKey] = parseFloat(input); recordActivity(); saveDataToCloud(); renderBalances(); } 
+            if (input !== null && !isNaN(input)) { 
+                balances[accKey] = parseFloat(input); 
+                recordActivity(); 
+                saveDataToCloud(); 
+                renderBalances(); 
+            } 
         };
 
-        window.addExpense = (e) => { 
-            const desc = document.getElementById('expDesc').value; const amount = document.getElementById('expAmount').value; const account = document.getElementById('expAccount').value; 
+        window.addExpense = () => { 
+            const desc = document.getElementById('expDesc').value;
+            const amount = document.getElementById('expAmount').value;
+            const account = document.getElementById('expAccount').value; 
             if (desc.trim() === '' || amount === '' || parseFloat(amount) <= 0 || account === '') return alert("Llena todos los campos."); 
             const numAmount = parseFloat(amount); 
             if (numAmount > balances[account] && !confirm(`Gasto mayor al saldo. ¿Continuar?`)) return; 
@@ -945,15 +839,15 @@
             const today = new Date().toLocaleString('es-VE'); 
             let eqUsd = null, eqUsdt = null, eqEur = null; 
             if (account === 'bs') { 
-                const bcv = window.rateBcvVal || 0; const binance = window.rateBinanceVal || 0; const euro = window.rateEuroVal || 0;
-                if (bcv > 0) eqUsd = numAmount / bcv; if (binance > 0) eqUsdt = numAmount / binance; if (euro > 0) eqEur = numAmount / euro;
+                const bcv = window.rateBcvVal || 0; 
+                const binance = window.rateBinanceVal || 0; 
+                const euro = window.rateEuroVal || 0;
+                if (bcv > 0) eqUsd = numAmount / bcv; 
+                if (binance > 0) eqUsdt = numAmount / binance; 
+                if (euro > 0) eqEur = numAmount / euro;
             } 
             expenses.push({ desc, amount: numAmount, account, date: today, eqUsd, eqUsdt, eqEur }); 
             document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; document.getElementById('expAccount').selectedIndex = 0; 
-            
-            // GAMIFICATION REWARD
-            window.awardXP(5, e || window.event);
-            
             recordActivity(); saveDataToCloud(); renderExpenses(); window.calculateSafeToSpend(); 
         };
 
@@ -965,41 +859,106 @@
             if(window.rateBcvVal > 0) eq.push(`🇺🇸 BCV: $${(bs / window.rateBcvVal).toFixed(2)}`); 
             if(window.rateBinanceVal > 0) eq.push(`🟡 BIN: ₮${(bs / window.rateBinanceVal).toFixed(2)}`); 
             if(window.rateEuroVal > 0) eq.push(`🇪🇺 EUR: €${(bs / window.rateEuroVal).toFixed(2)}`); 
+            
             document.getElementById('bsEquiv').innerHTML = eq.length > 0 ? eq.join('<br>') : '≈ Sincroniza tasas'; 
             window.calculateSafeToSpend(); 
         }
 
-        window.downloadChartPNG = () => { const canvas = document.getElementById('financeChart'); const link = document.createElement('a'); link.download = 'Distribucion_Gastos_MetaOS.png'; link.href = canvas.toDataURL('image/png'); link.click(); };
+        // === DESCARGA DE GRÁFICO (PNG) ===
+        window.downloadChartPNG = () => {
+            const canvas = document.getElementById('financeChart');
+            const link = document.createElement('a');
+            link.download = 'Distribucion_Gastos_MetaOS.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
 
         // === COMMAND PALETTE ===
-        const cmdOverlay = document.getElementById('cmdOverlay'); const cmdInput = document.getElementById('cmdInput'); const cmdResults = document.getElementById('cmdResults'); 
-        let cmdOptions = [ { name: "💰 Nuevo Gasto", action: () => { switchTab('finanzas'); document.getElementById('expDesc').focus(); } }, { name: "📓 Nueva Nota", action: () => { switchTab('notas'); document.getElementById('noteTitle').focus(); } }, { name: "📝 Nueva Tarea", action: () => { switchTab('actividades'); document.getElementById('taskInput').focus(); } }, { name: "⏰ Activar Pomodoro", action: () => { switchTab('actividades'); window.startTimer(); } }, { name: "🚪 Cerrar Sesión", action: () => { window.appLogout(); } } ];
-        document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if(!currentUid) return; cmdOverlay.style.display = 'flex'; cmdInput.value = ''; renderCmdResults(cmdOptions); cmdInput.focus(); } if (e.key === 'Escape' && cmdOverlay.style.display === 'flex') { cmdOverlay.style.display = 'none'; } }); 
+        const cmdOverlay = document.getElementById('cmdOverlay'); 
+        const cmdInput = document.getElementById('cmdInput'); 
+        const cmdResults = document.getElementById('cmdResults'); 
+        let cmdOptions = [ 
+            { name: "💰 Nuevo Gasto", action: () => { switchTab('finanzas'); document.getElementById('expDesc').focus(); } }, 
+            { name: "📓 Nueva Nota", action: () => { switchTab('notas'); document.getElementById('noteTitle').focus(); } }, 
+            { name: "📝 Nueva Tarea", action: () => { switchTab('actividades'); document.getElementById('taskInput').focus(); } }, 
+            { name: "⏰ Activar Pomodoro", action: () => { switchTab('actividades'); window.startTimer(); } }, 
+            { name: "🚪 Cerrar Sesión", action: () => { window.appLogout(); } } 
+        ];
+        
+        document.addEventListener('keydown', (e) => { 
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { 
+                e.preventDefault(); if(!currentUid) return; 
+                cmdOverlay.style.display = 'flex'; cmdInput.value = ''; 
+                renderCmdResults(cmdOptions); cmdInput.focus(); 
+            } 
+            if (e.key === 'Escape' && cmdOverlay.style.display === 'flex') { cmdOverlay.style.display = 'none'; } 
+        }); 
+        
         window.closeCmd = (e) => { if(e.target === cmdOverlay) cmdOverlay.style.display = 'none'; }
         cmdInput.addEventListener('input', (e) => { const val = e.target.value.toLowerCase(); const filtered = cmdOptions.filter(opt => opt.name.toLowerCase().includes(val)); renderCmdResults(filtered); }); 
-        function renderCmdResults(list) { cmdResults.innerHTML = ''; list.forEach((item, index) => { const li = document.createElement('li'); li.innerText = item.name; if(index === 0) li.classList.add('active-cmd'); li.onclick = () => { item.action(); cmdOverlay.style.display = 'none'; }; cmdResults.appendChild(li); }); } 
+        
+        function renderCmdResults(list) { 
+            cmdResults.innerHTML = ''; 
+            list.forEach((item, index) => { 
+                const li = document.createElement('li'); li.innerText = item.name; 
+                if(index === 0) li.classList.add('active-cmd'); 
+                li.onclick = () => { item.action(); cmdOverlay.style.display = 'none'; }; 
+                cmdResults.appendChild(li); 
+            }); 
+        } 
+        
         cmdInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const active = cmdResults.querySelector('.active-cmd'); if(active) active.click(); } });
 
-        // === API ORÁCULO ===
+        // === API ORÁCULO DE TASAS ===
         window.fetchExchangeRates = async () => { 
             const btn = document.getElementById('btnSyncRates'); btn.innerText = '📡 Sync...'; 
             try { 
                 let bcvVal = 0, binanceVal = 0, euroVal = 0; 
-                const fetchWithFallback = async (localRoute, directUrl) => { try { let res = await fetch(directUrl); if (res.ok) return await res.json(); } catch(e) {} return null; }; 
-                const dataBcv = await fetchWithFallback('/api/bcv', 'https://ve.dolarapi.com/v1/dolares/oficial'); if (dataBcv) bcvVal = dataBcv.promedio || 0; 
-                const dataEur = await fetchWithFallback('/api/eur', 'https://ve.dolarapi.com/v1/euros/oficial'); if (dataEur) euroVal = dataEur.promedio || 0; 
+                const fetchWithFallback = async (localRoute, directUrl) => { 
+                    try { let res = await fetch(directUrl); if (res.ok) return await res.json(); } catch(e) {} return null; 
+                }; 
+                const dataBcv = await fetchWithFallback('/api/bcv', 'https://ve.dolarapi.com/v1/dolares/oficial'); 
+                if (dataBcv) bcvVal = dataBcv.promedio || 0; 
+                const dataEur = await fetchWithFallback('/api/eur', 'https://ve.dolarapi.com/v1/euros/oficial'); 
+                if (dataEur) euroVal = dataEur.promedio || 0; 
+                
                 const endpoints = ['https://pydolarve.org/api/v1/dollar?page=binance','https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=binance','https://api.pydolarvenezuela.com/api/v1/dollar?page=binance']; 
                 const proxies = ['', 'https://corsproxy.io/?']; let bypassSuccess = false; 
-                for (let endpoint of endpoints) { if (bypassSuccess) break; for (let proxy of proxies) { try { let targetUrl = proxy ? proxy + encodeURIComponent(endpoint) : endpoint; let res = await fetch(targetUrl, { cache: "no-store" }); if (!res.ok) continue; let data = await res.json(); let foundPrice = 0; const searchPrice = (obj) => { if (!obj || typeof obj !== 'object') return; for (let key in obj) { if (key.toLowerCase().includes('binance')) { if (obj[key].price) { foundPrice = parseFloat(obj[key].price); return; } if (typeof obj[key] === 'number') { foundPrice = obj[key]; return; } } if (foundPrice === 0) searchPrice(obj[key]); } }; searchPrice(data); if (foundPrice > 0) { binanceVal = foundPrice; bypassSuccess = true; break; } } catch(e) {} } } 
+                for (let endpoint of endpoints) { 
+                    if (bypassSuccess) break; 
+                    for (let proxy of proxies) { 
+                        try { 
+                            let targetUrl = proxy ? proxy + encodeURIComponent(endpoint) : endpoint; 
+                            let res = await fetch(targetUrl, { cache: "no-store" }); 
+                            if (!res.ok) continue; let data = await res.json(); let foundPrice = 0; 
+                            const searchPrice = (obj) => { 
+                                if (!obj || typeof obj !== 'object') return; 
+                                for (let key in obj) { 
+                                    if (key.toLowerCase().includes('binance')) { 
+                                        if (obj[key].price) { foundPrice = parseFloat(obj[key].price); return; } 
+                                        if (typeof obj[key] === 'number') { foundPrice = obj[key]; return; } 
+                                    } 
+                                    if (foundPrice === 0) searchPrice(obj[key]); 
+                                } 
+                            }; 
+                            searchPrice(data); 
+                            if (foundPrice > 0) { binanceVal = foundPrice; bypassSuccess = true; break; } 
+                        } catch(e) {} 
+                    } 
+                } 
                 window.rateBcvVal = bcvVal; window.rateBinanceVal = binanceVal; window.rateEuroVal = euroVal; 
-                document.getElementById('rateBcv').innerText = `Bs. ${parseFloat(bcvVal).toFixed(2)}`; document.getElementById('rateBinance').innerText = `Bs. ${parseFloat(binanceVal).toFixed(2)}`; document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(euroVal).toFixed(2)}`; 
-                document.getElementById('rateLastUpdate').innerText = `Última act: ${new Date().toLocaleTimeString('es-VE')}`; renderBalances(); renderExpenses(); btn.innerText = '📡 Sincronizar'; 
+                document.getElementById('rateBcv').innerText = `Bs. ${parseFloat(bcvVal).toFixed(2)}`; 
+                document.getElementById('rateBinance').innerText = `Bs. ${parseFloat(binanceVal).toFixed(2)}`; 
+                document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(euroVal).toFixed(2)}`; 
+                document.getElementById('rateLastUpdate').innerText = `Última act: ${new Date().toLocaleTimeString('es-VE')}`; 
+                renderBalances(); renderExpenses(); btn.innerText = '📡 Sincronizar'; 
             } catch(err) { btn.innerText = '⚠️ Reintentar'; } 
         };
 
-        // UI Base (Tareas, Actividades)
+        // UI Base (Tareas, Actividades, Recordatorios, Checklists)
         let timerInterval, timeLeft = 25 * 60; 
         
+        // REPARADO: Pomodoro usa el nuevo sistema de alertas
         window.startTimer = () => { 
             clearInterval(timerInterval); 
             timerInterval = setInterval(() => { 
@@ -1011,9 +970,9 @@
                     window.triggerModal("Pomodoro", "¡Bloque de Enfoque Terminado!", () => {
                         window.resetTimer();
                         recordActivity();
-                        window.triggerLootBox(); // GAMIFICATION REWARD
                         saveDataToCloud();
                     }, () => {
+                        // Posponer pomodoro añade 5 mins
                         timeLeft = 5 * 60;
                         window.startTimer();
                     });
@@ -1023,28 +982,14 @@
         window.resetTimer = () => { clearInterval(timerInterval); timeLeft = 25 * 60; document.getElementById('timer').innerText = "25:00"; };
         
         window.addTask = () => { const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); if (input.value.trim() === '') return alert('Escribe.'); tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); input.value = ''; dateInput.value = ''; recordActivity(); saveDataToCloud(); };
-        function renderTasks() { 
-            const pendingList = document.getElementById('pendingList'); const completedList = document.getElementById('completedList'); pendingList.innerHTML = ''; completedList.innerHTML = ''; 
-            tasks.forEach((task, index) => { 
-                const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; 
-                checkbox.onchange = (e) => { 
-                    tasks[index].completed = !tasks[index].completed; 
-                    if(tasks[index].completed) { 
-                        recordActivity(); 
-                        window.awardXP(10, e); // GAMIFICATION REWARD
-                    } 
-                    saveDataToCloud(); renderTasks();
-                }; 
-                const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>`; const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); 
-            }); 
-        }
+        function renderTasks() { const pendingList = document.getElementById('pendingList'); const completedList = document.getElementById('completedList'); pendingList.innerHTML = ''; completedList.innerHTML = ''; tasks.forEach((task, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; checkbox.onchange = () => { tasks[index].completed = !tasks[index].completed; if(tasks[index].completed) recordActivity(); saveDataToCloud(); }; const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>`; const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
         
         window.addRecurringTask = () => { const input = document.getElementById('recTaskInput'), startInput = document.getElementById('recTaskStart'), intervalInput = document.getElementById('recTaskInterval'), freqInput = document.getElementById('recTaskFreq'); if (input.value.trim() === '' || startInput.value === '') return alert('Escribe.'); recurringTasks.push({ text: input.value, nextTrigger: startInput.value, interval: parseInt(intervalInput.value), freq: freqInput.value, notified: false }); input.value = ''; startInput.value = ''; intervalInput.value = '1'; recordActivity(); saveDataToCloud(); };
         window.rescheduleRecurring = (task) => { let date = new Date(task.nextTrigger); let now = new Date(); if (date < now) date = now; if(task.freq === 'minutos') date.setMinutes(date.getMinutes() + task.interval); if(task.freq === 'horas') date.setHours(date.getHours() + task.interval); if(task.freq === 'dias') date.setDate(date.getDate() + task.interval); if(task.freq === 'meses') date.setMonth(date.getMonth() + task.interval); const tzOffset = date.getTimezoneOffset() * 60000; task.nextTrigger = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16); task.notified = false; };
         function renderRecurringTasks() { const list = document.getElementById('recurringList'); list.innerHTML = ''; recurringTasks.forEach((rec, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; checkbox.onchange = () => { window.rescheduleRecurring(recurringTasks[index]); recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rec.nextTrigger); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge rec-badge`; badge.innerText = `Cada ${rec.interval} ${rec.freq}`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { recurringTasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); }); }
         
         window.addReminder = () => { const input = document.getElementById('remInput'), datetimeInput = document.getElementById('remDatetime'), snoozeInput = document.getElementById('snoozeInput'); if (input.value.trim() === '' || datetimeInput.value === '') return alert('Escribe.'); reminders.push({ text: input.value, datetime: datetimeInput.value, snoozeMins: parseInt(snoozeInput.value), completed: false, notified: false }); input.value = ''; datetimeInput.value = ''; recordActivity(); saveDataToCloud(); };
-        function renderReminders() { const pendingList = document.getElementById('pendingReminders'); const completedList = document.getElementById('completedReminders'); pendingList.innerHTML = ''; completedList.innerHTML = ''; reminders.forEach((rem, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = rem.completed; checkbox.onchange = () => { reminders[index].completed = !reminders[index].completed; if(!reminders[index].completed) reminders[index].notified = false; else recordActivity(); saveDataToCloud(); renderReminders(); }; const dateObj = new Date(rem.datetime); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rem.text}</strong><br><span class="task-date">⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge snooze-badge`; badge.innerText = `Snooze: ${rem.snoozeMins}m`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { reminders.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); rem.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
+        function renderReminders() { const pendingList = document.getElementById('pendingReminders'); const completedList = document.getElementById('completedReminders'); pendingList.innerHTML = ''; completedList.innerHTML = ''; reminders.forEach((rem, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = rem.completed; checkbox.onchange = () => { reminders[index].completed = !reminders[index].completed; if(!reminders[index].completed) reminders[index].notified = false; else recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rem.datetime); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rem.text}</strong><br><span class="task-date">⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge snooze-badge`; badge.innerText = `Snooze: ${rem.snoozeMins}m`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { reminders.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); rem.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
         
         // CHECKLISTS
         window.addTempChecklistItem = () => { const input = document.getElementById('clNewItem'); if(input.value.trim() === '') return; window.tempChecklistItems.push({ text: input.value, checked: false, checkedAt: null, editedAt: null }); input.value = ''; renderTempChecklist(); }; 
@@ -1059,7 +1004,6 @@
             window.tempChecklistItems = []; 
             renderTempChecklist(); 
             recordActivity(); 
-            window.awardXP(10); // Reward for making a project
             saveDataToCloud(); 
             renderChecklists(); 
         }; 
@@ -1086,15 +1030,7 @@
                     const itemDiv = document.createElement('div'); itemDiv.className = 'checklist-item'; 
                     const topRow = document.createElement('div'); topRow.className = 'checklist-item-row'; 
                     const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = item.checked; 
-                    cb.onchange = (e) => { 
-                        item.checked = cb.checked; 
-                        if(item.checked) { 
-                            item.checkedAt = new Date().toLocaleString('es-VE'); 
-                            recordActivity(); 
-                            window.awardXP(5, e); // Reward per check
-                        } else item.checkedAt = null; 
-                        saveDataToCloud(); renderChecklists(); 
-                    }; 
+                    cb.onchange = () => { item.checked = cb.checked; if(item.checked) { item.checkedAt = new Date().toLocaleString('es-VE'); recordActivity(); } else item.checkedAt = null; saveDataToCloud(); renderChecklists(); }; 
                     const textDiv = document.createElement('div'); textDiv.className = 'markdown-content'; textDiv.style.flexGrow = '1'; textDiv.innerHTML = window.parseMarkdown(item.text); 
                     topRow.append(cb, textDiv); itemDiv.appendChild(topRow); body.appendChild(itemDiv); 
                 }); 
@@ -1104,12 +1040,14 @@
             }); 
         }
 
-        // TABLAS MD Y NOTAS
+        // TABLAS MD
         window.isEditingPreview = false; window.htmlTableToMd = (tableEl) => { let md = "\n"; const rows = tableEl.querySelectorAll('tr'); rows.forEach((row, rowIndex) => { let rowMd = "|"; const cells = row.querySelectorAll('th, td'); cells.forEach(cell => { let text = cell.innerText.replace(/\n/g, ' ').trim(); if(text === '') text = ' '; rowMd += ` ${text} |`; }); md += rowMd + "\n"; if (rowIndex === 0) { let sepMd = "|"; cells.forEach(() => { sepMd += "---|"; }); md += sepMd + "\n"; } }); return md + "\n"; }; window.syncTableToMd = (tableIndex, tableEl, textareaEl, forceRender = false) => { const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); if(!tableTokens[tableIndex]) return; const oldMd = tableTokens[tableIndex].raw; const newMd = window.htmlTableToMd(tableEl); textareaEl.value = textareaEl.value.replace(oldMd, newMd); if (forceRender) { window.isEditingPreview = false; textareaEl.dispatchEvent(new Event('input')); } }; window.modifyTable = (tableIndex, action, textareaEl, previewEl) => { const tables = previewEl.querySelectorAll('table'); const table = tables[tableIndex]; if(!table) return; const tbody = table.querySelector('tbody') || table; const thead = table.querySelector('thead'); if(action === 'addCol') { table.querySelectorAll('tr').forEach((row, i) => { const cell = document.createElement(row.parentNode === thead ? 'th' : 'td'); cell.innerText = 'Dato'; row.appendChild(cell); }); } else if(action === 'remCol') { table.querySelectorAll('tr').forEach(row => { if(row.children.length > 1) row.removeChild(row.lastElementChild); }); } else if(action === 'addRow') { const row = document.createElement('tr'); const colCount = table.querySelector('tr').children.length; for(let i=0; i<colCount; i++) { const cell = document.createElement('td'); cell.innerText = 'Dato'; row.appendChild(cell); } tbody.appendChild(row); } else if(action === 'remRow') { if(tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild); } window.syncTableToMd(tableIndex, table, textareaEl, true); }; window.renderLivePreview = (textareaEl, previewEl) => { if (window.isEditingPreview) return; if(textareaEl.value.trim() !== '') { previewEl.style.display = 'block'; previewEl.innerHTML = window.parseMarkdown(textareaEl.value); } else { previewEl.style.display = 'none'; return; } const tables = previewEl.querySelectorAll('table'); const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); tables.forEach((table, i) => { if(!tableTokens[i]) return; const wrapper = document.createElement('div'); wrapper.className = 'table-editor-wrapper'; table.parentNode.insertBefore(wrapper, table); wrapper.appendChild(table); const controls = document.createElement('div'); controls.className = 'table-controls'; const addColBtn = document.createElement('button'); addColBtn.className = 't-btn'; addColBtn.innerText = '+ Columna'; addColBtn.onclick = () => window.modifyTable(i, 'addCol', textareaEl, previewEl); const remColBtn = document.createElement('button'); remColBtn.className = 't-btn t-btn-del'; remColBtn.innerText = '- Columna'; remColBtn.onclick = () => window.modifyTable(i, 'remCol', textareaEl, previewEl); const addRowBtn = document.createElement('button'); addRowBtn.className = 't-btn'; addRowBtn.innerText = '+ Fila'; addRowBtn.onclick = () => window.modifyTable(i, 'addRow', textareaEl, previewEl); const remRowBtn = document.createElement('button'); remRowBtn.className = 't-btn t-btn-del'; remRowBtn.innerText = '- Fila'; remRowBtn.onclick = () => window.modifyTable(i, 'remRow', textareaEl, previewEl); controls.append(addColBtn, remColBtn, addRowBtn, remRowBtn); wrapper.insertBefore(controls, table); table.querySelectorAll('th, td').forEach(cell => { cell.setAttribute('contenteditable', 'true'); cell.addEventListener('input', () => { window.isEditingPreview = true; window.syncTableToMd(i, table, textareaEl, false); window.isEditingPreview = false; }); }); }); };
+        
         const noteContentInput = document.getElementById('noteContent'); const notePreviewDiv = document.getElementById('newNotePreview'); noteContentInput.addEventListener('input', () => window.renderLivePreview(noteContentInput, notePreviewDiv));
         const mdToolbar = document.getElementById('mdToolbar'); document.addEventListener('focusin', (e) => { if (e.target.tagName === 'TEXTAREA') { activeTextarea = e.target; const rect = e.target.getBoundingClientRect(); mdToolbar.style.display = 'flex'; mdToolbar.style.top = (rect.top + window.scrollY - 45) + 'px'; mdToolbar.style.left = rect.left + 'px'; } }); document.addEventListener('focusout', (e) => { if (e.target.tagName === 'TEXTAREA') { setTimeout(()=> mdToolbar.style.display = 'none', 150); } }); window.applyMd = (e, prefix, suffix) => { e.preventDefault(); if (!activeTextarea) return; const start = activeTextarea.selectionStart; const end = activeTextarea.selectionEnd; const text = activeTextarea.value; const selected = text.substring(start, end); activeTextarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end); activeTextarea.focus(); activeTextarea.selectionStart = start + prefix.length; activeTextarea.selectionEnd = end + prefix.length; activeTextarea.dispatchEvent(new Event('input')); }; window.applyMdTable = (e) => { e.preventDefault(); if (!activeTextarea) return; const tableTemplate = `\n| Encabezado 1 | Encabezado 2 | Encabezado 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n| Dato 4 | Dato 5 | Dato 6 |\n\n`; const start = activeTextarea.selectionStart; const text = activeTextarea.value; activeTextarea.value = text.substring(0, start) + tableTemplate + text.substring(start); activeTextarea.focus(); activeTextarea.selectionStart = start + tableTemplate.length; activeTextarea.selectionEnd = start + tableTemplate.length; activeTextarea.dispatchEvent(new Event('input')); }; 
 
-        window.addNote = (e) => { 
+        // NOTAS
+        window.addNote = () => { 
             const title = document.getElementById('noteTitle').value;
             const content = document.getElementById('noteContent').value; 
             if (title.trim() === '' || content.trim() === '') return alert("Llenar campos."); 
@@ -1118,18 +1056,18 @@
             document.getElementById('noteTitle').value = ''; 
             document.getElementById('noteContent').value = ''; 
             document.getElementById('newNotePreview').style.display = 'none'; 
-            
-            window.awardXP(20, e || window.event); // GAMIFICATION REWARD
-            
             recordActivity(); saveDataToCloud(); renderNotes();
         };
 
         function renderNotes() { 
-            const list = document.getElementById('notesList'); list.innerHTML = ''; 
+            const list = document.getElementById('notesList'); 
+            list.innerHTML = ''; 
             [...notes].reverse().forEach((note, revIndex) => { 
                 const index = notes.length - 1 - revIndex; 
-                const li = document.createElement('li'); li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
-                const header = document.createElement('div'); header.className = 'note-header'; 
+                const li = document.createElement('li'); 
+                li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
+                const header = document.createElement('div'); 
+                header.className = 'note-header'; 
                 let editMsg = note.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Editada: ${note.editedAt}</span>` : ''; 
                 header.innerHTML = `<div style="flex-grow: 1;"><strong>${note.title}</strong><br><span class="task-date">📅 ${note.date}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">▼</span>`; 
                 const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
@@ -1138,8 +1076,12 @@
                 deleteBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar nota?")) { notes.splice(index, 1); saveDataToCloud(); renderNotes(); } }; 
                 btnBox.append(editBtn, deleteBtn); header.appendChild(btnBox); 
                 
-                const body = document.createElement('div'); body.className = 'note-body markdown-content'; body.innerHTML = window.parseMarkdown(note.content); 
-                const editArea = document.createElement('div'); editArea.style.display = 'none'; editArea.style.width = '100%'; editArea.style.marginTop = '15px'; 
+                const body = document.createElement('div'); 
+                body.className = 'note-body markdown-content'; 
+                body.innerHTML = window.parseMarkdown(note.content); 
+                
+                const editArea = document.createElement('div'); 
+                editArea.style.display = 'none'; editArea.style.width = '100%'; editArea.style.marginTop = '15px'; 
                 const editTitle = document.createElement('input'); editTitle.type = 'text'; editTitle.value = note.title; editTitle.style.width = '100%'; editTitle.style.marginBottom = '10px'; 
                 const editText = document.createElement('textarea'); editText.value = note.content; editText.style.width = '100%'; editText.style.minHeight = '150px'; 
                 
@@ -1153,20 +1095,96 @@
                 }; 
                 editArea.append(editTitle, editText, editPreview, saveEditBtn); 
                 
-                header.onclick = (e) => { if(e.target === editBtn) return; const isHidden = body.style.display === 'none' || body.style.display === ''; body.style.display = isHidden ? 'block' : 'none'; editArea.style.display = 'none'; header.querySelector('span').innerText = isHidden ? '▲' : '▼'; }; 
-                editBtn.onclick = (e) => { e.stopPropagation(); body.style.display = 'none'; editArea.style.display = 'block'; header.querySelector('span').innerText = '▲'; window.renderLivePreview(editText, editPreview); }; 
+                header.onclick = (e) => { 
+                    if(e.target === editBtn) return; 
+                    const isHidden = body.style.display === 'none' || body.style.display === ''; 
+                    body.style.display = isHidden ? 'block' : 'none'; 
+                    editArea.style.display = 'none'; 
+                    header.querySelector('span').innerText = isHidden ? '▲' : '▼'; 
+                }; 
+                editBtn.onclick = (e) => { 
+                    e.stopPropagation(); body.style.display = 'none'; editArea.style.display = 'block'; header.querySelector('span').innerText = '▲'; 
+                    window.renderLivePreview(editText, editPreview); 
+                }; 
                 li.appendChild(header); li.appendChild(body); li.appendChild(editArea); list.appendChild(li); 
             }); 
         }
 
-        window.searchAndOpenNote = (title) => { switchTab('notas'); const noteElements = document.querySelectorAll('#notesList li'); noteElements.forEach(li => { if(li.innerHTML.includes(`<strong>${title}</strong>`)) { li.scrollIntoView({ behavior: 'smooth', block: 'center' }); li.style.border = "2px solid var(--secondary)"; setTimeout(() => li.style.border = "none", 2000); } }); };
-        window.toggleNotesGraph = () => { const container = document.getElementById('networkGraph'); if(container.style.display === 'block') { container.style.display = 'none'; return; } container.style.display = 'block'; let nodesArray = []; let edgesArray = []; notes.forEach((n, idx) => { nodesArray.push({ id: n.title, label: n.title, shape: 'dot', size: 15, color: '#bb86fc', font: {color: 'white'} }); const matches = n.content.match(/\[\[(.*?)\]\]/g); if(matches) { matches.forEach(match => { const target = match.replace('[[', '').replace(']]', ''); edgesArray.push({ from: n.title, to: target, color: '#03dac6', arrows: 'to' }); }); } }); const data = { nodes: new vis.DataSet(nodesArray), edges: new vis.DataSet(edgesArray) }; const options = { physics: { barnesHut: { gravitationalConstant: -2000 } } }; new vis.Network(container, data, options); };
+        window.searchAndOpenNote = (title) => { 
+            switchTab('notas'); 
+            const noteElements = document.querySelectorAll('#notesList li'); 
+            noteElements.forEach(li => { 
+                if(li.innerHTML.includes(`<strong>${title}</strong>`)) { 
+                    li.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                    li.style.border = "2px solid var(--secondary)"; 
+                    setTimeout(() => li.style.border = "none", 2000); 
+                } 
+            }); 
+        };
 
-        // VAULT Y EXPORT
-        window.unlockVault = () => { const input = document.getElementById('pinInput').value; if (input === masterPin) { document.getElementById('vaultOverlay').classList.add('vault-hidden'); document.getElementById('vaultContent').classList.remove('vault-hidden'); if(navigator.vibrate) navigator.vibrate([50, 50, 50]); renderExpenses(); window.calculateSafeToSpend(); } else { alert("PIN Incorrecto."); document.getElementById('pinInput').value = ''; if(navigator.vibrate) navigator.vibrate(200); } };
-        window.changePin = () => { const newPin = prompt("🔑 Ingresa tu nuevo PIN de seguridad (solo números preferiblemente):"); if(newPin && newPin.trim().length > 0) { masterPin = newPin.trim(); saveDataToCloud(); alert("✅ PIN actualizado exitosamente."); } };
+        window.toggleNotesGraph = () => { 
+            const container = document.getElementById('networkGraph'); 
+            if(container.style.display === 'block') { container.style.display = 'none'; return; } 
+            container.style.display = 'block'; 
+            let nodesArray = []; let edgesArray = []; 
+            notes.forEach((n, idx) => { 
+                nodesArray.push({ id: n.title, label: n.title, shape: 'dot', size: 15, color: '#bb86fc', font: {color: 'white'} }); 
+                const matches = n.content.match(/\[\[(.*?)\]\]/g); 
+                if(matches) { 
+                    matches.forEach(match => { 
+                        const target = match.replace('[[', '').replace(']]', ''); 
+                        edgesArray.push({ from: n.title, to: target, color: '#03dac6', arrows: 'to' }); 
+                    }); 
+                } 
+            }); 
+            const data = { nodes: new vis.DataSet(nodesArray), edges: new vis.DataSet(edgesArray) }; 
+            const options = { physics: { barnesHut: { gravitationalConstant: -2000 } } }; 
+            new vis.Network(container, data, options); 
+        };
+
+        // VAULT
+        window.unlockVault = () => { 
+            const input = document.getElementById('pinInput').value; 
+            if (input === masterPin) { 
+                document.getElementById('vaultOverlay').classList.add('vault-hidden'); 
+                document.getElementById('vaultContent').classList.remove('vault-hidden'); 
+                if(navigator.vibrate) navigator.vibrate([50, 50, 50]); renderExpenses(); window.calculateSafeToSpend(); 
+            } else { 
+                alert("PIN Incorrecto."); document.getElementById('pinInput').value = ''; 
+                if(navigator.vibrate) navigator.vibrate(200); 
+            } 
+        };
+
+        window.changePin = () => {
+            const newPin = prompt("🔑 Ingresa tu nuevo PIN de seguridad (solo números preferiblemente):");
+            if(newPin && newPin.trim().length > 0) {
+                masterPin = newPin.trim();
+                saveDataToCloud();
+                alert("✅ PIN actualizado exitosamente.");
+            }
+        };
+
         Sortable.create(document.getElementById('tabContainer'), { animation: 150, ghostClass: 'sortable-ghost', onEnd: function () { tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); saveDataToCloud(); } }); 
-        window.exportToCSV = () => { if(expenses.length === 0) return alert("El historial está vacío."); let csvContent = "Fecha,Descripcion,Metodo,Monto (Original),Equiv USD (BCV),Equiv USDT (Binance),Equiv EUR\n"; const sorted = [...expenses].sort((a,b) => parseVeDate(a.date) - parseVeDate(b.date)); sorted.forEach(e => { const eqUsd = e.eqUsd ? e.eqUsd.toFixed(2) : "0.00"; const eqUsdt = e.eqUsdt ? e.eqUsdt.toFixed(2) : "0.00"; const eqEur = e.eqEur ? e.eqEur.toFixed(2) : "0.00"; csvContent += [`"${e.date}"`, `"${e.desc}"`, `"${e.account}"`, `"${e.amount}"`, `"${eqUsd}"`, `"${eqUsdt}"`, `"${eqEur}"`].join(',') + "\n"; }); const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.setAttribute("href", URL.createObjectURL(blob)); link.setAttribute("download", `Reporte_Finanzas_MetaOS.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); };
+
+        window.exportToCSV = () => { 
+            if(expenses.length === 0) return alert("Vacio."); 
+            let csvContent = "Fecha,Descripcion,Metodo,Monto (Original),Equiv USD (BCV),Equiv USDT (Binance),Equiv EUR\n"; 
+            const sorted = [...expenses].sort((a,b) => parseVeDate(a.date) - parseVeDate(b.date)); 
+            sorted.forEach(e => { 
+                const eqUsd = e.eqUsd ? e.eqUsd.toFixed(2) : "0.00";
+                const eqUsdt = e.eqUsdt ? e.eqUsdt.toFixed(2) : "0.00";
+                const eqEur = e.eqEur ? e.eqEur.toFixed(2) : "0.00";
+                csvContent += [`"${e.date}"`, `"${e.desc}"`, `"${e.account}"`, `"${e.amount}"`, `"${eqUsd}"`, `"${eqUsdt}"`, `"${eqEur}"`].join(',') + "\n"; 
+            }); 
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); 
+            const link = document.createElement("a"); 
+            link.setAttribute("href", URL.createObjectURL(blob)); 
+            link.setAttribute("download", `Reporte_Finanzas_MetaOS.csv`); 
+            link.style.visibility = 'hidden'; 
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link); 
+        };
     </script>
 </body>
 </html>
