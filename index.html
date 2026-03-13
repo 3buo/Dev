@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta-Cognitive OS v17.1 (Stable & Clean)</title>
+    <title>Meta-Cognitive OS v17.2 (Stable Pro)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121212">
     
@@ -95,7 +95,7 @@
         .filter-bar input[type="date"], .filter-bar select { padding: 5px; font-size: 0.9em; border: 1px solid #444; background: #333; color: white; border-radius: 4px; } 
         #bsEquiv { font-size: 0.85em; color: var(--secondary); opacity: 0.9; margin-bottom: 5px; line-height: 1.4; }
         
-        /* TABLAS LIVE PREVIEW */
+        /* LIVE PREVIEW */
         .live-preview-box { display:none; padding:15px; border:1px dashed var(--secondary); border-radius:4px; margin-bottom:10px; background:#1a1a1a; width: 100%; box-sizing: border-box; } 
         .markdown-content table { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 5px; background: #222; font-size: 0.9em; overflow-x: auto; display: block; white-space: nowrap; } 
         .markdown-content th, .markdown-content td { border: 1px solid #444; padding: 10px; text-align: left; } 
@@ -110,7 +110,7 @@
         .markdown-content td[contenteditable=true], .markdown-content th[contenteditable=true] { outline: none; transition: background 0.2s; cursor: text; min-width: 50px; } 
         .markdown-content td[contenteditable=true]:focus, .markdown-content th[contenteditable=true]:focus { background: rgba(3, 218, 198, 0.15); box-shadow: inset 0 0 0 2px var(--glow-color); }
         
-        /* BÓVEDA Y MICRÓFONO */
+        /* VAULT & MIC */
         .vault-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 18, 18, 0.95); z-index: 50; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 8px; backdrop-filter: blur(5px); } 
         .vault-hidden { display: none !important; } 
         #fab-mic { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--warning); color: white; font-size: 24px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(207, 102, 121, 0.5); cursor: pointer; z-index: 9000; transition: transform 0.2s; } 
@@ -118,7 +118,7 @@
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); } } 
         .chart-container { width: 100%; max-width: 400px; margin: 0 auto 20px auto; background: #222; padding: 15px; border-radius: 8px; }
 
-        /* A. COMMAND PALETTE */
+        /* V17 FEATURES */
         #cmdOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; padding-top: 10vh; }
         .cmd-box { background: #1e1e1e; width: 90%; max-width: 600px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; }
         .cmd-input { width: 100%; background: transparent; border: none; padding: 20px; font-size: 1.2em; color: white; outline: none; border-bottom: 1px solid #333; }
@@ -126,7 +126,6 @@
         .cmd-results li { padding: 15px 20px; border-bottom: 1px solid #2a2a2a; cursor: pointer; color: #aaa; transition: all 0.2s;}
         .cmd-results li:hover, .cmd-results li.active-cmd { background: var(--primary); color: black; font-weight: bold; }
 
-        /* B. SMART FINANCE */
         .safe-to-spend-box { background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%); padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #4CAF50; margin-bottom: 20px; position: relative; overflow: hidden;}
         .safe-to-spend-box::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(76, 175, 80, 0.2), transparent); animation: sweep 3s infinite; }
         @keyframes sweep { 100% { left: 200%; } }
@@ -134,13 +133,11 @@
         .sts-amount { font-size: 2.5em; font-weight: bold; color: #4CAF50; margin: 10px 0; }
         .sts-subtext { font-size: 0.8em; color: var(--warning); }
 
-        /* C. GITHUB HEATMAP */
         .heatmap-container { display: flex; flex-direction: column; align-items: center; background: #222; padding: 15px; border-radius: 8px; margin-top: 15px;}
         .heatmap-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-top: 10px; }
         .heat-cell { width: 15px; height: 15px; background: #333; border-radius: 2px; }
         .heat-lvl-1 { background: #0e4429; } .heat-lvl-2 { background: #006d32; } .heat-lvl-3 { background: #26a641; } .heat-lvl-4 { background: #39d353; }
 
-        /* D. ZETTELKASTEN */
         .zk-link { color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline; background: rgba(187, 134, 252, 0.1); padding: 2px 5px; border-radius: 4px;}
         .zk-link:hover { background: rgba(187, 134, 252, 0.3); }
         #networkGraph { width: 100%; height: 300px; background: #1a1a1a; border: 1px dashed #444; border-radius: 8px; margin-bottom: 15px; display: none;}
@@ -157,7 +154,7 @@
 
     <div id="authScreen">
         <div class="auth-container">
-            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.1</span></h1>
+            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.2</span></h1>
             <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia segura</p>
             <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required>
             <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required>
@@ -284,13 +281,17 @@
                     <h1 style="color: var(--warning);">🔒 Bóveda Segura</h1>
                     <p>Ingresa tu PIN Maestro para desencriptar</p>
                     <div class="input-group" style="justify-content: center;">
-                        <input type="password" id="pinInput" placeholder="****" style="text-align: center; width: 100px; font-size: 1.5em;" maxlength="4">
+                        <input type="password" id="pinInput" placeholder="****" style="text-align: center; width: 100px; font-size: 1.5em;" maxlength="10" autocomplete="new-password">
                         <button onclick="unlockVault()">Desbloquear</button>
                     </div>
                 </div>
                 
                 <div id="vaultContent" class="vault-hidden">
                     
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                        <button type="button" onclick="changePin()" style="background: var(--surface); color: #aaa; border: 1px solid #444; font-size: 0.8em; padding: 5px 10px; border-radius: 4px;">🔑 Cambiar PIN Maestro</button>
+                    </div>
+
                     <div class="safe-to-spend-box">
                         <div class="sts-title">Gasto Seguro Disponible (Total)</div>
                         <div class="sts-amount" id="stsValue">Calculando...</div>
@@ -304,7 +305,7 @@
                     </div>
 
                     <div class="container" style="text-align: center;">
-                        <h2>Distribución de Gastos (Mes Actual) 📊</h2>
+                        <h2>Distribución de Gastos (Filtrados) 📊</h2>
                         <div class="chart-container"><canvas id="financeChart"></canvas></div>
                     </div>
                     
@@ -334,12 +335,19 @@
                     </div>
                     
                     <div class="container">
-                        <h2>Historial <button onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black;">📥 Exportar</button></h2>
+                        <h2>Historial <button type="button" onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black;">📥 Exportar</button></h2>
                         <div class="filter-bar">
-                            <label>📅 <input type="date" id="filterDate" onchange="window.applyFilters()"></label>
-                            <label>🗓️><input type="date" id="filterStartDate" onchange="window.applyFilters()"> <span>a</span> <input type="date" id="filterEndDate" onchange="window.applyFilters()"></label>
-                            <label>💵<select id="filterAccount" onchange="window.applyFilters()"><option value="all">Todas</option><option value="bs">Solo Bs</option><option value="binance">Solo Binance</option><option value="facebank">Solo Facebank</option></select></label>
-                            <button onclick="window.clearFilters()" style="padding: 5px 10px; font-size: 0.9em; background: #cf6679; margin-left: auto;">✖</button>
+                            <label>📅 Día exacto: <input type="date" id="filterDate" onchange="window.applyFilters()"></label>
+                            <label>🗓️ Rango: <input type="date" id="filterStartDate" onchange="window.applyFilters()"> <span>a</span> <input type="date" id="filterEndDate" onchange="window.applyFilters()"></label>
+                            <label>💵 
+                                <select id="filterAccount" onchange="window.applyFilters()">
+                                    <option value="all">Todas las cuentas</option>
+                                    <option value="bs">Solo Bolívares</option>
+                                    <option value="binance">Solo Binance</option>
+                                    <option value="facebank">Solo Facebank</option>
+                                </select>
+                            </label>
+                            <button type="button" onclick="window.clearFilters()" style="padding: 5px 10px; font-size: 0.9em; background: #cf6679; margin-left: auto;">✖ Limpiar</button>
                         </div>
                         <ul id="expenseList"></ul>
                     </div>
@@ -355,7 +363,7 @@
                     <input type="text" id="noteTitle" placeholder="Título de la nota (Sirve como etiqueta Zettelkasten)">
                     <textarea id="noteContent" placeholder="Escribe tu información... usa [[Nombre de otra nota]] para conectar ideas."></textarea>
                     <div id="newNotePreview" class="markdown-content live-preview-box"></div>
-                    <button onclick="addNote()" style="align-self: flex-start;">Guardar Nota</button>
+                    <button type="button" onclick="addNote()" style="align-self: flex-start;">Guardar Nota</button>
                 </div>
             </div>
             <div class="container"><h2>Mi Bóveda de Notas</h2><ul id="notesList"></ul></div>
@@ -379,7 +387,7 @@
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // TUS CREDENCIALES EXACTAS
+        // CREDENCIALES
         const firebaseConfig = { 
             apiKey: "AIzaSyBa-d5nGmHqiJV0Es9LgT1S3gW4iFRBpyw", 
             authDomain: "activities-app-web.firebaseapp.com", 
@@ -393,16 +401,18 @@
         const db = getFirestore(app); 
         const auth = getAuth(app); 
 
-        // === ZETTELKASTEN FIX (ESTABLE) ===
+        // ZETTELKASTEN PARSER
         window.parseMarkdown = (text) => {
             if (!text) return "";
-            // Intercepta los corchetes antes de parsear a HTML
             let processed = text.replace(/\[\[(.*?)\]\]/g, `<span class="zk-link" onclick="window.searchAndOpenNote('$1')">#$1</span>`);
             return marked.parse(processed);
         };
 
         let currentUid = null; 
         let unsubSnapshot = null;
+        
+        // FIX: Se agrega masterPin a las variables globales
+        let masterPin = "1234";
         let tasks = [], reminders = [], balances = { facebank: 0, binance: 0, bs: 0 }, expenses = [], notes = [], recurringTasks = [], checklists = [], tabOrder = [], activityLog = {};
         window.tempChecklistItems = []; window.rateBcvVal = 0; window.rateBinanceVal = 0; window.rateEuroVal = 0; window.activeAlarm = null; window.alarmAudioInterval = null; window.openChecklists = new Set(); let activeTextarea = null; 
 
@@ -433,7 +443,9 @@
             const e = document.getElementById('authEmail').value;
             const p = document.getElementById('authPassword').value; 
             if(p.length < 6) return alert("Min 6 chars"); 
-            createUserWithEmailAndPassword(auth, e, p).then(() => alert("Cuenta creada.")).catch(err => alert("Error: " + err.message)); 
+            createUserWithEmailAndPassword(auth, e, p).then(() => {
+                alert("Cuenta creada. Tu PIN Maestro por defecto para la bóveda es 1234. Cámbialo al ingresar.");
+            }).catch(err => alert("Error: " + err.message)); 
         };
 
         window.appResetPassword = () => { 
@@ -446,10 +458,11 @@
         };
 
         function clearLocalData() { 
-            tasks = []; reminders = []; balances = {facebank:0, binance:0, bs:0}; expenses = []; notes = []; recurringTasks = []; checklists = []; tabOrder = []; activityLog = {}; 
+            tasks = []; reminders = []; balances = {facebank:0, binance:0, bs:0}; expenses = []; notes = []; recurringTasks = []; checklists = []; tabOrder = []; activityLog = {}; masterPin = "1234";
             renderTasks(); renderRecurringTasks(); renderReminders(); renderBalances(); renderExpenses(); renderNotes(); renderChecklists(); 
             document.getElementById('vaultOverlay').classList.remove('vault-hidden'); 
             document.getElementById('vaultContent').classList.add('vault-hidden'); 
+            document.getElementById('pinInput').value = '';
         }
 
         // === CLOUD DATA INIT ===
@@ -458,19 +471,20 @@
                 const docRef = doc(db, "userData", uid); 
                 const docSnap = await getDoc(docRef); 
                 if (!docSnap.exists()) { 
-                    await setDoc(docRef, { tasks: [], reminders: [], balances: {facebank:0,binance:0,bs:0}, expenses: [], notes: [], recurringTasks: [], checklists: [], tabOrder: [], activityLog: {} }); 
+                    await setDoc(docRef, { tasks: [], reminders: [], balances: {facebank:0,binance:0,bs:0}, expenses: [], notes: [], recurringTasks: [], checklists: [], tabOrder: [], activityLog: {}, masterPin: "1234" }); 
                 } 
                 unsubSnapshot = onSnapshot(docRef, (doc) => { 
                     if (doc.exists()) { 
                         const data = doc.data(); 
-                        tasks = data.tasks || []; reminders = data.reminders || []; balances = data.balances || {facebank:0,binance:0,bs:0}; expenses = data.expenses || []; notes = data.notes || []; recurringTasks = data.recurringTasks || []; checklists = data.checklists || []; tabOrder = data.tabOrder || []; activityLog = data.activityLog || {};
+                        tasks = data.tasks || []; reminders = data.reminders || []; balances = data.balances || {facebank:0,binance:0,bs:0}; expenses = data.expenses || []; notes = data.notes || []; recurringTasks = data.recurringTasks || []; checklists = data.checklists || []; tabOrder = data.tabOrder || []; activityLog = data.activityLog || {}; 
+                        masterPin = data.masterPin || "1234"; // Cargar el PIN personalizado
                         
                         if (tabOrder.length > 0) { 
                             const container = document.getElementById('tabContainer'); 
                             tabOrder.forEach(id => { const btn = document.getElementById(id); if (btn) container.appendChild(btn); }); 
                         } 
                         
-                        renderTasks(); renderRecurringTasks(); renderReminders(); renderBalances(); renderExpenses(); renderNotes(); renderChecklists(); renderHeatmap(); window.renderChart(); window.calculateSafeToSpend();
+                        renderTasks(); renderRecurringTasks(); renderReminders(); renderBalances(); renderExpenses(); renderNotes(); renderChecklists(); renderHeatmap(); window.calculateSafeToSpend();
                         
                         document.getElementById('syncStatus').innerText = "☁️ Sincronizado"; 
                         document.getElementById('syncStatus').className = "cloud-status cloud-syncing"; 
@@ -486,7 +500,7 @@
         async function saveDataToCloud() { 
             if(!currentUid) return; 
             document.getElementById('syncStatus').innerText = "Subiendo..."; 
-            await updateDoc(doc(db, "userData", currentUid), { tasks, reminders, balances, expenses, notes, recurringTasks, checklists, tabOrder, activityLog }); 
+            await updateDoc(doc(db, "userData", currentUid), { tasks, reminders, balances, expenses, notes, recurringTasks, checklists, tabOrder, activityLog, masterPin }); 
         }
 
         // === CORE HELPER FUNCTIONS ===
@@ -495,7 +509,7 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); 
             document.getElementById('tab-' + tabId).classList.add('active'); 
             document.getElementById(tabId).classList.add('active'); 
-            if(tabId === 'finanzas') { window.renderChart(); window.calculateSafeToSpend(); } 
+            if(tabId === 'finanzas') { renderExpenses(); window.calculateSafeToSpend(); } 
         };
 
         function parseVeDate(dateStr) { 
@@ -503,6 +517,14 @@
             const parts = dateStr.split(',')[0].split('/'); 
             if(parts.length === 3) { return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T00:00:00`); } 
             return new Date(dateStr); 
+        }
+
+        // FIX: Formateador estricto para solucionar el error de zona horaria en los filtros
+        function getLocalYMD(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
         }
 
         // === GAMIFICATION (HEATMAP) ===
@@ -534,27 +556,92 @@
         }
 
         // === FINANZAS & CHARTS ===
-        window.renderChart = () => { 
+        
+        // FIX: La función Apply Filters ahora ejecuta renderExpenses limpiamente.
+        window.applyFilters = () => { renderExpenses(); }; 
+        
+        // FIX: Botón de limpiar ahora funciona y resetea todos los campos.
+        window.clearFilters = () => { 
+            document.getElementById('filterDate').value = ''; 
+            document.getElementById('filterStartDate').value = ''; 
+            document.getElementById('filterEndDate').value = ''; 
+            document.getElementById('filterAccount').value = 'all'; 
+            renderExpenses(); 
+        };
+
+        function renderExpenses() { 
+            const list = document.getElementById('expenseList'); 
+            list.innerHTML = ''; 
+            
+            const fDate = document.getElementById('filterDate').value; 
+            const fStart = document.getElementById('filterStartDate').value; 
+            const fEnd = document.getElementById('filterEndDate').value; 
+            const fAcc = document.getElementById('filterAccount').value; 
+            
+            let filtered = expenses.map((exp, originalIndex) => ({...exp, originalIndex})); 
+            
+            // Filtro por cuenta
+            if(fAcc !== 'all') filtered = filtered.filter(e => e.account === fAcc); 
+            
+            // Filtros por fecha (Usando getLocalYMD para evadir bugs de Timezone)
+            if(fDate) { 
+                filtered = filtered.filter(e => getLocalYMD(parseVeDate(e.date)) === fDate); 
+            } 
+            else if (fStart && fEnd) { 
+                filtered = filtered.filter(e => { 
+                    const dYMD = getLocalYMD(parseVeDate(e.date)); 
+                    return dYMD >= fStart && dYMD <= fEnd; 
+                }); 
+            } 
+            
+            [...filtered].reverse().forEach((exp) => { 
+                const index = exp.originalIndex; 
+                const li = document.createElement('li'); 
+                li.className = `expense-item ex-${exp.account}`; 
+                let symbol = exp.account === 'facebank' ? '$' : exp.account === 'binance' ? '₮' : 'Bs.'; 
+                let equivHtml = ''; 
+                if (exp.account === 'bs' && (exp.eqUsd || exp.eqUsdt || exp.eqEur)) { 
+                    equivHtml = `<br><span style="font-size: 0.75em; color: var(--secondary); opacity: 0.9;">≈ $${(exp.eqUsd||0).toFixed(2)} BCV | ₮${(exp.eqUsdt||0).toFixed(2)} BIN | €${(exp.eqEur||0).toFixed(2)} EUR</span>`; 
+                } 
+                const contentDiv = document.createElement('div'); 
+                contentDiv.className = 'task-content'; 
+                contentDiv.innerHTML = `<strong>${exp.desc}</strong><br><span class="task-date">📅 ${exp.date} | 🏦 ${exp.account.toUpperCase()}</span>${equivHtml}`; 
+                const amountSpan = document.createElement('span'); 
+                amountSpan.className = 'expense-amount'; 
+                amountSpan.innerText = `-${symbol}${parseFloat(exp.amount).toFixed(2)}`; 
+                const deleteBtn = document.createElement('button'); 
+                deleteBtn.innerText = 'Deshacer'; 
+                deleteBtn.style.background = '#444'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; 
+                deleteBtn.onclick = () => { 
+                    if(confirm("¿Devolver gasto al saldo?")) { 
+                        balances[exp.account] += parseFloat(exp.amount); 
+                        expenses.splice(index, 1); 
+                        saveDataToCloud(); renderExpenses(); window.calculateSafeToSpend(); 
+                    } 
+                }; 
+                li.append(contentDiv, amountSpan, deleteBtn); 
+                list.appendChild(li); 
+            }); 
+            if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos con este filtro.</li>'; 
+            
+            // FIX: El gráfico ahora se dibuja en base a la data FILTRADA en tiempo real.
+            let sumFb = 0, sumBin = 0, sumBs = 0; 
+            filtered.forEach(e => { 
+                if(e.account === 'facebank') sumFb += parseFloat(e.amount); 
+                if(e.account === 'binance') sumBin += parseFloat(e.amount); 
+                if(e.account === 'bs') sumBs += parseFloat(e.amount); 
+            }); 
+            
             const ctx = document.getElementById('financeChart'); 
             if(!ctx || document.getElementById('finanzas').style.display === 'none' && !document.getElementById('tab-finanzas').classList.contains('active')) return; 
+            
             if(financeChartInstance) financeChartInstance.destroy(); 
-            let sumFb = 0, sumBin = 0, sumBs = 0; 
-            const currentMonth = new Date().getMonth(); 
-            const currentYear = new Date().getFullYear(); 
-            expenses.forEach(e => { 
-                const d = parseVeDate(e.date); 
-                if(d.getMonth() === currentMonth && d.getFullYear() === currentYear) { 
-                    if(e.account === 'facebank') sumFb += parseFloat(e.amount); 
-                    if(e.account === 'binance') sumBin += parseFloat(e.amount); 
-                    if(e.account === 'bs') sumBs += parseFloat(e.amount); 
-                } 
-            }); 
             financeChartInstance = new Chart(ctx, { 
                 type: 'doughnut', 
                 data: { labels: ['Facebank ($)', 'Binance (USDT)', 'Bolívares (Bs)'], datasets: [{ data: [sumFb, sumBin, sumBs], backgroundColor: ['#2196F3', '#F3BA2F', '#4CAF50'], borderWidth: 0, hoverOffset: 4 }] }, 
                 options: { plugins: { legend: { labels: { color: 'white' } } } } 
             }); 
-        };
+        }
 
         window.calculateSafeToSpend = () => { 
             let ghostSubsSum = 0; 
@@ -612,12 +699,16 @@
             const today = new Date().toLocaleString('es-VE'); 
             let eqUsd = null, eqUsdt = null, eqEur = null; 
             if (account === 'bs') { 
-                const bcv = window.rateBcvVal || 0; const binance = window.rateBinanceVal || 0; 
-                if (bcv > 0) eqUsd = numAmount / bcv; if (binance > 0) eqUsdt = numAmount / binance; 
+                const bcv = window.rateBcvVal || 0; 
+                const binance = window.rateBinanceVal || 0; 
+                const euro = window.rateEuroVal || 0;
+                if (bcv > 0) eqUsd = numAmount / bcv; 
+                if (binance > 0) eqUsdt = numAmount / binance; 
+                if (euro > 0) eqEur = numAmount / euro;
             } 
             expenses.push({ desc, amount: numAmount, account, date: today, eqUsd, eqUsdt, eqEur }); 
             document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; document.getElementById('expAccount').selectedIndex = 0; 
-            recordActivity(); saveDataToCloud(); renderChart(); window.calculateSafeToSpend(); 
+            recordActivity(); saveDataToCloud(); renderExpenses(); window.calculateSafeToSpend(); 
         };
 
         function renderBalances() { 
@@ -627,55 +718,11 @@
             let bs = balances.bs || 0; let eq = []; 
             if(window.rateBcvVal > 0) eq.push(`🇺🇸 BCV: $${(bs / window.rateBcvVal).toFixed(2)}`); 
             if(window.rateBinanceVal > 0) eq.push(`🟡 BIN: ₮${(bs / window.rateBinanceVal).toFixed(2)}`); 
+            // FIX: Equivalente de EUR en la tarjeta principal
+            if(window.rateEuroVal > 0) eq.push(`🇪🇺 EUR: €${(bs / window.rateEuroVal).toFixed(2)}`); 
+            
             document.getElementById('bsEquiv').innerHTML = eq.length > 0 ? eq.join('<br>') : '≈ Sincroniza tasas'; 
             window.calculateSafeToSpend(); 
-        }
-
-        function renderExpenses() { 
-            const list = document.getElementById('expenseList'); 
-            list.innerHTML = ''; 
-            const fDate = document.getElementById('filterDate').value; 
-            const fStart = document.getElementById('filterStartDate').value; 
-            const fEnd = document.getElementById('filterEndDate').value; 
-            const fAcc = document.getElementById('filterAccount').value; 
-            let filtered = expenses.map((exp, originalIndex) => ({...exp, originalIndex})); 
-            if(fAcc !== 'all') filtered = filtered.filter(e => e.account === fAcc); 
-            if(fDate) { filtered = filtered.filter(e => { const d = parseVeDate(e.date); return d.toISOString().startsWith(fDate); }); } 
-            else if (fStart && fEnd) { 
-                const startD = new Date(fStart + "T00:00:00"); 
-                const endD = new Date(fEnd + "T23:59:59"); 
-                filtered = filtered.filter(e => { const d = parseVeDate(e.date); return d >= startD && d <= endD; }); 
-            } 
-            [...filtered].reverse().forEach((exp) => { 
-                const index = exp.originalIndex; 
-                const li = document.createElement('li'); 
-                li.className = `expense-item ex-${exp.account}`; 
-                let symbol = exp.account === 'facebank' ? '$' : exp.account === 'binance' ? '₮' : 'Bs.'; 
-                let equivHtml = ''; 
-                if (exp.account === 'bs' && (exp.eqUsd || exp.eqUsdt || exp.eqEur)) { 
-                    equivHtml = `<br><span style="font-size: 0.75em; color: var(--secondary); opacity: 0.9;">≈ $${(exp.eqUsd||0).toFixed(2)} BCV | ₮${(exp.eqUsdt||0).toFixed(2)} BIN</span>`; 
-                } 
-                const contentDiv = document.createElement('div'); 
-                contentDiv.className = 'task-content'; 
-                contentDiv.innerHTML = `<strong>${exp.desc}</strong><br><span class="task-date">📅 ${exp.date} | 🏦 ${exp.account.toUpperCase()}</span>${equivHtml}`; 
-                const amountSpan = document.createElement('span'); 
-                amountSpan.className = 'expense-amount'; 
-                amountSpan.innerText = `-${symbol}${parseFloat(exp.amount).toFixed(2)}`; 
-                const deleteBtn = document.createElement('button'); 
-                deleteBtn.innerText = 'Deshacer'; 
-                deleteBtn.style.background = '#444'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; 
-                deleteBtn.onclick = () => { 
-                    if(confirm("¿Devolver gasto al saldo?")) { 
-                        balances[exp.account] += parseFloat(exp.amount); 
-                        expenses.splice(index, 1); 
-                        saveDataToCloud(); window.renderChart(); window.calculateSafeToSpend(); 
-                    } 
-                }; 
-                li.append(contentDiv, amountSpan, deleteBtn); 
-                list.appendChild(li); 
-            }); 
-            if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos.</li>'; 
-            window.renderChart(); window.calculateSafeToSpend(); 
         }
 
         // === NOTAS & ZETTELKASTEN ===
@@ -689,6 +736,8 @@
             document.getElementById('noteContent').value = ''; 
             document.getElementById('newNotePreview').style.display = 'none'; 
             recordActivity(); saveDataToCloud(); 
+            // FIX: Forzamos la renderización inmediata al guardar para no esperar al snapshot
+            renderNotes();
         };
 
         function renderNotes() { 
@@ -705,12 +754,11 @@
                 const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
                 const editBtn = document.createElement('button'); editBtn.innerText = '✏️'; editBtn.style.background = '#444'; editBtn.style.padding = '5px'; 
                 const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; 
-                deleteBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar nota?")) { notes.splice(index, 1); saveDataToCloud(); } }; 
+                deleteBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar nota?")) { notes.splice(index, 1); saveDataToCloud(); renderNotes(); } }; 
                 btnBox.append(editBtn, deleteBtn); header.appendChild(btnBox); 
                 
                 const body = document.createElement('div'); 
                 body.className = 'note-body markdown-content'; 
-                // AQUI USAMOS EL NUEVO PARSEADOR
                 body.innerHTML = window.parseMarkdown(note.content); 
                 
                 const editArea = document.createElement('div'); 
@@ -724,7 +772,7 @@
                 saveEditBtn.onclick = () => { 
                     if (editTitle.value.trim() === '' || editText.value.trim() === '') return alert("Vacío no."); 
                     notes[index].title = editTitle.value; notes[index].content = editText.value; notes[index].editedAt = new Date().toLocaleString('es-VE'); 
-                    recordActivity(); saveDataToCloud(); 
+                    recordActivity(); saveDataToCloud(); renderNotes();
                 }; 
                 editArea.append(editTitle, editText, editPreview, saveEditBtn); 
                 
@@ -853,11 +901,11 @@
                 document.getElementById('rateBinance').innerText = `Bs. ${parseFloat(binanceVal).toFixed(2)}`; 
                 document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(euroVal).toFixed(2)}`; 
                 document.getElementById('rateLastUpdate').innerText = `Última act: ${new Date().toLocaleTimeString('es-VE')}`; 
-                renderBalances(); btn.innerText = '📡 Sincronizar'; 
+                renderBalances(); renderExpenses(); btn.innerText = '📡 Sincronizar'; 
             } catch(err) { btn.innerText = '⚠️ Reintentar'; } 
         };
 
-        // Resto de funciones UI menores comprimidas por seguridad de bloque (Tareas, Checklists, Vault)
+        // Resto de UI (Tareas, Checklists)
         window.addTask = () => { const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); if (input.value.trim() === '') return alert('Escribe.'); tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); input.value = ''; dateInput.value = ''; recordActivity(); saveDataToCloud(); };
         function renderTasks() { const pendingList = document.getElementById('pendingList'); const completedList = document.getElementById('completedList'); pendingList.innerHTML = ''; completedList.innerHTML = ''; tasks.forEach((task, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; checkbox.onchange = () => { tasks[index].completed = !tasks[index].completed; if(tasks[index].completed) recordActivity(); saveDataToCloud(); }; const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>`; const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
         window.addRecurringTask = () => { const input = document.getElementById('recTaskInput'), startInput = document.getElementById('recTaskStart'), intervalInput = document.getElementById('recTaskInterval'), freqInput = document.getElementById('recTaskFreq'); if (input.value.trim() === '' || startInput.value === '') return alert('Escribe.'); recurringTasks.push({ text: input.value, nextTrigger: startInput.value, interval: parseInt(intervalInput.value), freq: freqInput.value, notified: false }); input.value = ''; startInput.value = ''; intervalInput.value = '1'; recordActivity(); saveDataToCloud(); };
@@ -876,21 +924,31 @@
         const noteContentInput = document.getElementById('noteContent'); const notePreviewDiv = document.getElementById('newNotePreview'); noteContentInput.addEventListener('input', () => window.renderLivePreview(noteContentInput, notePreviewDiv));
         const mdToolbar = document.getElementById('mdToolbar'); document.addEventListener('focusin', (e) => { if (e.target.tagName === 'TEXTAREA') { activeTextarea = e.target; const rect = e.target.getBoundingClientRect(); mdToolbar.style.display = 'flex'; mdToolbar.style.top = (rect.top + window.scrollY - 45) + 'px'; mdToolbar.style.left = rect.left + 'px'; } }); document.addEventListener('focusout', (e) => { if (e.target.tagName === 'TEXTAREA') { setTimeout(()=> mdToolbar.style.display = 'none', 150); } }); window.applyMd = (e, prefix, suffix) => { e.preventDefault(); if (!activeTextarea) return; const start = activeTextarea.selectionStart; const end = activeTextarea.selectionEnd; const text = activeTextarea.value; const selected = text.substring(start, end); activeTextarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end); activeTextarea.focus(); activeTextarea.selectionStart = start + prefix.length; activeTextarea.selectionEnd = end + prefix.length; activeTextarea.dispatchEvent(new Event('input')); }; window.applyMdTable = (e) => { e.preventDefault(); if (!activeTextarea) return; const tableTemplate = `\n| Encabezado 1 | Encabezado 2 | Encabezado 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n| Dato 4 | Dato 5 | Dato 6 |\n\n`; const start = activeTextarea.selectionStart; const text = activeTextarea.value; activeTextarea.value = text.substring(0, start) + tableTemplate + text.substring(start); activeTextarea.focus(); activeTextarea.selectionStart = start + tableTemplate.length; activeTextarea.selectionEnd = start + tableTemplate.length; activeTextarea.dispatchEvent(new Event('input')); }; 
 
-        const MASTER_PIN = "1234"; 
+        // FIX: Lógica para desbloquear y cambiar el PIN Maestro
         window.unlockVault = () => { 
             const input = document.getElementById('pinInput').value; 
-            if (input === MASTER_PIN) { 
+            if (input === masterPin) { 
                 document.getElementById('vaultOverlay').classList.add('vault-hidden'); 
                 document.getElementById('vaultContent').classList.remove('vault-hidden'); 
-                if(navigator.vibrate) navigator.vibrate([50, 50, 50]); window.renderChart(); window.calculateSafeToSpend(); 
+                if(navigator.vibrate) navigator.vibrate([50, 50, 50]); renderExpenses(); window.calculateSafeToSpend(); 
             } else { 
                 alert("PIN Incorrecto."); document.getElementById('pinInput').value = ''; 
                 if(navigator.vibrate) navigator.vibrate(200); 
             } 
         };
 
+        window.changePin = () => {
+            const newPin = prompt("🔑 Ingresa tu nuevo PIN de seguridad:");
+            if(newPin && newPin.trim().length > 0) {
+                masterPin = newPin.trim();
+                saveDataToCloud();
+                alert("✅ PIN actualizado exitosamente.");
+            }
+        };
+
         Sortable.create(document.getElementById('tabContainer'), { animation: 150, ghostClass: 'sortable-ghost', onEnd: function () { tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); saveDataToCloud(); } }); 
 
+        window.exportToCSV = () => { if(expenses.length === 0) return alert("Vacio."); let csvContent = "Fecha,Descripcion,Metodo,Monto\n"; const sorted = [...expenses].sort((a,b) => parseVeDate(a.date) - parseVeDate(b.date)); sorted.forEach(e => { csvContent += [`"${e.date}"`, `"${e.desc}"`, `"${e.account}"`, `"${e.amount}"`].join(',') + "\n"; }); const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.setAttribute("href", URL.createObjectURL(blob)); link.setAttribute("download", `Reporte.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); };
     </script>
 </body>
 </html>
