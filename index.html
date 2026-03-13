@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta-Cognitive OS v17.3 (Master Release)</title>
+    <title>Meta-Cognitive OS v17.4 (Alarms Active)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121212">
     
@@ -69,9 +69,9 @@
         .expense-amount { font-size: 1.2em; font-weight: bold; color: var(--warning); } 
         .pomodoro { text-align: center; } #timer { font-size: 3em; font-weight: bold; margin: 10px 0; color: var(--primary); }
         
-        #alarmModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; } 
-        .modal-content { background: var(--surface); padding: 30px; border-radius: 8px; text-align: center; border: 2px solid var(--secondary); box-shadow: 0 0 20px var(--glow-color); max-width: 90%; } 
-        .modal-buttons { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+        #alarmModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); } 
+        .modal-content { background: var(--surface); padding: 40px; border-radius: 12px; text-align: center; border: 2px solid var(--secondary); box-shadow: 0 0 30px var(--glow-color); max-width: 90%; width: 400px;} 
+        .modal-buttons { margin-top: 30px; display: flex; gap: 15px; justify-content: center; }
         
         .note-header { display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer; } 
         .note-body { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #444; color: #ccc; line-height: 1.5; width: 100%; overflow-x: auto;} 
@@ -95,7 +95,6 @@
         .filter-bar input[type="date"], .filter-bar select { padding: 5px; font-size: 0.9em; border: 1px solid #444; background: #333; color: white; border-radius: 4px; } 
         #bsEquiv { font-size: 0.85em; color: var(--secondary); opacity: 0.9; margin-bottom: 5px; line-height: 1.4; }
         
-        /* LIVE PREVIEW */
         .live-preview-box { display:none; padding:15px; border:1px dashed var(--secondary); border-radius:4px; margin-bottom:10px; background:#1a1a1a; width: 100%; box-sizing: border-box; } 
         .markdown-content table { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 5px; background: #222; font-size: 0.9em; overflow-x: auto; display: block; white-space: nowrap; } 
         .markdown-content th, .markdown-content td { border: 1px solid #444; padding: 10px; text-align: left; } 
@@ -110,7 +109,6 @@
         .markdown-content td[contenteditable=true], .markdown-content th[contenteditable=true] { outline: none; transition: background 0.2s; cursor: text; min-width: 50px; } 
         .markdown-content td[contenteditable=true]:focus, .markdown-content th[contenteditable=true]:focus { background: rgba(3, 218, 198, 0.15); box-shadow: inset 0 0 0 2px var(--glow-color); }
         
-        /* VAULT & MIC */
         .vault-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 18, 18, 0.95); z-index: 50; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 8px; backdrop-filter: blur(5px); } 
         .vault-hidden { display: none !important; } 
         #fab-mic { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--warning); color: white; font-size: 24px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(207, 102, 121, 0.5); cursor: pointer; z-index: 9000; transition: transform 0.2s; } 
@@ -118,7 +116,6 @@
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); } } 
         .chart-container { width: 100%; max-width: 400px; margin: 0 auto 20px auto; background: #222; padding: 15px; border-radius: 8px; }
 
-        /* V17 FEATURES */
         #cmdOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; backdrop-filter: blur(4px); align-items: flex-start; justify-content: center; padding-top: 10vh; }
         .cmd-box { background: #1e1e1e; width: 90%; max-width: 600px; border-radius: 12px; border: 1px solid #444; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; }
         .cmd-input { width: 100%; background: transparent; border: none; padding: 20px; font-size: 1.2em; color: white; outline: none; border-bottom: 1px solid #333; }
@@ -142,7 +139,6 @@
         .zk-link:hover { background: rgba(187, 134, 252, 0.3); }
         #networkGraph { width: 100%; height: 300px; background: #1a1a1a; border: 1px dashed #444; border-radius: 8px; margin-bottom: 15px; display: none;}
 
-        /* TOOLTIPS CSS */
         .tooltip { position: relative; display: inline-block; cursor: pointer; color: var(--secondary); margin-left: 5px; font-weight: bold; font-size: 0.85em; background: rgba(3, 218, 198, 0.1); border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; }
         .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2a2a2a; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1000; bottom: 125%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; font-size: 0.85em; font-weight: normal; border: 1px solid var(--secondary); box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
@@ -159,7 +155,7 @@
 
     <div id="authScreen">
         <div class="auth-container">
-            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.3</span></h1>
+            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.4</span></h1>
             <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia segura</p>
             <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required>
             <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required>
@@ -377,11 +373,11 @@
         <div id="alarmModal">
             <div class="modal-content">
                 <h1 style="color: var(--secondary);">⏰ ¡Es Hora!</h1>
-                <h2 id="alarmText">Recordatorio</h2>
-                <div id="alarmTypeDesc" style="font-size: 0.8em; color: #aaa; margin-bottom: 15px;"></div>
+                <h2 id="alarmText" style="color: white; font-size: 1.5em; margin: 15px 0;">Recordatorio</h2>
+                <div id="alarmTypeDesc" style="font-size: 0.9em; color: #aaa; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px;"></div>
                 <div class="modal-buttons">
-                    <button id="btnSnooze" style="background: var(--surface); color: white; border: 1px solid var(--secondary);">Posponer 10m</button>
-                    <button id="btnComplete" style="background: var(--secondary);">Completar</button>
+                    <button id="btnSnooze" style="background: var(--surface); color: white; border: 1px solid var(--secondary); font-size: 1.1em; padding: 12px 25px;">Posponer</button>
+                    <button id="btnComplete" style="background: var(--secondary); font-size: 1.1em; padding: 12px 25px;">Completar</button>
                 </div>
             </div>
         </div>
@@ -406,7 +402,6 @@
         const db = getFirestore(app); 
         const auth = getAuth(app); 
 
-        // ZETTELKASTEN PARSER
         window.parseMarkdown = (text) => {
             if (!text) return "";
             let processed = text.replace(/\[\[(.*?)\]\]/g, `<span class="zk-link" onclick="window.searchAndOpenNote('$1')">#$1</span>`);
@@ -417,7 +412,153 @@
         let unsubSnapshot = null;
         let masterPin = "1234";
         let tasks = [], reminders = [], balances = { facebank: 0, binance: 0, bs: 0 }, expenses = [], notes = [], recurringTasks = [], checklists = [], tabOrder = [], activityLog = {};
-        window.tempChecklistItems = []; window.rateBcvVal = 0; window.rateBinanceVal = 0; window.rateEuroVal = 0; window.activeAlarm = null; window.alarmAudioInterval = null; window.openChecklists = new Set(); let activeTextarea = null; 
+        window.tempChecklistItems = []; window.rateBcvVal = 0; window.rateBinanceVal = 0; window.rateEuroVal = 0; 
+        
+        // VARIABLES DEL SISTEMA DE ALARMAS
+        window.activeAlarm = null; 
+        window.alarmAudioInterval = null; 
+        let audioCtx = null;
+        
+        window.openChecklists = new Set(); let activeTextarea = null; 
+
+        // ==========================================
+        // SISTEMA DE NOTIFICACIONES Y AUDIO (NUEVO)
+        // ==========================================
+        
+        // Solicitar permisos e iniciar el contexto de audio en el primer clic (Políticas de navegadores)
+        document.addEventListener('click', () => {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }, { once: true });
+
+        // Sintetizador de audio (Sin archivos MP3 externos)
+        function playBeep() {
+            if (!audioCtx) return;
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = "sine";
+            osc.frequency.value = 800; // Tono de alarma
+            gain.gain.setValueAtTime(1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.startAlarmSound = () => {
+            if(window.alarmAudioInterval) return;
+            playBeep(); // Suena de inmediato
+            window.alarmAudioInterval = setInterval(playBeep, 2000); // Repite cada 2 segundos
+        };
+
+        window.stopAlarmSound = () => {
+            if(window.alarmAudioInterval) {
+                clearInterval(window.alarmAudioInterval);
+                window.alarmAudioInterval = null;
+            }
+        };
+
+        function showNotification(title, body) {
+            if (Notification.permission === "granted") {
+                new Notification(title, { body: body });
+            }
+        }
+
+        // Despliega la interfaz de la alarma y asigna funciones a los botones dinámicamente
+        window.triggerModal = (type, text, onComplete, onSnooze) => {
+            showNotification(type, text);
+            window.startAlarmSound();
+            
+            document.getElementById('alarmTypeDesc').innerText = type;
+            document.getElementById('alarmText').innerText = text;
+            document.getElementById('alarmModal').style.display = 'flex';
+
+            const btnC = document.getElementById('btnComplete');
+            const btnS = document.getElementById('btnSnooze');
+
+            // Clonamos los botones para eliminar listeners anteriores
+            const newBtnC = btnC.cloneNode(true);
+            const newBtnS = btnS.cloneNode(true);
+            btnC.parentNode.replaceChild(newBtnC, btnC);
+            btnS.parentNode.replaceChild(newBtnS, btnS);
+
+            newBtnC.onclick = () => {
+                window.stopAlarmSound();
+                document.getElementById('alarmModal').style.display = 'none';
+                if(onComplete) onComplete();
+            };
+
+            newBtnS.onclick = () => {
+                window.stopAlarmSound();
+                document.getElementById('alarmModal').style.display = 'none';
+                if(onSnooze) onSnooze();
+            };
+        };
+
+        // EL CORAZÓN DE LA APP: Revisa las fechas cada 10 segundos
+        window.checkAlarms = () => {
+            if(!currentUid) return; // Si no estás logueado, no suena
+            const now = new Date();
+
+            // 1. Revisar Recordatorios Únicos
+            reminders.forEach((rem, index) => {
+                if (!rem.completed && !rem.notified) {
+                    const remTime = new Date(rem.datetime);
+                    if (now >= remTime) {
+                        rem.notified = true; // Evita que dispare múltiples veces
+                        window.triggerModal("Recordatorio", rem.text, () => {
+                            // Acción: Completar
+                            rem.completed = true;
+                            saveDataToCloud();
+                            renderReminders();
+                        }, () => {
+                            // Acción: Posponer (Suma los minutos de snooze seleccionados)
+                            rem.notified = false;
+                            const snoozeTime = new Date(now.getTime() + (rem.snoozeMins * 60000));
+                            // Ajuste para evitar bugs de Zona Horaria al re-escribir el datetime local
+                            rem.datetime = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                            saveDataToCloud();
+                            renderReminders();
+                        });
+                    }
+                }
+            });
+
+            // 2. Revisar Tareas Recurrentes (Hábitos)
+            recurringTasks.forEach((rec, index) => {
+                if (!rec.notified) {
+                    const recTime = new Date(rec.nextTrigger);
+                    if (now >= recTime) {
+                        rec.notified = true;
+                        window.triggerModal("Hábito / Rutina", rec.text, () => {
+                            // Acción: Completar (Reprograma para la siguiente iteración)
+                            window.rescheduleRecurring(rec);
+                            recordActivity();
+                            saveDataToCloud();
+                            renderRecurringTasks();
+                        }, () => {
+                            // Acción: Posponer (Le da 10 minutos de gracia sin afectar la rutina real)
+                            rec.notified = false;
+                            const snoozeTime = new Date(now.getTime() + (10 * 60000));
+                            rec.nextTrigger = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                            saveDataToCloud();
+                            renderRecurringTasks();
+                        });
+                    }
+                }
+            });
+        };
+
+        // Inicia el latido del sistema
+        setInterval(window.checkAlarms, 10000); 
+
+        // ==========================================
+
 
         // === AUTHENTICATION LOGIC ===
         onAuthStateChanged(auth, (user) => { 
@@ -515,7 +656,6 @@
             if(tabId === 'finanzas') { renderExpenses(); window.calculateSafeToSpend(); } 
         };
 
-        // REPARADO: Parsea robustamente formatos locales (DD/MM/YYYY) para convertirlos a Objetos de Fecha universales.
         function parseVeDate(dateStr) { 
             if(!dateStr) return new Date(0); 
             const parts = dateStr.split(',')[0].trim().split('/'); 
@@ -525,7 +665,6 @@
             return new Date(dateStr); 
         }
 
-        // REPARADO: Asegura que el string de salida siempre sea YYYY-MM-DD sin importar la Zona Horaria.
         function getLocalYMD(dateObj) {
             if (isNaN(dateObj)) return "";
             const y = dateObj.getFullYear();
@@ -626,7 +765,6 @@
             }); 
             if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos en este rango o cuenta.</li>'; 
             
-            // REPARADO: EL GRAFICO AHORA LEE DIRECTAMENTE DE LA DATA FILTRADA
             let sumFb = 0, sumBin = 0, sumBs = 0; 
             filtered.forEach(e => { 
                 if(e.account === 'facebank') sumFb += parseFloat(e.amount); 
@@ -735,7 +873,180 @@
             link.click();
         };
 
-        // === NOTAS & ZETTELKASTEN ===
+        // === COMMAND PALETTE ===
+        const cmdOverlay = document.getElementById('cmdOverlay'); 
+        const cmdInput = document.getElementById('cmdInput'); 
+        const cmdResults = document.getElementById('cmdResults'); 
+        let cmdOptions = [ 
+            { name: "💰 Nuevo Gasto", action: () => { switchTab('finanzas'); document.getElementById('expDesc').focus(); } }, 
+            { name: "📓 Nueva Nota", action: () => { switchTab('notas'); document.getElementById('noteTitle').focus(); } }, 
+            { name: "📝 Nueva Tarea", action: () => { switchTab('actividades'); document.getElementById('taskInput').focus(); } }, 
+            { name: "⏰ Activar Pomodoro", action: () => { switchTab('actividades'); window.startTimer(); } }, 
+            { name: "🚪 Cerrar Sesión", action: () => { window.appLogout(); } } 
+        ];
+        
+        document.addEventListener('keydown', (e) => { 
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { 
+                e.preventDefault(); if(!currentUid) return; 
+                cmdOverlay.style.display = 'flex'; cmdInput.value = ''; 
+                renderCmdResults(cmdOptions); cmdInput.focus(); 
+            } 
+            if (e.key === 'Escape' && cmdOverlay.style.display === 'flex') { cmdOverlay.style.display = 'none'; } 
+        }); 
+        
+        window.closeCmd = (e) => { if(e.target === cmdOverlay) cmdOverlay.style.display = 'none'; }
+        cmdInput.addEventListener('input', (e) => { const val = e.target.value.toLowerCase(); const filtered = cmdOptions.filter(opt => opt.name.toLowerCase().includes(val)); renderCmdResults(filtered); }); 
+        
+        function renderCmdResults(list) { 
+            cmdResults.innerHTML = ''; 
+            list.forEach((item, index) => { 
+                const li = document.createElement('li'); li.innerText = item.name; 
+                if(index === 0) li.classList.add('active-cmd'); 
+                li.onclick = () => { item.action(); cmdOverlay.style.display = 'none'; }; 
+                cmdResults.appendChild(li); 
+            }); 
+        } 
+        
+        cmdInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const active = cmdResults.querySelector('.active-cmd'); if(active) active.click(); } });
+
+        // === API ORÁCULO DE TASAS ===
+        window.fetchExchangeRates = async () => { 
+            const btn = document.getElementById('btnSyncRates'); btn.innerText = '📡 Sync...'; 
+            try { 
+                let bcvVal = 0, binanceVal = 0, euroVal = 0; 
+                const fetchWithFallback = async (localRoute, directUrl) => { 
+                    try { let res = await fetch(directUrl); if (res.ok) return await res.json(); } catch(e) {} return null; 
+                }; 
+                const dataBcv = await fetchWithFallback('/api/bcv', 'https://ve.dolarapi.com/v1/dolares/oficial'); 
+                if (dataBcv) bcvVal = dataBcv.promedio || 0; 
+                const dataEur = await fetchWithFallback('/api/eur', 'https://ve.dolarapi.com/v1/euros/oficial'); 
+                if (dataEur) euroVal = dataEur.promedio || 0; 
+                
+                const endpoints = ['https://pydolarve.org/api/v1/dollar?page=binance','https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=binance','https://api.pydolarvenezuela.com/api/v1/dollar?page=binance']; 
+                const proxies = ['', 'https://corsproxy.io/?']; let bypassSuccess = false; 
+                for (let endpoint of endpoints) { 
+                    if (bypassSuccess) break; 
+                    for (let proxy of proxies) { 
+                        try { 
+                            let targetUrl = proxy ? proxy + encodeURIComponent(endpoint) : endpoint; 
+                            let res = await fetch(targetUrl, { cache: "no-store" }); 
+                            if (!res.ok) continue; let data = await res.json(); let foundPrice = 0; 
+                            const searchPrice = (obj) => { 
+                                if (!obj || typeof obj !== 'object') return; 
+                                for (let key in obj) { 
+                                    if (key.toLowerCase().includes('binance')) { 
+                                        if (obj[key].price) { foundPrice = parseFloat(obj[key].price); return; } 
+                                        if (typeof obj[key] === 'number') { foundPrice = obj[key]; return; } 
+                                    } 
+                                    if (foundPrice === 0) searchPrice(obj[key]); 
+                                } 
+                            }; 
+                            searchPrice(data); 
+                            if (foundPrice > 0) { binanceVal = foundPrice; bypassSuccess = true; break; } 
+                        } catch(e) {} 
+                    } 
+                } 
+                window.rateBcvVal = bcvVal; window.rateBinanceVal = binanceVal; window.rateEuroVal = euroVal; 
+                document.getElementById('rateBcv').innerText = `Bs. ${parseFloat(bcvVal).toFixed(2)}`; 
+                document.getElementById('rateBinance').innerText = `Bs. ${parseFloat(binanceVal).toFixed(2)}`; 
+                document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(euroVal).toFixed(2)}`; 
+                document.getElementById('rateLastUpdate').innerText = `Última act: ${new Date().toLocaleTimeString('es-VE')}`; 
+                renderBalances(); renderExpenses(); btn.innerText = '📡 Sincronizar'; 
+            } catch(err) { btn.innerText = '⚠️ Reintentar'; } 
+        };
+
+        // UI Base (Tareas, Actividades, Recordatorios, Checklists)
+        let timerInterval, timeLeft = 25 * 60; 
+        
+        // REPARADO: Pomodoro usa el nuevo sistema de alertas
+        window.startTimer = () => { 
+            clearInterval(timerInterval); 
+            timerInterval = setInterval(() => { 
+                if(timeLeft>0) { 
+                    timeLeft--; 
+                    document.getElementById('timer').innerText = `${Math.floor(timeLeft/60).toString().padStart(2,'0')}:${(timeLeft%60).toString().padStart(2,'0')}`; 
+                } else { 
+                    clearInterval(timerInterval); 
+                    window.triggerModal("Pomodoro", "¡Bloque de Enfoque Terminado!", () => {
+                        window.resetTimer();
+                        recordActivity();
+                        saveDataToCloud();
+                    }, () => {
+                        // Posponer pomodoro añade 5 mins
+                        timeLeft = 5 * 60;
+                        window.startTimer();
+                    });
+                } 
+            }, 1000); 
+        }; 
+        window.resetTimer = () => { clearInterval(timerInterval); timeLeft = 25 * 60; document.getElementById('timer').innerText = "25:00"; };
+        
+        window.addTask = () => { const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); if (input.value.trim() === '') return alert('Escribe.'); tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); input.value = ''; dateInput.value = ''; recordActivity(); saveDataToCloud(); };
+        function renderTasks() { const pendingList = document.getElementById('pendingList'); const completedList = document.getElementById('completedList'); pendingList.innerHTML = ''; completedList.innerHTML = ''; tasks.forEach((task, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; checkbox.onchange = () => { tasks[index].completed = !tasks[index].completed; if(tasks[index].completed) recordActivity(); saveDataToCloud(); }; const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>`; const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
+        
+        window.addRecurringTask = () => { const input = document.getElementById('recTaskInput'), startInput = document.getElementById('recTaskStart'), intervalInput = document.getElementById('recTaskInterval'), freqInput = document.getElementById('recTaskFreq'); if (input.value.trim() === '' || startInput.value === '') return alert('Escribe.'); recurringTasks.push({ text: input.value, nextTrigger: startInput.value, interval: parseInt(intervalInput.value), freq: freqInput.value, notified: false }); input.value = ''; startInput.value = ''; intervalInput.value = '1'; recordActivity(); saveDataToCloud(); };
+        window.rescheduleRecurring = (task) => { let date = new Date(task.nextTrigger); let now = new Date(); if (date < now) date = now; if(task.freq === 'minutos') date.setMinutes(date.getMinutes() + task.interval); if(task.freq === 'horas') date.setHours(date.getHours() + task.interval); if(task.freq === 'dias') date.setDate(date.getDate() + task.interval); if(task.freq === 'meses') date.setMonth(date.getMonth() + task.interval); const tzOffset = date.getTimezoneOffset() * 60000; task.nextTrigger = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16); task.notified = false; };
+        function renderRecurringTasks() { const list = document.getElementById('recurringList'); list.innerHTML = ''; recurringTasks.forEach((rec, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; checkbox.onchange = () => { window.rescheduleRecurring(recurringTasks[index]); recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rec.nextTrigger); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge rec-badge`; badge.innerText = `Cada ${rec.interval} ${rec.freq}`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { recurringTasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); }); }
+        
+        window.addReminder = () => { const input = document.getElementById('remInput'), datetimeInput = document.getElementById('remDatetime'), snoozeInput = document.getElementById('snoozeInput'); if (input.value.trim() === '' || datetimeInput.value === '') return alert('Escribe.'); reminders.push({ text: input.value, datetime: datetimeInput.value, snoozeMins: parseInt(snoozeInput.value), completed: false, notified: false }); input.value = ''; datetimeInput.value = ''; recordActivity(); saveDataToCloud(); };
+        function renderReminders() { const pendingList = document.getElementById('pendingReminders'); const completedList = document.getElementById('completedReminders'); pendingList.innerHTML = ''; completedList.innerHTML = ''; reminders.forEach((rem, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = rem.completed; checkbox.onchange = () => { reminders[index].completed = !reminders[index].completed; if(!reminders[index].completed) reminders[index].notified = false; else recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rem.datetime); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rem.text}</strong><br><span class="task-date">⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge snooze-badge`; badge.innerText = `Snooze: ${rem.snoozeMins}m`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { reminders.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); rem.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
+        
+        // CHECKLISTS
+        window.addTempChecklistItem = () => { const input = document.getElementById('clNewItem'); if(input.value.trim() === '') return; window.tempChecklistItems.push({ text: input.value, checked: false, checkedAt: null, editedAt: null }); input.value = ''; renderTempChecklist(); }; 
+        function renderTempChecklist() { const ul = document.getElementById('clTempList'); ul.innerHTML = ''; window.tempChecklistItems.forEach((item, i) => { const li = document.createElement('li'); li.style.padding = "5px"; li.style.marginBottom = "5px"; li.innerHTML = `<span style="flex-grow:1;">- ${item.text.substring(0,30)}...</span> <button onclick="window.tempChecklistItems.splice(${i},1); renderTempChecklist()" style="background:#cf6679; padding:2px 5px;">X</button>`; ul.appendChild(li); }); } 
+        
+        window.saveNewChecklist = () => { 
+            const title = document.getElementById('clTitle').value; 
+            if (title.trim() === '' || window.tempChecklistItems.length === 0) return alert("Título y 1 ítem min."); 
+            const today = new Date().toLocaleString('es-VE'); 
+            checklists.push({ id: Date.now().toString(), title, items: [...window.tempChecklistItems], createdAt: today, editedAt: null }); 
+            document.getElementById('clTitle').value = ''; 
+            window.tempChecklistItems = []; 
+            renderTempChecklist(); 
+            recordActivity(); 
+            saveDataToCloud(); 
+            renderChecklists(); 
+        }; 
+        
+        function renderChecklists() { 
+            const pendingList = document.getElementById('clPending'); pendingList.innerHTML = ''; 
+            const completedList = document.getElementById('clCompleted'); completedList.innerHTML = ''; 
+            checklists.forEach((listData, listIndex) => { 
+                const li = document.createElement('li'); li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
+                const isCompleted = listData.items.length > 0 && listData.items.every(item => item.checked); 
+                const listId = listData.id || listData.createdAt; 
+                const header = document.createElement('div'); header.className = 'note-header'; 
+                let editMsg = listData.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Última modificación: ${listData.editedAt}</span>` : ''; 
+                const isOpen = window.openChecklists.has(listId); const arrow = isOpen ? '▲' : '▼'; 
+                header.innerHTML = `<div style="flex-grow: 1;"><strong>${listData.title}</strong><br><span class="task-date">Creado el: 📅 ${listData.createdAt}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">${arrow}</span>`; 
+                const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
+                const editTitleBtn = document.createElement('button'); editTitleBtn.innerText = '📝'; editTitleBtn.style.background = '#444'; editTitleBtn.style.padding = '5px'; 
+                editTitleBtn.onclick = (e) => { e.stopPropagation(); let newTitle = prompt("Editar Título:", listData.title); if(newTitle) { listData.title = newTitle; listData.editedAt = new Date().toLocaleString('es-VE'); saveDataToCloud(); renderChecklists(); } }; 
+                const delBtn = document.createElement('button'); delBtn.innerText = 'X'; delBtn.style.background = '#cf6679'; delBtn.style.padding = '5px 10px'; 
+                delBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar?")) { checklists.splice(listIndex, 1); saveDataToCloud(); renderChecklists(); } }; 
+                btnBox.append(editTitleBtn, delBtn); header.appendChild(btnBox); 
+                const body = document.createElement('div'); body.className = 'note-body'; body.style.display = isOpen ? 'block' : 'none'; 
+                listData.items.forEach((item, itemIndex) => { 
+                    const itemDiv = document.createElement('div'); itemDiv.className = 'checklist-item'; 
+                    const topRow = document.createElement('div'); topRow.className = 'checklist-item-row'; 
+                    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = item.checked; 
+                    cb.onchange = () => { item.checked = cb.checked; if(item.checked) { item.checkedAt = new Date().toLocaleString('es-VE'); recordActivity(); } else item.checkedAt = null; saveDataToCloud(); renderChecklists(); }; 
+                    const textDiv = document.createElement('div'); textDiv.className = 'markdown-content'; textDiv.style.flexGrow = '1'; textDiv.innerHTML = window.parseMarkdown(item.text); 
+                    topRow.append(cb, textDiv); itemDiv.appendChild(topRow); body.appendChild(itemDiv); 
+                }); 
+                header.onclick = () => { const isHidden = body.style.display === 'none'; if (isHidden) { window.openChecklists.add(listId); body.style.display = 'block'; header.querySelector('span').innerText = '▲'; } else { window.openChecklists.delete(listId); body.style.display = 'none'; header.querySelector('span').innerText = '▼'; } }; 
+                li.appendChild(header); li.appendChild(body); 
+                isCompleted ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); 
+            }); 
+        }
+
+        // TABLAS MD
+        window.isEditingPreview = false; window.htmlTableToMd = (tableEl) => { let md = "\n"; const rows = tableEl.querySelectorAll('tr'); rows.forEach((row, rowIndex) => { let rowMd = "|"; const cells = row.querySelectorAll('th, td'); cells.forEach(cell => { let text = cell.innerText.replace(/\n/g, ' ').trim(); if(text === '') text = ' '; rowMd += ` ${text} |`; }); md += rowMd + "\n"; if (rowIndex === 0) { let sepMd = "|"; cells.forEach(() => { sepMd += "---|"; }); md += sepMd + "\n"; } }); return md + "\n"; }; window.syncTableToMd = (tableIndex, tableEl, textareaEl, forceRender = false) => { const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); if(!tableTokens[tableIndex]) return; const oldMd = tableTokens[tableIndex].raw; const newMd = window.htmlTableToMd(tableEl); textareaEl.value = textareaEl.value.replace(oldMd, newMd); if (forceRender) { window.isEditingPreview = false; textareaEl.dispatchEvent(new Event('input')); } }; window.modifyTable = (tableIndex, action, textareaEl, previewEl) => { const tables = previewEl.querySelectorAll('table'); const table = tables[tableIndex]; if(!table) return; const tbody = table.querySelector('tbody') || table; const thead = table.querySelector('thead'); if(action === 'addCol') { table.querySelectorAll('tr').forEach((row, i) => { const cell = document.createElement(row.parentNode === thead ? 'th' : 'td'); cell.innerText = 'Dato'; row.appendChild(cell); }); } else if(action === 'remCol') { table.querySelectorAll('tr').forEach(row => { if(row.children.length > 1) row.removeChild(row.lastElementChild); }); } else if(action === 'addRow') { const row = document.createElement('tr'); const colCount = table.querySelector('tr').children.length; for(let i=0; i<colCount; i++) { const cell = document.createElement('td'); cell.innerText = 'Dato'; row.appendChild(cell); } tbody.appendChild(row); } else if(action === 'remRow') { if(tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild); } window.syncTableToMd(tableIndex, table, textareaEl, true); }; window.renderLivePreview = (textareaEl, previewEl) => { if (window.isEditingPreview) return; if(textareaEl.value.trim() !== '') { previewEl.style.display = 'block'; previewEl.innerHTML = window.parseMarkdown(textareaEl.value); } else { previewEl.style.display = 'none'; return; } const tables = previewEl.querySelectorAll('table'); const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); tables.forEach((table, i) => { if(!tableTokens[i]) return; const wrapper = document.createElement('div'); wrapper.className = 'table-editor-wrapper'; table.parentNode.insertBefore(wrapper, table); wrapper.appendChild(table); const controls = document.createElement('div'); controls.className = 'table-controls'; const addColBtn = document.createElement('button'); addColBtn.className = 't-btn'; addColBtn.innerText = '+ Columna'; addColBtn.onclick = () => window.modifyTable(i, 'addCol', textareaEl, previewEl); const remColBtn = document.createElement('button'); remColBtn.className = 't-btn t-btn-del'; remColBtn.innerText = '- Columna'; remColBtn.onclick = () => window.modifyTable(i, 'remCol', textareaEl, previewEl); const addRowBtn = document.createElement('button'); addRowBtn.className = 't-btn'; addRowBtn.innerText = '+ Fila'; addRowBtn.onclick = () => window.modifyTable(i, 'addRow', textareaEl, previewEl); const remRowBtn = document.createElement('button'); remRowBtn.className = 't-btn t-btn-del'; remRowBtn.innerText = '- Fila'; remRowBtn.onclick = () => window.modifyTable(i, 'remRow', textareaEl, previewEl); controls.append(addColBtn, remColBtn, addRowBtn, remRowBtn); wrapper.insertBefore(controls, table); table.querySelectorAll('th, td').forEach(cell => { cell.setAttribute('contenteditable', 'true'); cell.addEventListener('input', () => { window.isEditingPreview = true; window.syncTableToMd(i, table, textareaEl, false); window.isEditingPreview = false; }); }); }); };
+        
+        const noteContentInput = document.getElementById('noteContent'); const notePreviewDiv = document.getElementById('newNotePreview'); noteContentInput.addEventListener('input', () => window.renderLivePreview(noteContentInput, notePreviewDiv));
+        const mdToolbar = document.getElementById('mdToolbar'); document.addEventListener('focusin', (e) => { if (e.target.tagName === 'TEXTAREA') { activeTextarea = e.target; const rect = e.target.getBoundingClientRect(); mdToolbar.style.display = 'flex'; mdToolbar.style.top = (rect.top + window.scrollY - 45) + 'px'; mdToolbar.style.left = rect.left + 'px'; } }); document.addEventListener('focusout', (e) => { if (e.target.tagName === 'TEXTAREA') { setTimeout(()=> mdToolbar.style.display = 'none', 150); } }); window.applyMd = (e, prefix, suffix) => { e.preventDefault(); if (!activeTextarea) return; const start = activeTextarea.selectionStart; const end = activeTextarea.selectionEnd; const text = activeTextarea.value; const selected = text.substring(start, end); activeTextarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end); activeTextarea.focus(); activeTextarea.selectionStart = start + prefix.length; activeTextarea.selectionEnd = end + prefix.length; activeTextarea.dispatchEvent(new Event('input')); }; window.applyMdTable = (e) => { e.preventDefault(); if (!activeTextarea) return; const tableTemplate = `\n| Encabezado 1 | Encabezado 2 | Encabezado 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n| Dato 4 | Dato 5 | Dato 6 |\n\n`; const start = activeTextarea.selectionStart; const text = activeTextarea.value; activeTextarea.value = text.substring(0, start) + tableTemplate + text.substring(start); activeTextarea.focus(); activeTextarea.selectionStart = start + tableTemplate.length; activeTextarea.selectionEnd = start + tableTemplate.length; activeTextarea.dispatchEvent(new Event('input')); }; 
+
+        // NOTAS
         window.addNote = () => { 
             const title = document.getElementById('noteTitle').value;
             const content = document.getElementById('noteContent').value; 
@@ -831,154 +1142,6 @@
             new vis.Network(container, data, options); 
         };
 
-        // === COMMAND PALETTE ===
-        const cmdOverlay = document.getElementById('cmdOverlay'); 
-        const cmdInput = document.getElementById('cmdInput'); 
-        const cmdResults = document.getElementById('cmdResults'); 
-        let cmdOptions = [ 
-            { name: "💰 Nuevo Gasto", action: () => { switchTab('finanzas'); document.getElementById('expDesc').focus(); } }, 
-            { name: "📓 Nueva Nota", action: () => { switchTab('notas'); document.getElementById('noteTitle').focus(); } }, 
-            { name: "📝 Nueva Tarea", action: () => { switchTab('actividades'); document.getElementById('taskInput').focus(); } }, 
-            { name: "⏰ Activar Pomodoro", action: () => { switchTab('actividades'); window.startTimer(); } }, 
-            { name: "🚪 Cerrar Sesión", action: () => { window.appLogout(); } } 
-        ];
-        
-        document.addEventListener('keydown', (e) => { 
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { 
-                e.preventDefault(); if(!currentUid) return; 
-                cmdOverlay.style.display = 'flex'; cmdInput.value = ''; 
-                renderCmdResults(cmdOptions); cmdInput.focus(); 
-            } 
-            if (e.key === 'Escape' && cmdOverlay.style.display === 'flex') { cmdOverlay.style.display = 'none'; } 
-        }); 
-        
-        window.closeCmd = (e) => { if(e.target === cmdOverlay) cmdOverlay.style.display = 'none'; }
-        cmdInput.addEventListener('input', (e) => { const val = e.target.value.toLowerCase(); const filtered = cmdOptions.filter(opt => opt.name.toLowerCase().includes(val)); renderCmdResults(filtered); }); 
-        
-        function renderCmdResults(list) { 
-            cmdResults.innerHTML = ''; 
-            list.forEach((item, index) => { 
-                const li = document.createElement('li'); li.innerText = item.name; 
-                if(index === 0) li.classList.add('active-cmd'); 
-                li.onclick = () => { item.action(); cmdOverlay.style.display = 'none'; }; 
-                cmdResults.appendChild(li); 
-            }); 
-        } 
-        
-        cmdInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const active = cmdResults.querySelector('.active-cmd'); if(active) active.click(); } });
-
-        // === API ORÁCULO DE TASAS ===
-        window.fetchExchangeRates = async () => { 
-            const btn = document.getElementById('btnSyncRates'); btn.innerText = '📡 Sync...'; 
-            try { 
-                let bcvVal = 0, binanceVal = 0, euroVal = 0; 
-                const fetchWithFallback = async (localRoute, directUrl) => { 
-                    try { let res = await fetch(directUrl); if (res.ok) return await res.json(); } catch(e) {} return null; 
-                }; 
-                const dataBcv = await fetchWithFallback('/api/bcv', 'https://ve.dolarapi.com/v1/dolares/oficial'); 
-                if (dataBcv) bcvVal = dataBcv.promedio || 0; 
-                const dataEur = await fetchWithFallback('/api/eur', 'https://ve.dolarapi.com/v1/euros/oficial'); 
-                if (dataEur) euroVal = dataEur.promedio || 0; 
-                
-                const endpoints = ['https://pydolarve.org/api/v1/dollar?page=binance','https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=binance','https://api.pydolarvenezuela.com/api/v1/dollar?page=binance']; 
-                const proxies = ['', 'https://corsproxy.io/?']; let bypassSuccess = false; 
-                for (let endpoint of endpoints) { 
-                    if (bypassSuccess) break; 
-                    for (let proxy of proxies) { 
-                        try { 
-                            let targetUrl = proxy ? proxy + encodeURIComponent(endpoint) : endpoint; 
-                            let res = await fetch(targetUrl, { cache: "no-store" }); 
-                            if (!res.ok) continue; let data = await res.json(); let foundPrice = 0; 
-                            const searchPrice = (obj) => { 
-                                if (!obj || typeof obj !== 'object') return; 
-                                for (let key in obj) { 
-                                    if (key.toLowerCase().includes('binance')) { 
-                                        if (obj[key].price) { foundPrice = parseFloat(obj[key].price); return; } 
-                                        if (typeof obj[key] === 'number') { foundPrice = obj[key]; return; } 
-                                    } 
-                                    if (foundPrice === 0) searchPrice(obj[key]); 
-                                } 
-                            }; 
-                            searchPrice(data); 
-                            if (foundPrice > 0) { binanceVal = foundPrice; bypassSuccess = true; break; } 
-                        } catch(e) {} 
-                    } 
-                } 
-                window.rateBcvVal = bcvVal; window.rateBinanceVal = binanceVal; window.rateEuroVal = euroVal; 
-                document.getElementById('rateBcv').innerText = `Bs. ${parseFloat(bcvVal).toFixed(2)}`; 
-                document.getElementById('rateBinance').innerText = `Bs. ${parseFloat(binanceVal).toFixed(2)}`; 
-                document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(euroVal).toFixed(2)}`; 
-                document.getElementById('rateLastUpdate').innerText = `Última act: ${new Date().toLocaleTimeString('es-VE')}`; 
-                renderBalances(); renderExpenses(); btn.innerText = '📡 Sincronizar'; 
-            } catch(err) { btn.innerText = '⚠️ Reintentar'; } 
-        };
-
-        // Tareas y UI Base
-        let timerInterval, timeLeft = 25 * 60; window.startTimer = () => { clearInterval(timerInterval); timerInterval = setInterval(() => { if(timeLeft>0) { timeLeft--; document.getElementById('timer').innerText = `${Math.floor(timeLeft/60).toString().padStart(2,'0')}:${(timeLeft%60).toString().padStart(2,'0')}`; } else { clearInterval(timerInterval); alert("¡Pomodoro Terminado!"); recordActivity(); } }, 1000); }; window.resetTimer = () => { clearInterval(timerInterval); timeLeft = 25 * 60; document.getElementById('timer').innerText = "25:00"; };
-        window.addTask = () => { const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); if (input.value.trim() === '') return alert('Escribe.'); tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); input.value = ''; dateInput.value = ''; recordActivity(); saveDataToCloud(); };
-        function renderTasks() { const pendingList = document.getElementById('pendingList'); const completedList = document.getElementById('completedList'); pendingList.innerHTML = ''; completedList.innerHTML = ''; tasks.forEach((task, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; checkbox.onchange = () => { tasks[index].completed = !tasks[index].completed; if(tasks[index].completed) recordActivity(); saveDataToCloud(); }; const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>`; const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
-        window.addRecurringTask = () => { const input = document.getElementById('recTaskInput'), startInput = document.getElementById('recTaskStart'), intervalInput = document.getElementById('recTaskInterval'), freqInput = document.getElementById('recTaskFreq'); if (input.value.trim() === '' || startInput.value === '') return alert('Escribe.'); recurringTasks.push({ text: input.value, nextTrigger: startInput.value, interval: parseInt(intervalInput.value), freq: freqInput.value, notified: false }); input.value = ''; startInput.value = ''; intervalInput.value = '1'; recordActivity(); saveDataToCloud(); };
-        window.rescheduleRecurring = (task) => { let date = new Date(task.nextTrigger); let now = new Date(); if (date < now) date = now; if(task.freq === 'minutos') date.setMinutes(date.getMinutes() + task.interval); if(task.freq === 'horas') date.setHours(date.getHours() + task.interval); if(task.freq === 'dias') date.setDate(date.getDate() + task.interval); if(task.freq === 'meses') date.setMonth(date.getMonth() + task.interval); const tzOffset = date.getTimezoneOffset() * 60000; task.nextTrigger = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16); task.notified = false; };
-        function renderRecurringTasks() { const list = document.getElementById('recurringList'); list.innerHTML = ''; recurringTasks.forEach((rec, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; checkbox.onchange = () => { window.rescheduleRecurring(recurringTasks[index]); recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rec.nextTrigger); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge rec-badge`; badge.innerText = `Cada ${rec.interval} ${rec.freq}`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { recurringTasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); }); }
-        window.addReminder = () => { const input = document.getElementById('remInput'), datetimeInput = document.getElementById('remDatetime'), snoozeInput = document.getElementById('snoozeInput'); if (input.value.trim() === '' || datetimeInput.value === '') return alert('Escribe.'); reminders.push({ text: input.value, datetime: datetimeInput.value, snoozeMins: parseInt(snoozeInput.value), completed: false, notified: false }); input.value = ''; datetimeInput.value = ''; recordActivity(); saveDataToCloud(); };
-        function renderReminders() { const pendingList = document.getElementById('pendingReminders'); const completedList = document.getElementById('completedReminders'); pendingList.innerHTML = ''; completedList.innerHTML = ''; reminders.forEach((rem, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = rem.completed; checkbox.onchange = () => { reminders[index].completed = !reminders[index].completed; if(!reminders[index].completed) reminders[index].notified = false; else recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rem.datetime); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rem.text}</strong><br><span class="task-date">⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge snooze-badge`; badge.innerText = `Snooze: ${rem.snoozeMins}m`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { reminders.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); rem.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
-        
-        // CHECKLISTS
-        window.addTempChecklistItem = () => { const input = document.getElementById('clNewItem'); if(input.value.trim() === '') return; window.tempChecklistItems.push({ text: input.value, checked: false, checkedAt: null, editedAt: null }); input.value = ''; renderTempChecklist(); }; 
-        function renderTempChecklist() { const ul = document.getElementById('clTempList'); ul.innerHTML = ''; window.tempChecklistItems.forEach((item, i) => { const li = document.createElement('li'); li.style.padding = "5px"; li.style.marginBottom = "5px"; li.innerHTML = `<span style="flex-grow:1;">- ${item.text.substring(0,30)}...</span> <button onclick="window.tempChecklistItems.splice(${i},1); renderTempChecklist()" style="background:#cf6679; padding:2px 5px;">X</button>`; ul.appendChild(li); }); } 
-        
-        // REPARADO: Se agregó renderChecklists() al guardar.
-        window.saveNewChecklist = () => { 
-            const title = document.getElementById('clTitle').value; 
-            if (title.trim() === '' || window.tempChecklistItems.length === 0) return alert("Título y 1 ítem min."); 
-            const today = new Date().toLocaleString('es-VE'); 
-            checklists.push({ id: Date.now().toString(), title, items: [...window.tempChecklistItems], createdAt: today, editedAt: null }); 
-            document.getElementById('clTitle').value = ''; 
-            window.tempChecklistItems = []; 
-            renderTempChecklist(); 
-            recordActivity(); 
-            saveDataToCloud(); 
-            renderChecklists(); 
-        }; 
-        
-        function renderChecklists() { 
-            const pendingList = document.getElementById('clPending'); pendingList.innerHTML = ''; 
-            const completedList = document.getElementById('clCompleted'); completedList.innerHTML = ''; 
-            checklists.forEach((listData, listIndex) => { 
-                const li = document.createElement('li'); li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
-                const isCompleted = listData.items.length > 0 && listData.items.every(item => item.checked); 
-                const listId = listData.id || listData.createdAt; 
-                const header = document.createElement('div'); header.className = 'note-header'; 
-                let editMsg = listData.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Última modificación: ${listData.editedAt}</span>` : ''; 
-                const isOpen = window.openChecklists.has(listId); const arrow = isOpen ? '▲' : '▼'; 
-                header.innerHTML = `<div style="flex-grow: 1;"><strong>${listData.title}</strong><br><span class="task-date">Creado el: 📅 ${listData.createdAt}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">${arrow}</span>`; 
-                const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
-                const editTitleBtn = document.createElement('button'); editTitleBtn.innerText = '📝'; editTitleBtn.style.background = '#444'; editTitleBtn.style.padding = '5px'; 
-                editTitleBtn.onclick = (e) => { e.stopPropagation(); let newTitle = prompt("Editar Título:", listData.title); if(newTitle) { listData.title = newTitle; listData.editedAt = new Date().toLocaleString('es-VE'); saveDataToCloud(); renderChecklists(); } }; 
-                const delBtn = document.createElement('button'); delBtn.innerText = 'X'; delBtn.style.background = '#cf6679'; delBtn.style.padding = '5px 10px'; 
-                delBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar?")) { checklists.splice(listIndex, 1); saveDataToCloud(); renderChecklists(); } }; 
-                btnBox.append(editTitleBtn, delBtn); header.appendChild(btnBox); 
-                const body = document.createElement('div'); body.className = 'note-body'; body.style.display = isOpen ? 'block' : 'none'; 
-                listData.items.forEach((item, itemIndex) => { 
-                    const itemDiv = document.createElement('div'); itemDiv.className = 'checklist-item'; 
-                    const topRow = document.createElement('div'); topRow.className = 'checklist-item-row'; 
-                    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = item.checked; 
-                    cb.onchange = () => { item.checked = cb.checked; if(item.checked) { item.checkedAt = new Date().toLocaleString('es-VE'); recordActivity(); } else item.checkedAt = null; saveDataToCloud(); renderChecklists(); }; 
-                    const textDiv = document.createElement('div'); textDiv.className = 'markdown-content'; textDiv.style.flexGrow = '1'; textDiv.innerHTML = window.parseMarkdown(item.text); 
-                    topRow.append(cb, textDiv); itemDiv.appendChild(topRow); body.appendChild(itemDiv); 
-                }); 
-                header.onclick = () => { const isHidden = body.style.display === 'none'; if (isHidden) { window.openChecklists.add(listId); body.style.display = 'block'; header.querySelector('span').innerText = '▲'; } else { window.openChecklists.delete(listId); body.style.display = 'none'; header.querySelector('span').innerText = '▼'; } }; 
-                li.appendChild(header); li.appendChild(body); 
-                isCompleted ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); 
-            }); 
-        }
-
-        // TABLAS MD
-        window.isEditingPreview = false; window.htmlTableToMd = (tableEl) => { let md = "\n"; const rows = tableEl.querySelectorAll('tr'); rows.forEach((row, rowIndex) => { let rowMd = "|"; const cells = row.querySelectorAll('th, td'); cells.forEach(cell => { let text = cell.innerText.replace(/\n/g, ' ').trim(); if(text === '') text = ' '; rowMd += ` ${text} |`; }); md += rowMd + "\n"; if (rowIndex === 0) { let sepMd = "|"; cells.forEach(() => { sepMd += "---|"; }); md += sepMd + "\n"; } }); return md + "\n"; }; window.syncTableToMd = (tableIndex, tableEl, textareaEl, forceRender = false) => { const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); if(!tableTokens[tableIndex]) return; const oldMd = tableTokens[tableIndex].raw; const newMd = window.htmlTableToMd(tableEl); textareaEl.value = textareaEl.value.replace(oldMd, newMd); if (forceRender) { window.isEditingPreview = false; textareaEl.dispatchEvent(new Event('input')); } }; window.modifyTable = (tableIndex, action, textareaEl, previewEl) => { const tables = previewEl.querySelectorAll('table'); const table = tables[tableIndex]; if(!table) return; const tbody = table.querySelector('tbody') || table; const thead = table.querySelector('thead'); if(action === 'addCol') { table.querySelectorAll('tr').forEach((row, i) => { const cell = document.createElement(row.parentNode === thead ? 'th' : 'td'); cell.innerText = 'Dato'; row.appendChild(cell); }); } else if(action === 'remCol') { table.querySelectorAll('tr').forEach(row => { if(row.children.length > 1) row.removeChild(row.lastElementChild); }); } else if(action === 'addRow') { const row = document.createElement('tr'); const colCount = table.querySelector('tr').children.length; for(let i=0; i<colCount; i++) { const cell = document.createElement('td'); cell.innerText = 'Dato'; row.appendChild(cell); } tbody.appendChild(row); } else if(action === 'remRow') { if(tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild); } window.syncTableToMd(tableIndex, table, textareaEl, true); }; window.renderLivePreview = (textareaEl, previewEl) => { if (window.isEditingPreview) return; if(textareaEl.value.trim() !== '') { previewEl.style.display = 'block'; previewEl.innerHTML = window.parseMarkdown(textareaEl.value); } else { previewEl.style.display = 'none'; return; } const tables = previewEl.querySelectorAll('table'); const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); tables.forEach((table, i) => { if(!tableTokens[i]) return; const wrapper = document.createElement('div'); wrapper.className = 'table-editor-wrapper'; table.parentNode.insertBefore(wrapper, table); wrapper.appendChild(table); const controls = document.createElement('div'); controls.className = 'table-controls'; const addColBtn = document.createElement('button'); addColBtn.className = 't-btn'; addColBtn.innerText = '+ Columna'; addColBtn.onclick = () => window.modifyTable(i, 'addCol', textareaEl, previewEl); const remColBtn = document.createElement('button'); remColBtn.className = 't-btn t-btn-del'; remColBtn.innerText = '- Columna'; remColBtn.onclick = () => window.modifyTable(i, 'remCol', textareaEl, previewEl); const addRowBtn = document.createElement('button'); addRowBtn.className = 't-btn'; addRowBtn.innerText = '+ Fila'; addRowBtn.onclick = () => window.modifyTable(i, 'addRow', textareaEl, previewEl); const remRowBtn = document.createElement('button'); remRowBtn.className = 't-btn t-btn-del'; remRowBtn.innerText = '- Fila'; remRowBtn.onclick = () => window.modifyTable(i, 'remRow', textareaEl, previewEl); controls.append(addColBtn, remColBtn, addRowBtn, remRowBtn); wrapper.insertBefore(controls, table); table.querySelectorAll('th, td').forEach(cell => { cell.setAttribute('contenteditable', 'true'); cell.addEventListener('input', () => { window.isEditingPreview = true; window.syncTableToMd(i, table, textareaEl, false); window.isEditingPreview = false; }); }); }); };
-        
-        const noteContentInput = document.getElementById('noteContent'); const notePreviewDiv = document.getElementById('newNotePreview'); noteContentInput.addEventListener('input', () => window.renderLivePreview(noteContentInput, notePreviewDiv));
-        const mdToolbar = document.getElementById('mdToolbar'); document.addEventListener('focusin', (e) => { if (e.target.tagName === 'TEXTAREA') { activeTextarea = e.target; const rect = e.target.getBoundingClientRect(); mdToolbar.style.display = 'flex'; mdToolbar.style.top = (rect.top + window.scrollY - 45) + 'px'; mdToolbar.style.left = rect.left + 'px'; } }); document.addEventListener('focusout', (e) => { if (e.target.tagName === 'TEXTAREA') { setTimeout(()=> mdToolbar.style.display = 'none', 150); } }); window.applyMd = (e, prefix, suffix) => { e.preventDefault(); if (!activeTextarea) return; const start = activeTextarea.selectionStart; const end = activeTextarea.selectionEnd; const text = activeTextarea.value; const selected = text.substring(start, end); activeTextarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end); activeTextarea.focus(); activeTextarea.selectionStart = start + prefix.length; activeTextarea.selectionEnd = end + prefix.length; activeTextarea.dispatchEvent(new Event('input')); }; window.applyMdTable = (e) => { e.preventDefault(); if (!activeTextarea) return; const tableTemplate = `\n| Encabezado 1 | Encabezado 2 | Encabezado 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n| Dato 4 | Dato 5 | Dato 6 |\n\n`; const start = activeTextarea.selectionStart; const text = activeTextarea.value; activeTextarea.value = text.substring(0, start) + tableTemplate + text.substring(start); activeTextarea.focus(); activeTextarea.selectionStart = start + tableTemplate.length; activeTextarea.selectionEnd = start + tableTemplate.length; activeTextarea.dispatchEvent(new Event('input')); }; 
-
         // VAULT
         window.unlockVault = () => { 
             const input = document.getElementById('pinInput').value; 
@@ -1003,7 +1166,6 @@
 
         Sortable.create(document.getElementById('tabContainer'), { animation: 150, ghostClass: 'sortable-ghost', onEnd: function () { tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); saveDataToCloud(); } }); 
 
-        // REPARADO: EXPORTAR CSV AHORA INCLUYE EQUIVALENCIAS EN TASA
         window.exportToCSV = () => { 
             if(expenses.length === 0) return alert("Vacio."); 
             let csvContent = "Fecha,Descripcion,Metodo,Monto (Original),Equiv USD (BCV),Equiv USDT (Binance),Equiv EUR\n"; 
