@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta-Cognitive OS v17.2 (Stable Pro)</title>
+    <title>Meta-Cognitive OS v17.3 (Master Release)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#121212">
     
@@ -42,8 +42,8 @@
         .cloud-status { font-size: 0.5em; padding: 4px 8px; border-radius: 10px; background: #444; color: white; } 
         .cloud-syncing { background: var(--secondary); color: black; } 
         .input-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; width: 100%; align-items: center; } 
-        input[type="text"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], select, textarea { padding: 10px; border: 1px solid #444; background: #2c2c2c; color: white; border-radius: 4px; font-family: inherit; } 
-        input[type="text"], input[type="number"], input[type="password"], textarea { flex-grow: 1; } 
+        input[type="text"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="tel"], select, textarea { padding: 10px; border: 1px solid #444; background: #2c2c2c; color: white; border-radius: 4px; font-family: inherit; } 
+        input[type="text"], input[type="number"], input[type="password"], input[type="tel"], textarea { flex-grow: 1; } 
         textarea { width: 100%; min-height: 80px; resize: vertical; } 
         button { padding: 10px 20px; background-color: var(--primary); color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; } 
         button:hover { opacity: 0.9; } 
@@ -141,6 +141,11 @@
         .zk-link { color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline; background: rgba(187, 134, 252, 0.1); padding: 2px 5px; border-radius: 4px;}
         .zk-link:hover { background: rgba(187, 134, 252, 0.3); }
         #networkGraph { width: 100%; height: 300px; background: #1a1a1a; border: 1px dashed #444; border-radius: 8px; margin-bottom: 15px; display: none;}
+
+        /* TOOLTIPS CSS */
+        .tooltip { position: relative; display: inline-block; cursor: pointer; color: var(--secondary); margin-left: 5px; font-weight: bold; font-size: 0.85em; background: rgba(3, 218, 198, 0.1); border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2a2a2a; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1000; bottom: 125%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; font-size: 0.85em; font-weight: normal; border: 1px solid var(--secondary); box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body>
@@ -154,7 +159,7 @@
 
     <div id="authScreen">
         <div class="auth-container">
-            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.2</span></h1>
+            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">v17.3</span></h1>
             <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia segura</p>
             <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required>
             <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required>
@@ -187,13 +192,13 @@
 
         <div id="actividades" class="tab-content active">
             <div class="container pomodoro">
-                <h2>Bloque de Enfoque (Pomodoro)</h2>
+                <h2>Bloque de Enfoque (Pomodoro) <div class="tooltip">?<span class="tooltiptext">Temporizador de 25 minutos. Úsalo para trabajar sin distracciones. Sonará al terminar.</span></div></h2>
                 <div id="timer">25:00</div>
                 <button onclick="startTimer()">Iniciar Enfoque</button>
                 <button onclick="resetTimer()" style="background:#444; color:white;">Reset</button>
             </div>
             <div class="container">
-                <h2>Nueva Actividad <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
+                <h2>Nueva Actividad <div class="tooltip">?<span class="tooltiptext">Crea tareas sueltas para hoy. Al completarlas y tacharlas se sumarán a tu Mapa de Productividad.</span></div> <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
                 <div class="input-group">
                     <input type="text" id="taskInput" placeholder="¿Qué necesitas lograr hoy?">
                     <input type="date" id="dateInput">
@@ -208,7 +213,7 @@
             </div>
 
             <div class="container">
-                <h2 style="color: #39d353;">Mapa de Productividad (Últimos 30 días)</h2>
+                <h2 style="color: #39d353;">Mapa de Productividad (Heatmap) <div class="tooltip">?<span class="tooltiptext">Al estilo de GitHub. Cada vez que cumples una tarea o registras información, el día de hoy se pintará más verde. ¡No rompas la racha!</span></div></h2>
                 <div class="heatmap-container">
                     <div id="heatmapGrid" class="heatmap-grid"></div>
                     <span style="font-size: 0.7em; color: #aaa; margin-top: 10px;">Menos ← ■ ■ ■ ■ → Más Productivo</span>
@@ -216,7 +221,7 @@
             </div>
 
             <div class="container">
-                <h2 style="color: #ff9800; border-bottom-color: #ff9800;">Hábitos y Rutinas (Recurrentes)</h2>
+                <h2 style="color: #ff9800; border-bottom-color: #ff9800;">Hábitos y Rutinas <div class="tooltip">?<span class="tooltiptext">Para tareas que se repiten. Si pones 'Tomar agua cada 2 horas', al completarla, la app volverá a crear la tarea automáticamente sumándole 2 horas al reloj.</span></div></h2>
                 <div class="input-group">
                     <input type="text" id="recTaskInput" placeholder="Ej: Tomar agua, Pagar luz...">
                     <input type="datetime-local" id="recTaskStart" title="Fecha y hora de inicio">
@@ -240,9 +245,9 @@
 
         <div id="checklists" class="tab-content">
             <div class="container">
-                <h2>Constructor de Check-list</h2>
+                <h2>Constructor de Check-list <div class="tooltip">?<span class="tooltiptext">A diferencia de tareas simples, aquí agrupas muchos pasos en un solo Proyecto. Añade ítems primero y luego guarda la lista entera.</span></div></h2>
                 <div class="input-group" style="flex-direction: column;">
-                    <input type="text" id="clTitle" placeholder="Título de la lista">
+                    <input type="text" id="clTitle" placeholder="Título de la lista (Ej: Viaje a la Playa)">
                     <div style="display: flex; gap: 10px; width: 100%;">
                         <textarea id="clNewItem" placeholder="Escribe un ítem..."></textarea>
                         <button onclick="addTempChecklistItem()" style="background: var(--secondary);">Añadir Ítem</button>
@@ -257,7 +262,7 @@
 
         <div id="recordatorios" class="tab-content">
             <div class="container">
-                <h2>Nuevo Recordatorio Único</h2>
+                <h2>Nuevo Recordatorio Único <div class="tooltip">?<span class="tooltiptext">Una alarma literal. Programa una hora exacta y tu navegador emitirá un sonido y una notificación en pantalla en ese momento.</span></div></h2>
                 <div class="input-group">
                     <input type="text" id="remInput" placeholder="¿Qué debo recordarte?">
                     <input type="datetime-local" id="remDatetime">
@@ -281,7 +286,7 @@
                     <h1 style="color: var(--warning);">🔒 Bóveda Segura</h1>
                     <p>Ingresa tu PIN Maestro para desencriptar</p>
                     <div class="input-group" style="justify-content: center;">
-                        <input type="password" id="pinInput" placeholder="****" style="text-align: center; width: 100px; font-size: 1.5em;" maxlength="10" autocomplete="new-password">
+                        <input type="tel" id="pinInput" placeholder="****" style="-webkit-text-security: disc; text-align: center; width: 100px; font-size: 1.5em; letter-spacing: 5px;" maxlength="10" autocomplete="off">
                         <button onclick="unlockVault()">Desbloquear</button>
                     </div>
                 </div>
@@ -289,11 +294,11 @@
                 <div id="vaultContent" class="vault-hidden">
                     
                     <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
-                        <button type="button" onclick="changePin()" style="background: var(--surface); color: #aaa; border: 1px solid #444; font-size: 0.8em; padding: 5px 10px; border-radius: 4px;">🔑 Cambiar PIN Maestro</button>
+                        <button type="button" onclick="changePin()" style="background: var(--surface); color: #aaa; border: 1px solid #444; font-size: 0.8em; padding: 5px 10px; border-radius: 4px;">🔑 Cambiar PIN</button>
                     </div>
 
                     <div class="safe-to-spend-box">
-                        <div class="sts-title">Gasto Seguro Disponible (Total)</div>
+                        <div class="sts-title">Gasto Seguro Disponible <div class="tooltip">?<span class="tooltiptext">Cálculo Predictivo: Suma todo tu dinero actual y le resta automáticamente los gastos que repetiste idénticos en el mes anterior (Ghost Subs) para decirte cuánto dinero libre de culpa tienes.</span></div></div>
                         <div class="sts-amount" id="stsValue">Calculando...</div>
                         <div class="sts-subtext" id="stsSubs">Analizando suscripciones fantasma...</div>
                     </div>
@@ -305,12 +310,12 @@
                     </div>
 
                     <div class="container" style="text-align: center;">
-                        <h2>Distribución de Gastos (Filtrados) 📊</h2>
+                        <h2>Distribución de Gastos (Filtrados) 📊 <div class="tooltip">?<span class="tooltiptext">El gráfico se recalcula al instante basándose en lo que filtres en la sección de 'Historial'.</span></div> <button type="button" onclick="downloadChartPNG()" style="font-size: 0.6em; padding: 5px 10px; margin-left: auto; background: var(--secondary); color: black;">⬇️ PNG</button></h2>
                         <div class="chart-container"><canvas id="financeChart"></canvas></div>
                     </div>
                     
                     <div class="container">
-                        <h2>Oráculo de Tasas <button id="btnSyncRates" onclick="fetchExchangeRates()" style="font-size: 0.6em; padding: 5px 10px; margin-left: auto;">📡 Sincronizar</button></h2>
+                        <h2>Oráculo de Tasas <div class="tooltip">?<span class="tooltiptext">Extrae automáticamente en vivo el valor del Dólar Oficial BCV, Dólar Binance y Euro desde APIs bancarias.</span></div> <button id="btnSyncRates" onclick="fetchExchangeRates()" style="font-size: 0.6em; padding: 5px 10px; margin-left: auto;">📡 Sincronizar</button></h2>
                         <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
                             <div class="rate-card">🇺🇸 BCV:<br><strong id="rateBcv">Bs. 0.00</strong></div>
                             <div class="rate-card">🟡 Binance:<br><strong id="rateBinance">Bs. 0.00</strong></div>
@@ -320,7 +325,7 @@
                     </div>
                     
                     <div class="container">
-                        <h2>Registrar Nuevo Gasto</h2>
+                        <h2>Registrar Nuevo Gasto <div class="tooltip">?<span class="tooltiptext">Si descuentas en Bolívares, se calculará automáticamente el equivalente en dólares de ese preciso instante usando las tasas del Oráculo, para que nunca pierdas de vista la inflación.</span></div></h2>
                         <div class="input-group">
                             <input type="text" id="expDesc" placeholder="Detalle del gasto">
                             <input type="number" id="expAmount" placeholder="Monto" step="0.01" min="0.01">
@@ -335,7 +340,7 @@
                     </div>
                     
                     <div class="container">
-                        <h2>Historial <button type="button" onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black;">📥 Exportar</button></h2>
+                        <h2>Historial <button type="button" onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black;">📥 Exportar CSV</button></h2>
                         <div class="filter-bar">
                             <label>📅 Día exacto: <input type="date" id="filterDate" onchange="window.applyFilters()"></label>
                             <label>🗓️ Rango: <input type="date" id="filterStartDate" onchange="window.applyFilters()"> <span>a</span> <input type="date" id="filterEndDate" onchange="window.applyFilters()"></label>
@@ -357,7 +362,7 @@
 
         <div id="notas" class="tab-content">
             <div class="container">
-                <h2>El Segundo Cerebro <button onclick="toggleNotesGraph()" style="font-size: 0.7em; background: #444; color: white; padding: 5px 10px;">🌌 Ver Grafo Visual</button></h2>
+                <h2>El Segundo Cerebro <div class="tooltip">?<span class="tooltiptext">Usa doble corchete [[Como Esto]] para conectar el nombre de dos notas entre sí. Al presionar 'Ver Grafo Visual', se dibujará una red neuronal interactiva con tus ideas.</span></div> <button onclick="toggleNotesGraph()" style="font-size: 0.7em; background: #444; color: white; padding: 5px 10px;">🌌 Ver Grafo Visual</button></h2>
                 <div id="networkGraph"></div>
                 <div class="input-group" style="flex-direction: column; margin-top: 15px;">
                     <input type="text" id="noteTitle" placeholder="Título de la nota (Sirve como etiqueta Zettelkasten)">
@@ -410,8 +415,6 @@
 
         let currentUid = null; 
         let unsubSnapshot = null;
-        
-        // FIX: Se agrega masterPin a las variables globales
         let masterPin = "1234";
         let tasks = [], reminders = [], balances = { facebank: 0, binance: 0, bs: 0 }, expenses = [], notes = [], recurringTasks = [], checklists = [], tabOrder = [], activityLog = {};
         window.tempChecklistItems = []; window.rateBcvVal = 0; window.rateBinanceVal = 0; window.rateEuroVal = 0; window.activeAlarm = null; window.alarmAudioInterval = null; window.openChecklists = new Set(); let activeTextarea = null; 
@@ -477,7 +480,7 @@
                     if (doc.exists()) { 
                         const data = doc.data(); 
                         tasks = data.tasks || []; reminders = data.reminders || []; balances = data.balances || {facebank:0,binance:0,bs:0}; expenses = data.expenses || []; notes = data.notes || []; recurringTasks = data.recurringTasks || []; checklists = data.checklists || []; tabOrder = data.tabOrder || []; activityLog = data.activityLog || {}; 
-                        masterPin = data.masterPin || "1234"; // Cargar el PIN personalizado
+                        masterPin = data.masterPin || "1234";
                         
                         if (tabOrder.length > 0) { 
                             const container = document.getElementById('tabContainer'); 
@@ -512,15 +515,19 @@
             if(tabId === 'finanzas') { renderExpenses(); window.calculateSafeToSpend(); } 
         };
 
+        // REPARADO: Parsea robustamente formatos locales (DD/MM/YYYY) para convertirlos a Objetos de Fecha universales.
         function parseVeDate(dateStr) { 
             if(!dateStr) return new Date(0); 
-            const parts = dateStr.split(',')[0].split('/'); 
-            if(parts.length === 3) { return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T00:00:00`); } 
+            const parts = dateStr.split(',')[0].trim().split('/'); 
+            if(parts.length === 3) { 
+                return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T00:00:00`); 
+            } 
             return new Date(dateStr); 
         }
 
-        // FIX: Formateador estricto para solucionar el error de zona horaria en los filtros
+        // REPARADO: Asegura que el string de salida siempre sea YYYY-MM-DD sin importar la Zona Horaria.
         function getLocalYMD(dateObj) {
+            if (isNaN(dateObj)) return "";
             const y = dateObj.getFullYear();
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
             const d = String(dateObj.getDate()).padStart(2, '0');
@@ -556,11 +563,8 @@
         }
 
         // === FINANZAS & CHARTS ===
-        
-        // FIX: La función Apply Filters ahora ejecuta renderExpenses limpiamente.
         window.applyFilters = () => { renderExpenses(); }; 
         
-        // FIX: Botón de limpiar ahora funciona y resetea todos los campos.
         window.clearFilters = () => { 
             document.getElementById('filterDate').value = ''; 
             document.getElementById('filterStartDate').value = ''; 
@@ -580,10 +584,8 @@
             
             let filtered = expenses.map((exp, originalIndex) => ({...exp, originalIndex})); 
             
-            // Filtro por cuenta
             if(fAcc !== 'all') filtered = filtered.filter(e => e.account === fAcc); 
             
-            // Filtros por fecha (Usando getLocalYMD para evadir bugs de Timezone)
             if(fDate) { 
                 filtered = filtered.filter(e => getLocalYMD(parseVeDate(e.date)) === fDate); 
             } 
@@ -622,9 +624,9 @@
                 li.append(contentDiv, amountSpan, deleteBtn); 
                 list.appendChild(li); 
             }); 
-            if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos con este filtro.</li>'; 
+            if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos en este rango o cuenta.</li>'; 
             
-            // FIX: El gráfico ahora se dibuja en base a la data FILTRADA en tiempo real.
+            // REPARADO: EL GRAFICO AHORA LEE DIRECTAMENTE DE LA DATA FILTRADA
             let sumFb = 0, sumBin = 0, sumBs = 0; 
             filtered.forEach(e => { 
                 if(e.account === 'facebank') sumFb += parseFloat(e.amount); 
@@ -718,12 +720,20 @@
             let bs = balances.bs || 0; let eq = []; 
             if(window.rateBcvVal > 0) eq.push(`🇺🇸 BCV: $${(bs / window.rateBcvVal).toFixed(2)}`); 
             if(window.rateBinanceVal > 0) eq.push(`🟡 BIN: ₮${(bs / window.rateBinanceVal).toFixed(2)}`); 
-            // FIX: Equivalente de EUR en la tarjeta principal
             if(window.rateEuroVal > 0) eq.push(`🇪🇺 EUR: €${(bs / window.rateEuroVal).toFixed(2)}`); 
             
             document.getElementById('bsEquiv').innerHTML = eq.length > 0 ? eq.join('<br>') : '≈ Sincroniza tasas'; 
             window.calculateSafeToSpend(); 
         }
+
+        // === DESCARGA DE GRÁFICO (PNG) ===
+        window.downloadChartPNG = () => {
+            const canvas = document.getElementById('financeChart');
+            const link = document.createElement('a');
+            link.download = 'Distribucion_Gastos_MetaOS.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
 
         // === NOTAS & ZETTELKASTEN ===
         window.addNote = () => { 
@@ -735,9 +745,7 @@
             document.getElementById('noteTitle').value = ''; 
             document.getElementById('noteContent').value = ''; 
             document.getElementById('newNotePreview').style.display = 'none'; 
-            recordActivity(); saveDataToCloud(); 
-            // FIX: Forzamos la renderización inmediata al guardar para no esperar al snapshot
-            renderNotes();
+            recordActivity(); saveDataToCloud(); renderNotes();
         };
 
         function renderNotes() { 
@@ -905,7 +913,8 @@
             } catch(err) { btn.innerText = '⚠️ Reintentar'; } 
         };
 
-        // Resto de UI (Tareas, Checklists)
+        // Tareas y UI Base
+        let timerInterval, timeLeft = 25 * 60; window.startTimer = () => { clearInterval(timerInterval); timerInterval = setInterval(() => { if(timeLeft>0) { timeLeft--; document.getElementById('timer').innerText = `${Math.floor(timeLeft/60).toString().padStart(2,'0')}:${(timeLeft%60).toString().padStart(2,'0')}`; } else { clearInterval(timerInterval); alert("¡Pomodoro Terminado!"); recordActivity(); } }, 1000); }; window.resetTimer = () => { clearInterval(timerInterval); timeLeft = 25 * 60; document.getElementById('timer').innerText = "25:00"; };
         window.addTask = () => { const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); if (input.value.trim() === '') return alert('Escribe.'); tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); input.value = ''; dateInput.value = ''; recordActivity(); saveDataToCloud(); };
         function renderTasks() { const pendingList = document.getElementById('pendingList'); const completedList = document.getElementById('completedList'); pendingList.innerHTML = ''; completedList.innerHTML = ''; tasks.forEach((task, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; checkbox.onchange = () => { tasks[index].completed = !tasks[index].completed; if(tasks[index].completed) recordActivity(); saveDataToCloud(); }; const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>`; const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
         window.addRecurringTask = () => { const input = document.getElementById('recTaskInput'), startInput = document.getElementById('recTaskStart'), intervalInput = document.getElementById('recTaskInterval'), freqInput = document.getElementById('recTaskFreq'); if (input.value.trim() === '' || startInput.value === '') return alert('Escribe.'); recurringTasks.push({ text: input.value, nextTrigger: startInput.value, interval: parseInt(intervalInput.value), freq: freqInput.value, notified: false }); input.value = ''; startInput.value = ''; intervalInput.value = '1'; recordActivity(); saveDataToCloud(); };
@@ -914,17 +923,63 @@
         window.addReminder = () => { const input = document.getElementById('remInput'), datetimeInput = document.getElementById('remDatetime'), snoozeInput = document.getElementById('snoozeInput'); if (input.value.trim() === '' || datetimeInput.value === '') return alert('Escribe.'); reminders.push({ text: input.value, datetime: datetimeInput.value, snoozeMins: parseInt(snoozeInput.value), completed: false, notified: false }); input.value = ''; datetimeInput.value = ''; recordActivity(); saveDataToCloud(); };
         function renderReminders() { const pendingList = document.getElementById('pendingReminders'); const completedList = document.getElementById('completedReminders'); pendingList.innerHTML = ''; completedList.innerHTML = ''; reminders.forEach((rem, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = rem.completed; checkbox.onchange = () => { reminders[index].completed = !reminders[index].completed; if(!reminders[index].completed) reminders[index].notified = false; else recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rem.datetime); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rem.text}</strong><br><span class="task-date">⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge snooze-badge`; badge.innerText = `Snooze: ${rem.snoozeMins}m`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { reminders.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); rem.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
         
+        // CHECKLISTS
         window.addTempChecklistItem = () => { const input = document.getElementById('clNewItem'); if(input.value.trim() === '') return; window.tempChecklistItems.push({ text: input.value, checked: false, checkedAt: null, editedAt: null }); input.value = ''; renderTempChecklist(); }; 
         function renderTempChecklist() { const ul = document.getElementById('clTempList'); ul.innerHTML = ''; window.tempChecklistItems.forEach((item, i) => { const li = document.createElement('li'); li.style.padding = "5px"; li.style.marginBottom = "5px"; li.innerHTML = `<span style="flex-grow:1;">- ${item.text.substring(0,30)}...</span> <button onclick="window.tempChecklistItems.splice(${i},1); renderTempChecklist()" style="background:#cf6679; padding:2px 5px;">X</button>`; ul.appendChild(li); }); } 
-        window.saveNewChecklist = () => { const title = document.getElementById('clTitle').value; if (title.trim() === '' || window.tempChecklistItems.length === 0) return alert("Título y 1 ítem min."); const today = new Date().toLocaleString('es-VE'); checklists.push({ id: Date.now().toString(), title, items: [...window.tempChecklistItems], createdAt: today, editedAt: null }); document.getElementById('clTitle').value = ''; window.tempChecklistItems = []; renderTempChecklist(); recordActivity(); saveDataToCloud(); }; 
-        function renderChecklists() { const pendingList = document.getElementById('clPending'); pendingList.innerHTML = ''; const completedList = document.getElementById('clCompleted'); completedList.innerHTML = ''; checklists.forEach((listData, listIndex) => { const li = document.createElement('li'); li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; const isCompleted = listData.items.length > 0 && listData.items.every(item => item.checked); const listId = listData.id || listData.createdAt; const header = document.createElement('div'); header.className = 'note-header'; let editMsg = listData.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Última modificación: ${listData.editedAt}</span>` : ''; const isOpen = window.openChecklists.has(listId); const arrow = isOpen ? '▲' : '▼'; header.innerHTML = `<div style="flex-grow: 1;"><strong>${listData.title}</strong><br><span class="task-date">Creado el: 📅 ${listData.createdAt}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">${arrow}</span>`; const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; const editTitleBtn = document.createElement('button'); editTitleBtn.innerText = '📝'; editTitleBtn.style.background = '#444'; editTitleBtn.style.padding = '5px'; editTitleBtn.onclick = (e) => { e.stopPropagation(); let newTitle = prompt("Editar Título:", listData.title); if(newTitle) { listData.title = newTitle; listData.editedAt = new Date().toLocaleString('es-VE'); saveDataToCloud(); } }; const delBtn = document.createElement('button'); delBtn.innerText = 'X'; delBtn.style.background = '#cf6679'; delBtn.style.padding = '5px 10px'; delBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar?")) { checklists.splice(listIndex, 1); saveDataToCloud(); } }; btnBox.append(editTitleBtn, delBtn); header.appendChild(btnBox); const body = document.createElement('div'); body.className = 'note-body'; body.style.display = isOpen ? 'block' : 'none'; listData.items.forEach((item, itemIndex) => { const itemDiv = document.createElement('div'); itemDiv.className = 'checklist-item'; const topRow = document.createElement('div'); topRow.className = 'checklist-item-row'; const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = item.checked; cb.onchange = () => { item.checked = cb.checked; if(item.checked) { item.checkedAt = new Date().toLocaleString('es-VE'); recordActivity(); } else item.checkedAt = null; saveDataToCloud(); }; const textDiv = document.createElement('div'); textDiv.className = 'markdown-content'; textDiv.style.flexGrow = '1'; textDiv.innerHTML = window.parseMarkdown(item.text); topRow.append(cb, textDiv); itemDiv.appendChild(topRow); body.appendChild(itemDiv); }); header.onclick = () => { const isHidden = body.style.display === 'none'; if (isHidden) { window.openChecklists.add(listId); body.style.display = 'block'; header.querySelector('span').innerText = '▲'; } else { window.openChecklists.delete(listId); body.style.display = 'none'; header.querySelector('span').innerText = '▼'; } }; li.appendChild(header); li.appendChild(body); isCompleted ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
+        
+        // REPARADO: Se agregó renderChecklists() al guardar.
+        window.saveNewChecklist = () => { 
+            const title = document.getElementById('clTitle').value; 
+            if (title.trim() === '' || window.tempChecklistItems.length === 0) return alert("Título y 1 ítem min."); 
+            const today = new Date().toLocaleString('es-VE'); 
+            checklists.push({ id: Date.now().toString(), title, items: [...window.tempChecklistItems], createdAt: today, editedAt: null }); 
+            document.getElementById('clTitle').value = ''; 
+            window.tempChecklistItems = []; 
+            renderTempChecklist(); 
+            recordActivity(); 
+            saveDataToCloud(); 
+            renderChecklists(); 
+        }; 
+        
+        function renderChecklists() { 
+            const pendingList = document.getElementById('clPending'); pendingList.innerHTML = ''; 
+            const completedList = document.getElementById('clCompleted'); completedList.innerHTML = ''; 
+            checklists.forEach((listData, listIndex) => { 
+                const li = document.createElement('li'); li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
+                const isCompleted = listData.items.length > 0 && listData.items.every(item => item.checked); 
+                const listId = listData.id || listData.createdAt; 
+                const header = document.createElement('div'); header.className = 'note-header'; 
+                let editMsg = listData.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Última modificación: ${listData.editedAt}</span>` : ''; 
+                const isOpen = window.openChecklists.has(listId); const arrow = isOpen ? '▲' : '▼'; 
+                header.innerHTML = `<div style="flex-grow: 1;"><strong>${listData.title}</strong><br><span class="task-date">Creado el: 📅 ${listData.createdAt}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">${arrow}</span>`; 
+                const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
+                const editTitleBtn = document.createElement('button'); editTitleBtn.innerText = '📝'; editTitleBtn.style.background = '#444'; editTitleBtn.style.padding = '5px'; 
+                editTitleBtn.onclick = (e) => { e.stopPropagation(); let newTitle = prompt("Editar Título:", listData.title); if(newTitle) { listData.title = newTitle; listData.editedAt = new Date().toLocaleString('es-VE'); saveDataToCloud(); renderChecklists(); } }; 
+                const delBtn = document.createElement('button'); delBtn.innerText = 'X'; delBtn.style.background = '#cf6679'; delBtn.style.padding = '5px 10px'; 
+                delBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar?")) { checklists.splice(listIndex, 1); saveDataToCloud(); renderChecklists(); } }; 
+                btnBox.append(editTitleBtn, delBtn); header.appendChild(btnBox); 
+                const body = document.createElement('div'); body.className = 'note-body'; body.style.display = isOpen ? 'block' : 'none'; 
+                listData.items.forEach((item, itemIndex) => { 
+                    const itemDiv = document.createElement('div'); itemDiv.className = 'checklist-item'; 
+                    const topRow = document.createElement('div'); topRow.className = 'checklist-item-row'; 
+                    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = item.checked; 
+                    cb.onchange = () => { item.checked = cb.checked; if(item.checked) { item.checkedAt = new Date().toLocaleString('es-VE'); recordActivity(); } else item.checkedAt = null; saveDataToCloud(); renderChecklists(); }; 
+                    const textDiv = document.createElement('div'); textDiv.className = 'markdown-content'; textDiv.style.flexGrow = '1'; textDiv.innerHTML = window.parseMarkdown(item.text); 
+                    topRow.append(cb, textDiv); itemDiv.appendChild(topRow); body.appendChild(itemDiv); 
+                }); 
+                header.onclick = () => { const isHidden = body.style.display === 'none'; if (isHidden) { window.openChecklists.add(listId); body.style.display = 'block'; header.querySelector('span').innerText = '▲'; } else { window.openChecklists.delete(listId); body.style.display = 'none'; header.querySelector('span').innerText = '▼'; } }; 
+                li.appendChild(header); li.appendChild(body); 
+                isCompleted ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); 
+            }); 
+        }
 
+        // TABLAS MD
         window.isEditingPreview = false; window.htmlTableToMd = (tableEl) => { let md = "\n"; const rows = tableEl.querySelectorAll('tr'); rows.forEach((row, rowIndex) => { let rowMd = "|"; const cells = row.querySelectorAll('th, td'); cells.forEach(cell => { let text = cell.innerText.replace(/\n/g, ' ').trim(); if(text === '') text = ' '; rowMd += ` ${text} |`; }); md += rowMd + "\n"; if (rowIndex === 0) { let sepMd = "|"; cells.forEach(() => { sepMd += "---|"; }); md += sepMd + "\n"; } }); return md + "\n"; }; window.syncTableToMd = (tableIndex, tableEl, textareaEl, forceRender = false) => { const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); if(!tableTokens[tableIndex]) return; const oldMd = tableTokens[tableIndex].raw; const newMd = window.htmlTableToMd(tableEl); textareaEl.value = textareaEl.value.replace(oldMd, newMd); if (forceRender) { window.isEditingPreview = false; textareaEl.dispatchEvent(new Event('input')); } }; window.modifyTable = (tableIndex, action, textareaEl, previewEl) => { const tables = previewEl.querySelectorAll('table'); const table = tables[tableIndex]; if(!table) return; const tbody = table.querySelector('tbody') || table; const thead = table.querySelector('thead'); if(action === 'addCol') { table.querySelectorAll('tr').forEach((row, i) => { const cell = document.createElement(row.parentNode === thead ? 'th' : 'td'); cell.innerText = 'Dato'; row.appendChild(cell); }); } else if(action === 'remCol') { table.querySelectorAll('tr').forEach(row => { if(row.children.length > 1) row.removeChild(row.lastElementChild); }); } else if(action === 'addRow') { const row = document.createElement('tr'); const colCount = table.querySelector('tr').children.length; for(let i=0; i<colCount; i++) { const cell = document.createElement('td'); cell.innerText = 'Dato'; row.appendChild(cell); } tbody.appendChild(row); } else if(action === 'remRow') { if(tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild); } window.syncTableToMd(tableIndex, table, textareaEl, true); }; window.renderLivePreview = (textareaEl, previewEl) => { if (window.isEditingPreview) return; if(textareaEl.value.trim() !== '') { previewEl.style.display = 'block'; previewEl.innerHTML = window.parseMarkdown(textareaEl.value); } else { previewEl.style.display = 'none'; return; } const tables = previewEl.querySelectorAll('table'); const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); tables.forEach((table, i) => { if(!tableTokens[i]) return; const wrapper = document.createElement('div'); wrapper.className = 'table-editor-wrapper'; table.parentNode.insertBefore(wrapper, table); wrapper.appendChild(table); const controls = document.createElement('div'); controls.className = 'table-controls'; const addColBtn = document.createElement('button'); addColBtn.className = 't-btn'; addColBtn.innerText = '+ Columna'; addColBtn.onclick = () => window.modifyTable(i, 'addCol', textareaEl, previewEl); const remColBtn = document.createElement('button'); remColBtn.className = 't-btn t-btn-del'; remColBtn.innerText = '- Columna'; remColBtn.onclick = () => window.modifyTable(i, 'remCol', textareaEl, previewEl); const addRowBtn = document.createElement('button'); addRowBtn.className = 't-btn'; addRowBtn.innerText = '+ Fila'; addRowBtn.onclick = () => window.modifyTable(i, 'addRow', textareaEl, previewEl); const remRowBtn = document.createElement('button'); remRowBtn.className = 't-btn t-btn-del'; remRowBtn.innerText = '- Fila'; remRowBtn.onclick = () => window.modifyTable(i, 'remRow', textareaEl, previewEl); controls.append(addColBtn, remColBtn, addRowBtn, remRowBtn); wrapper.insertBefore(controls, table); table.querySelectorAll('th, td').forEach(cell => { cell.setAttribute('contenteditable', 'true'); cell.addEventListener('input', () => { window.isEditingPreview = true; window.syncTableToMd(i, table, textareaEl, false); window.isEditingPreview = false; }); }); }); };
         
         const noteContentInput = document.getElementById('noteContent'); const notePreviewDiv = document.getElementById('newNotePreview'); noteContentInput.addEventListener('input', () => window.renderLivePreview(noteContentInput, notePreviewDiv));
         const mdToolbar = document.getElementById('mdToolbar'); document.addEventListener('focusin', (e) => { if (e.target.tagName === 'TEXTAREA') { activeTextarea = e.target; const rect = e.target.getBoundingClientRect(); mdToolbar.style.display = 'flex'; mdToolbar.style.top = (rect.top + window.scrollY - 45) + 'px'; mdToolbar.style.left = rect.left + 'px'; } }); document.addEventListener('focusout', (e) => { if (e.target.tagName === 'TEXTAREA') { setTimeout(()=> mdToolbar.style.display = 'none', 150); } }); window.applyMd = (e, prefix, suffix) => { e.preventDefault(); if (!activeTextarea) return; const start = activeTextarea.selectionStart; const end = activeTextarea.selectionEnd; const text = activeTextarea.value; const selected = text.substring(start, end); activeTextarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end); activeTextarea.focus(); activeTextarea.selectionStart = start + prefix.length; activeTextarea.selectionEnd = end + prefix.length; activeTextarea.dispatchEvent(new Event('input')); }; window.applyMdTable = (e) => { e.preventDefault(); if (!activeTextarea) return; const tableTemplate = `\n| Encabezado 1 | Encabezado 2 | Encabezado 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n| Dato 4 | Dato 5 | Dato 6 |\n\n`; const start = activeTextarea.selectionStart; const text = activeTextarea.value; activeTextarea.value = text.substring(0, start) + tableTemplate + text.substring(start); activeTextarea.focus(); activeTextarea.selectionStart = start + tableTemplate.length; activeTextarea.selectionEnd = start + tableTemplate.length; activeTextarea.dispatchEvent(new Event('input')); }; 
 
-        // FIX: Lógica para desbloquear y cambiar el PIN Maestro
+        // VAULT
         window.unlockVault = () => { 
             const input = document.getElementById('pinInput').value; 
             if (input === masterPin) { 
@@ -938,7 +993,7 @@
         };
 
         window.changePin = () => {
-            const newPin = prompt("🔑 Ingresa tu nuevo PIN de seguridad:");
+            const newPin = prompt("🔑 Ingresa tu nuevo PIN de seguridad (solo números preferiblemente):");
             if(newPin && newPin.trim().length > 0) {
                 masterPin = newPin.trim();
                 saveDataToCloud();
@@ -948,7 +1003,26 @@
 
         Sortable.create(document.getElementById('tabContainer'), { animation: 150, ghostClass: 'sortable-ghost', onEnd: function () { tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); saveDataToCloud(); } }); 
 
-        window.exportToCSV = () => { if(expenses.length === 0) return alert("Vacio."); let csvContent = "Fecha,Descripcion,Metodo,Monto\n"; const sorted = [...expenses].sort((a,b) => parseVeDate(a.date) - parseVeDate(b.date)); sorted.forEach(e => { csvContent += [`"${e.date}"`, `"${e.desc}"`, `"${e.account}"`, `"${e.amount}"`].join(',') + "\n"; }); const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.setAttribute("href", URL.createObjectURL(blob)); link.setAttribute("download", `Reporte.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); };
+        // REPARADO: EXPORTAR CSV AHORA INCLUYE EQUIVALENCIAS EN TASA
+        window.exportToCSV = () => { 
+            if(expenses.length === 0) return alert("Vacio."); 
+            let csvContent = "Fecha,Descripcion,Metodo,Monto (Original),Equiv USD (BCV),Equiv USDT (Binance),Equiv EUR\n"; 
+            const sorted = [...expenses].sort((a,b) => parseVeDate(a.date) - parseVeDate(b.date)); 
+            sorted.forEach(e => { 
+                const eqUsd = e.eqUsd ? e.eqUsd.toFixed(2) : "0.00";
+                const eqUsdt = e.eqUsdt ? e.eqUsdt.toFixed(2) : "0.00";
+                const eqEur = e.eqEur ? e.eqEur.toFixed(2) : "0.00";
+                csvContent += [`"${e.date}"`, `"${e.desc}"`, `"${e.account}"`, `"${e.amount}"`, `"${eqUsd}"`, `"${eqUsdt}"`, `"${eqEur}"`].join(',') + "\n"; 
+            }); 
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); 
+            const link = document.createElement("a"); 
+            link.setAttribute("href", URL.createObjectURL(blob)); 
+            link.setAttribute("download", `Reporte_Finanzas_MetaOS.csv`); 
+            link.style.visibility = 'hidden'; 
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link); 
+        };
     </script>
 </body>
 </html>
