@@ -161,7 +161,7 @@
             <button class="tab-btn" id="tab-recordatorios" onclick="switchTab('recordatorios')">🔔 Recordatorios</button>
             <button class="tab-btn" id="tab-finanzas" onclick="switchTab('finanzas')">🔒 Finanzas</button>
             <button class="tab-btn" id="tab-notas" onclick="switchTab('notas')">📓 Notas</button>
-            <button class="tab-btn" onclick="appLogout()" style="flex-grow: 0; background-color: #cf6679; color: black; font-weight: bold; border-radius: 8px 8px 0 0;">🚪 Salir</button> <button class="tab-btn" onclick="migrarDatosAntiguos()" style="flex-grow: 0; background-color: #ff9800; color: black; font-weight: bold; border-radius: 8px 8px 0 0;">🚚 Migrar Datos Viejos</button>
+            <button class="tab-btn" onclick="appLogout()" style="flex-grow: 0; background-color: #cf6679; color: black; font-weight: bold; border-radius: 8px 8px 0 0;">🚪 Salir</button>
         </div>
 
         <div id="actividades" class="tab-content active">
@@ -317,30 +317,6 @@
         window.appLogout = () => {
             if(confirm("¿Estás seguro de cerrar sesión?")) {
                 signOut(auth);
-            }
-        };
-
-        window.migrarDatosAntiguos = async () => {
-            if(!currentUid) return alert("Primero debes iniciar sesión con tu cuenta nueva.");
-            if(!confirm("⚠️ ¿Estás seguro? Esto traerá todos tus datos viejos (del defaultVault) a esta cuenta. Si ya habías creado notas nuevas aquí, se podrían mezclar o sobrescribir.")) return;
-            
-            try {
-                // 1. Buscamos la caja vieja
-                const oldRef = doc(db, "userData", "defaultVault");
-                const oldSnap = await getDoc(oldRef);
-                
-                if (oldSnap.exists()) {
-                    const oldData = oldSnap.data();
-                    // 2. Inyectamos la data vieja en tu usuario actual
-                    await updateDoc(doc(db, "userData", currentUid), oldData);
-                    alert("✅ ¡Éxito! Migración completada. La página se va a recargar para mostrar tus datos.");
-                    location.reload();
-                } else {
-                    alert("No se encontró la bóveda antigua. (defaultVault está vacío)");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Error al intentar migrar: " + error.message);
             }
         };
 
