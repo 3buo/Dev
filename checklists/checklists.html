@@ -1,0 +1,14 @@
+<div class="container">
+    <h2>Constructor de Check-list <div class="tooltip">?<span class="tooltiptext">A diferencia de tareas simples, aquí agrupas muchos pasos en un solo Proyecto. Añade ítems primero y luego guarda la lista entera.</span></div></h2>
+    <div class="input-group" style="flex-direction: column;">
+        <input type="text" id="clTitle" placeholder="Título de la lista (Ej: Viaje a la Playa)">
+        <div style="display: flex; gap: 10px; width: 100%;">
+            <textarea id="clNewItem" placeholder="Escribe un ítem..."></textarea>
+            <button onclick="addTempChecklistItem()" style="background: var(--secondary);">Añadir Ítem</button>
+        </div>
+        <ul id="clTempList" style="width: 100%; border: 1px dashed #444; padding: 10px; min-height: 20px;"></ul>
+        <button onclick="saveNewChecklist()" style="align-self: flex-end; width: 100%;">Guardar Check-list</button>
+    </div>
+</div>
+<div class="container"><h2>Pendientes</h2><ul id="clPending" class="pending-list-style"></ul></div>
+<div class="container"><h2>Completados</h2><ul id="clCompleted"></ul></div>
