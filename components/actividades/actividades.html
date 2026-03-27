@@ -1,26 +1,48 @@
-<div class="container">
-    <h2>Nueva Actividad <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
-    <div class="input-group">
-        <input type="text" id="taskInput" placeholder="¿Qué necesitas lograr hoy?">
-        <input type="date" id="dateInput">
-        <select id="priorityInput"><option value="Alta">Alta</option><option value="Media" selected>Media</option><option value="Baja">Baja</option></select>
-        <button onclick="addTask()">Agregar</button>
+<div id="view-actividades">
+    
+    <div class="container">
+        <h2>Nueva Actividad <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="¿Qué necesitas lograr hoy?">
+            <input type="date" id="dateInput">
+            <select id="priorityInput">
+                <option value="Alta">Alta</option>
+                <option value="Media" selected>Media</option>
+                <option value="Baja">Baja</option>
+            </select>
+            <button onclick="addTask()">Agregar</button>
+        </div>
+        <ul id="pendingList" class="pending-list-style"></ul>
     </div>
-    <ul id="pendingList" class="pending-list-style"></ul>
-</div>
-<div class="container">
-    <h2 style="color: #39d353;">Mapa de Productividad (Heatmap)</h2>
-    <div class="heatmap-container"><div id="heatmapGrid" class="heatmap-grid"></div><span style="font-size: 0.7em; color: #aaa; margin-top: 10px;">Menos ← ■ ■ ■ ■ → Más Productivo</span></div>
-</div>
-<div class="container">
-    <h2 style="color: #ff9800;">Hábitos y Rutinas</h2>
-    <div class="input-group">
-        <input type="text" id="recTaskInput" placeholder="Ej: Tomar agua">
-        <input type="datetime-local" id="recTaskStart">
-        <input type="number" id="recTaskInterval" min="1" value="1" style="width: 60px;">
-        <select id="recTaskFreq" style="width: 110px;"><option value="minutos">Minuto(s)</option><option value="horas" selected>Hora(s)</option><option value="dias">Día(s)</option><option value="meses">Mes(es)</option></select>
-        <button onclick="addRecurringTask()" style="background-color: #ff9800;">Crear</button>
+
+    <div class="container">
+        <h2 class="title-heatmap">Mapa de Productividad (Heatmap)</h2>
+        <div class="heatmap-container">
+            <div id="heatmapGrid" class="heatmap-grid"></div>
+            <span style="font-size: 0.7em; color: #8ba4b5; margin-top: 10px;">Menos ← ■ ■ ■ ■ → Más Productivo</span>
+        </div>
     </div>
-    <ul id="recurringList" class="pending-list-style"></ul>
+
+    <div class="container">
+        <h2 class="title-habits">Hábitos y Rutinas</h2>
+        <div class="input-group">
+            <input type="text" id="recTaskInput" placeholder="Ej: Tomar agua">
+            <input type="datetime-local" id="recTaskStart">
+            <input type="number" id="recTaskInterval" min="1" value="1" style="width: 60px;">
+            <select id="recTaskFreq" style="width: 110px;">
+                <option value="minutos">Minuto(s)</option>
+                <option value="horas" selected>Hora(s)</option>
+                <option value="dias">Día(s)</option>
+                <option value="meses">Mes(es)</option>
+            </select>
+            <button onclick="addRecurringTask()" class="btn-habits">Crear</button>
+        </div>
+        <ul id="recurringList" class="pending-list-style"></ul>
+    </div>
+
+    <div class="container">
+        <h2>Actividades Completadas</h2>
+        <ul id="completedList"></ul>
+    </div>
+
 </div>
-<div class="container"><h2>Actividades Completadas</h2><ul id="completedList"></ul></div>
