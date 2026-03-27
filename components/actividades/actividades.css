@@ -5,7 +5,7 @@
    ESTILO GLOBAL DEL FONDO PARA ESTA PESTAÑA
    ========================================= */
 body[data-theme="actividades"] {
-    background-color: #ffffff; /* Un fondo súper oscuro casi negro */
+    background-color: #303135; /* Un fondo súper oscuro casi negro */
     /* Un degradado radial azul oscuro en la parte superior para dar profundidad */
     background-image: radial-gradient(circle at top center, #919191 15%, #ffffff 60%);
     background-attachment: fixed; /* Evita que el gradiente se mueva al hacer scroll */
