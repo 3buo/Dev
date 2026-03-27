@@ -1,0 +1,11 @@
+<div class="container">
+    <h2>Notas<div class="tooltip">?<span class="tooltiptext">Usa doble corchete [[Como Esto]] para conectar el nombre de dos notas entre sí. Al presionar 'Ver Grafo Visual', se dibujará una red neuronal interactiva con tus ideas.</span></div> <button onclick="toggleNotesGraph()" style="font-size: 0.7em; background: #444; color: white; padding: 5px 10px;">🌌 Ver Grafo Visual</button></h2>
+    <div id="networkGraph"></div>
+    <div class="input-group" style="flex-direction: column; margin-top: 15px;">
+        <input type="text" id="noteTitle" placeholder="Título de la nota (Sirve como etiqueta Zettelkasten)">
+        <textarea id="noteContent" placeholder="Escribe tu información... usa [[Nombre de otra nota]] para conectar ideas."></textarea>
+        <div id="newNotePreview" class="markdown-content live-preview-box"></div>
+        <button type="button" onclick="addNote()" style="align-self: flex-start;">Guardar Nota</button>
+    </div>
+</div>
+<div class="container"><h2>Notas guardadas</h2><ul id="notesList"></ul></div>
