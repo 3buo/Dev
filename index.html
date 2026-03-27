@@ -142,6 +142,10 @@
         .tooltip { position: relative; display: inline-block; cursor: pointer; color: var(--secondary); margin-left: 5px; font-weight: bold; font-size: 0.85em; background: rgba(3, 218, 198, 0.1); border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; }
         .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2a2a2a; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1000; bottom: 125%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; font-size: 0.85em; font-weight: normal; border: 1px solid var(--secondary); box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+        /* Voice dictation transcript box */
+        .voice-transcript-box { position: fixed; bottom: 100px; right: 20px; background: var(--surface); border: 1px solid var(--secondary); border-radius: 8px; padding: 12px 16px; max-width: 300px; z-index: 9001; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 0.9em; color: var(--text); display: none; }
+        .voice-transcript-box .voice-label { font-size: 0.75em; color: var(--secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -167,6 +171,10 @@
 
     <div id="mainApp">
         <div id="fab-mic" onclick="toggleVoiceNLP()" title="Dictado Inteligente">🎙️</div>
+        <div id="voiceTranscript" class="voice-transcript-box">
+            <div class="voice-label">🎙️ Escuchando...</div>
+            <div id="voiceText">---</div>
+        </div>
 
         <div id="mdToolbar">
             <button class="md-btn" onmousedown="applyMd(event, '**', '**')" title="Negrita">B</button>
@@ -404,7 +412,7 @@
 
         window.parseMarkdown = (text) => {
             if (!text) return "";
-            let processed = text.replace(/\[\[(.*?)\]\]/g, `<span class="zk-link" onclick="window.searchAndOpenNote('$1')">#$1</span>`);
+            let processed = text.replace(/\[\[(.*?)\]\]/g, '<span class="zk-link" onclick="window.searchAndOpenNote(\'$1\')">#$1</span>');
             return marked.parse(processed);
         };
 
@@ -414,6 +422,9 @@
         let tasks = [], reminders = [], balances = { facebank: 0, binance: 0, bs: 0 }, expenses = [], notes = [], recurringTasks = [], checklists = [], tabOrder = [], activityLog = {};
         window.tempChecklistItems = []; window.rateBcvVal = 0; window.rateBinanceVal = 0; window.rateEuroVal = 0; 
         
+        // FIX 4: Declarar financeChartInstance correctamente
+        let financeChartInstance = null;
+        
         // VARIABLES DEL SISTEMA DE ALARMAS
         window.activeAlarm = null; 
         window.alarmAudioInterval = null; 
@@ -422,10 +433,188 @@
         window.openChecklists = new Set(); let activeTextarea = null; 
 
         // ==========================================
-        // SISTEMA DE NOTIFICACIONES Y AUDIO (NUEVO)
+        // FIX 3: SISTEMA DE VOZ / MICRÓFONO COMPLETO
+        // ==========================================
+        let voiceRecognition = null;
+        let isRecording = false;
+
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.");
+                return null;
+            }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.interimResults = true;
+            recognition.continuous = true;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                const voiceTextEl = document.getElementById('voiceText');
+                const voiceBox = document.getElementById('voiceTranscript');
+                
+                if (interimTranscript) {
+                    voiceTextEl.innerText = interimTranscript;
+                    voiceBox.style.display = 'block';
+                }
+
+                if (finalTranscript) {
+                    voiceTextEl.innerText = finalTranscript;
+                    processVoiceCommand(finalTranscript.trim());
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Voice error:', event.error);
+                if (event.error === 'not-allowed') {
+                    alert("Permiso de micrófono denegado. Habilítalo en la configuración del navegador.");
+                }
+                stopVoiceRecording();
+            };
+
+            recognition.onend = () => {
+                if (isRecording) {
+                    // Auto-restart if still in recording mode
+                    try { recognition.start(); } catch(e) {}
+                }
+            };
+
+            return recognition;
+        }
+
+        function processVoiceCommand(text) {
+            const lower = text.toLowerCase();
+            
+            // Detect intent: task, note, expense, reminder
+            if (lower.startsWith('tarea ') || lower.startsWith('actividad ') || lower.startsWith('agregar tarea ')) {
+                const taskText = text.replace(/^(tarea|actividad|agregar tarea)\s+/i, '');
+                tasks.push({ text: taskText, date: new Date().toISOString().split('T')[0], priority: 'Media', completed: false });
+                recordActivity(); saveDataToCloud();
+                showVoiceFeedback('✅ Tarea agregada: ' + taskText);
+            } else if (lower.startsWith('nota ') || lower.startsWith('agregar nota ')) {
+                const noteText = text.replace(/^(nota|agregar nota)\s+/i, '');
+                notes.push({ title: 'Nota de Voz', content: noteText, date: new Date().toLocaleString('es-VE'), editedAt: null });
+                recordActivity(); saveDataToCloud(); renderNotes();
+                showVoiceFeedback('📓 Nota guardada: ' + noteText);
+            } else if (lower.startsWith('recordatorio ') || lower.startsWith('recuérdame ')) {
+                const remText = text.replace(/^(recordatorio|recuérdame)\s+/i, '');
+                // Set reminder for 1 hour from now by default
+                const futureDate = new Date(Date.now() + 3600000);
+                const tzOffset = futureDate.getTimezoneOffset() * 60000;
+                const localISO = new Date(futureDate.getTime() - tzOffset).toISOString().slice(0, 16);
+                reminders.push({ text: remText, datetime: localISO, snoozeMins: 10, completed: false, notified: false });
+                recordActivity(); saveDataToCloud(); renderReminders();
+                showVoiceFeedback('🔔 Recordatorio en 1h: ' + remText);
+            } else if (lower.startsWith('gasto ')) {
+                // Try to parse "gasto 50 en comida facebank"
+                const match = text.match(/gasto\s+([\d.,]+)\s+(?:en\s+)?(.+)/i);
+                if (match) {
+                    const amount = parseFloat(match[1].replace(',', '.'));
+                    const desc = match[2].trim();
+                    if (amount > 0) {
+                        // Default to facebank if no account detected
+                        let account = 'facebank';
+                        if (lower.includes('binance') || lower.includes('usdt')) account = 'binance';
+                        else if (lower.includes('bolívar') || lower.includes('bolivar') || lower.includes(' bs')) account = 'bs';
+                        
+                        balances[account] -= amount;
+                        const today = new Date().toLocaleString('es-VE');
+                        expenses.push({ desc, amount, account, date: today, eqUsd: null, eqUsdt: null, eqEur: null });
+                        recordActivity(); saveDataToCloud(); renderExpenses(); window.calculateSafeToSpend();
+                        showVoiceFeedback(`💰 Gasto registrado: ${amount} en ${desc} (${account})`);
+                    }
+                } else {
+                    showVoiceFeedback('No entendí el gasto. Di: "gasto 50 en comida"');
+                }
+            } else if (lower.includes('ir a actividades') || lower.includes('abrir actividades') || lower.includes('tareas')) {
+                window.switchTab('actividades');
+                showVoiceFeedback('📝 Navegando a Actividades');
+            } else if (lower.includes('ir a notas') || lower.includes('abrir notas')) {
+                window.switchTab('notas');
+                showVoiceFeedback('📓 Navegando a Notas');
+            } else if (lower.includes('ir a finanzas') || lower.includes('abrir finanzas')) {
+                window.switchTab('finanzas');
+                showVoiceFeedback('🔒 Navegando a Finanzas');
+            } else if (lower.includes('iniciar pomodoro') || lower.includes('enfoque')) {
+                window.switchTab('actividades');
+                window.startTimer();
+                showVoiceFeedback('⏰ Pomodoro iniciado');
+            } else {
+                // Default: add as a quick task
+                tasks.push({ text: text, date: new Date().toISOString().split('T')[0], priority: 'Media', completed: false });
+                recordActivity(); saveDataToCloud();
+                showVoiceFeedback('📝 Tarea rápida: ' + text);
+            }
+        }
+
+        function showVoiceFeedback(msg) {
+            const voiceBox = document.getElementById('voiceTranscript');
+            const voiceText = document.getElementById('voiceText');
+            voiceBox.style.display = 'block';
+            voiceText.innerText = msg;
+            setTimeout(() => {
+                if (!isRecording) voiceBox.style.display = 'none';
+            }, 3000);
+        }
+
+        function stopVoiceRecording() {
+            isRecording = false;
+            if (voiceRecognition) {
+                try { voiceRecognition.stop(); } catch(e) {}
+            }
+            const fab = document.getElementById('fab-mic');
+            fab.classList.remove('recording');
+            const voiceBox = document.getElementById('voiceTranscript');
+            setTimeout(() => { voiceBox.style.display = 'none'; }, 2000);
+        }
+
+        window.toggleVoiceNLP = () => {
+            const fab = document.getElementById('fab-mic');
+            
+            if (isRecording) {
+                stopVoiceRecording();
+                return;
+            }
+            
+            if (!voiceRecognition) {
+                voiceRecognition = initVoiceRecognition();
+                if (!voiceRecognition) return;
+            }
+            
+            isRecording = true;
+            fab.classList.add('recording');
+            const voiceBox = document.getElementById('voiceTranscript');
+            const voiceText = document.getElementById('voiceText');
+            voiceBox.style.display = 'block';
+            voiceText.innerText = 'Escuchando... Di un comando.';
+            
+            try {
+                voiceRecognition.start();
+            } catch(e) {
+                // Already started
+                voiceRecognition.stop();
+                setTimeout(() => {
+                    try { voiceRecognition.start(); } catch(e2) {}
+                }, 100);
+            }
+        };
+
+        // ==========================================
+        // SISTEMA DE NOTIFICACIONES Y AUDIO
         // ==========================================
         
-        // Solicitar permisos e iniciar el contexto de audio en el primer clic (Políticas de navegadores)
         document.addEventListener('click', () => {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -435,7 +624,6 @@
             }
         }, { once: true });
 
-        // Sintetizador de audio (Sin archivos MP3 externos)
         function playBeep() {
             if (!audioCtx) return;
             let osc = audioCtx.createOscillator();
@@ -443,7 +631,7 @@
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.type = "sine";
-            osc.frequency.value = 800; // Tono de alarma
+            osc.frequency.value = 800;
             gain.gain.setValueAtTime(1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
             osc.start();
@@ -452,8 +640,8 @@
 
         window.startAlarmSound = () => {
             if(window.alarmAudioInterval) return;
-            playBeep(); // Suena de inmediato
-            window.alarmAudioInterval = setInterval(playBeep, 2000); // Repite cada 2 segundos
+            playBeep();
+            window.alarmAudioInterval = setInterval(playBeep, 2000);
         };
 
         window.stopAlarmSound = () => {
@@ -469,7 +657,6 @@
             }
         }
 
-        // Despliega la interfaz de la alarma y asigna funciones a los botones dinámicamente
         window.triggerModal = (type, text, onComplete, onSnooze) => {
             showNotification(type, text);
             window.startAlarmSound();
@@ -481,7 +668,6 @@
             const btnC = document.getElementById('btnComplete');
             const btnS = document.getElementById('btnSnooze');
 
-            // Clonamos los botones para eliminar listeners anteriores
             const newBtnC = btnC.cloneNode(true);
             const newBtnS = btnS.cloneNode(true);
             btnC.parentNode.replaceChild(newBtnC, btnC);
@@ -500,27 +686,22 @@
             };
         };
 
-        // EL CORAZÓN DE LA APP: Revisa las fechas cada 10 segundos
         window.checkAlarms = () => {
-            if(!currentUid) return; // Si no estás logueado, no suena
+            if(!currentUid) return;
             const now = new Date();
 
-            // 1. Revisar Recordatorios Únicos
             reminders.forEach((rem, index) => {
                 if (!rem.completed && !rem.notified) {
                     const remTime = new Date(rem.datetime);
                     if (now >= remTime) {
-                        rem.notified = true; // Evita que dispare múltiples veces
+                        rem.notified = true;
                         window.triggerModal("Recordatorio", rem.text, () => {
-                            // Acción: Completar
                             rem.completed = true;
                             saveDataToCloud();
                             renderReminders();
                         }, () => {
-                            // Acción: Posponer (Suma los minutos de snooze seleccionados)
                             rem.notified = false;
                             const snoozeTime = new Date(now.getTime() + (rem.snoozeMins * 60000));
-                            // Ajuste para evitar bugs de Zona Horaria al re-escribir el datetime local
                             rem.datetime = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
                             saveDataToCloud();
                             renderReminders();
@@ -529,20 +710,17 @@
                 }
             });
 
-            // 2. Revisar Tareas Recurrentes (Hábitos)
             recurringTasks.forEach((rec, index) => {
                 if (!rec.notified) {
                     const recTime = new Date(rec.nextTrigger);
                     if (now >= recTime) {
                         rec.notified = true;
                         window.triggerModal("Hábito / Rutina", rec.text, () => {
-                            // Acción: Completar (Reprograma para la siguiente iteración)
                             window.rescheduleRecurring(rec);
                             recordActivity();
                             saveDataToCloud();
                             renderRecurringTasks();
                         }, () => {
-                            // Acción: Posponer (Le da 10 minutos de gracia sin afectar la rutina real)
                             rec.notified = false;
                             const snoozeTime = new Date(now.getTime() + (10 * 60000));
                             rec.nextTrigger = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
@@ -554,11 +732,7 @@
             });
         };
 
-        // Inicia el latido del sistema
         setInterval(window.checkAlarms, 10000); 
-
-        // ==========================================
-
 
         // === AUTHENTICATION LOGIC ===
         onAuthStateChanged(auth, (user) => { 
@@ -660,7 +834,7 @@
             if(!dateStr) return new Date(0); 
             const parts = dateStr.split(',')[0].trim().split('/'); 
             if(parts.length === 3) { 
-                return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T00:00:00`); 
+                return new Date(parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0') + 'T00:00:00'); 
             } 
             return new Date(dateStr); 
         }
@@ -670,7 +844,7 @@
             const y = dateObj.getFullYear();
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
             const d = String(dateObj.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
+            return y + '-' + m + '-' + d;
         }
 
         // === GAMIFICATION (HEATMAP) ===
@@ -696,7 +870,7 @@
                 else if(count > 2 && count <= 5) cell.classList.add('heat-lvl-2'); 
                 else if(count > 5 && count <= 8) cell.classList.add('heat-lvl-3'); 
                 else if(count > 8) cell.classList.add('heat-lvl-4'); 
-                cell.title = `${dateStr}: ${count} acciones`; 
+                cell.title = dateStr + ': ' + count + ' acciones'; 
                 grid.appendChild(cell); 
             } 
         }
@@ -712,14 +886,21 @@
             renderExpenses(); 
         };
 
+        // FIX 4: renderExpenses reescrito - el gráfico ahora siempre se actualiza con los datos filtrados
         function renderExpenses() { 
             const list = document.getElementById('expenseList'); 
+            if (!list) return;
             list.innerHTML = ''; 
             
-            const fDate = document.getElementById('filterDate').value; 
-            const fStart = document.getElementById('filterStartDate').value; 
-            const fEnd = document.getElementById('filterEndDate').value; 
-            const fAcc = document.getElementById('filterAccount').value; 
+            const filterDateEl = document.getElementById('filterDate');
+            const filterStartEl = document.getElementById('filterStartDate');
+            const filterEndEl = document.getElementById('filterEndDate');
+            const filterAccEl = document.getElementById('filterAccount');
+            
+            const fDate = filterDateEl ? filterDateEl.value : '';
+            const fStart = filterStartEl ? filterStartEl.value : '';
+            const fEnd = filterEndEl ? filterEndEl.value : '';
+            const fAcc = filterAccEl ? filterAccEl.value : 'all';
             
             let filtered = expenses.map((exp, originalIndex) => ({...exp, originalIndex})); 
             
@@ -738,18 +919,18 @@
             [...filtered].reverse().forEach((exp) => { 
                 const index = exp.originalIndex; 
                 const li = document.createElement('li'); 
-                li.className = `expense-item ex-${exp.account}`; 
+                li.className = 'expense-item ex-' + exp.account; 
                 let symbol = exp.account === 'facebank' ? '$' : exp.account === 'binance' ? '₮' : 'Bs.'; 
                 let equivHtml = ''; 
                 if (exp.account === 'bs' && (exp.eqUsd || exp.eqUsdt || exp.eqEur)) { 
-                    equivHtml = `<br><span style="font-size: 0.75em; color: var(--secondary); opacity: 0.9;">≈ $${(exp.eqUsd||0).toFixed(2)} BCV | ₮${(exp.eqUsdt||0).toFixed(2)} BIN | €${(exp.eqEur||0).toFixed(2)} EUR</span>`; 
+                    equivHtml = '<br><span style="font-size: 0.75em; color: var(--secondary); opacity: 0.9;">≈ $' + (exp.eqUsd||0).toFixed(2) + ' BCV | ₮' + (exp.eqUsdt||0).toFixed(2) + ' BIN | €' + (exp.eqEur||0).toFixed(2) + ' EUR</span>'; 
                 } 
                 const contentDiv = document.createElement('div'); 
                 contentDiv.className = 'task-content'; 
-                contentDiv.innerHTML = `<strong>${exp.desc}</strong><br><span class="task-date">📅 ${exp.date} | 🏦 ${exp.account.toUpperCase()}</span>${equivHtml}`; 
+                contentDiv.innerHTML = '<strong>' + exp.desc + '</strong><br><span class="task-date">📅 ' + exp.date + ' | 🏦 ' + exp.account.toUpperCase() + '</span>' + equivHtml; 
                 const amountSpan = document.createElement('span'); 
                 amountSpan.className = 'expense-amount'; 
-                amountSpan.innerText = `-${symbol}${parseFloat(exp.amount).toFixed(2)}`; 
+                amountSpan.innerText = '-' + symbol + parseFloat(exp.amount).toFixed(2); 
                 const deleteBtn = document.createElement('button'); 
                 deleteBtn.innerText = 'Deshacer'; 
                 deleteBtn.style.background = '#444'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; 
@@ -765,6 +946,7 @@
             }); 
             if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos en este rango o cuenta.</li>'; 
             
+            // Calcular sumas de los datos filtrados para el gráfico
             let sumFb = 0, sumBin = 0, sumBs = 0; 
             filtered.forEach(e => { 
                 if(e.account === 'facebank') sumFb += parseFloat(e.amount); 
@@ -772,14 +954,48 @@
                 if(e.account === 'bs') sumBs += parseFloat(e.amount); 
             }); 
             
+            // FIX 4: Siempre actualizar el gráfico sin importar la visibilidad del tab
+            updateFinanceChart(sumFb, sumBin, sumBs);
+        }
+
+        // FIX 4: Función separada para actualizar el gráfico, siempre funcional
+        function updateFinanceChart(sumFb, sumBin, sumBs) {
             const ctx = document.getElementById('financeChart'); 
-            if(!ctx || document.getElementById('finanzas').style.display === 'none' && !document.getElementById('tab-finanzas').classList.contains('active')) return; 
+            if(!ctx) return;
             
-            if(financeChartInstance) financeChartInstance.destroy(); 
+            // Destruir instancia previa si existe
+            if(financeChartInstance) {
+                financeChartInstance.destroy(); 
+                financeChartInstance = null;
+            }
+            
+            // Si no hay datos, mostrar gráfico vacío con mensaje
+            const hasData = (sumFb + sumBin + sumBs) > 0;
+            
             financeChartInstance = new Chart(ctx, { 
                 type: 'doughnut', 
-                data: { labels: ['Facebank ($)', 'Binance (USDT)', 'Bolívares (Bs)'], datasets: [{ data: [sumFb, sumBin, sumBs], backgroundColor: ['#2196F3', '#F3BA2F', '#4CAF50'], borderWidth: 0, hoverOffset: 4 }] }, 
-                options: { plugins: { legend: { labels: { color: 'white' } } } } 
+                data: { 
+                    labels: ['Facebank ($)', 'Binance (USDT)', 'Bolívares (Bs)'], 
+                    datasets: [{ 
+                        data: hasData ? [sumFb, sumBin, sumBs] : [1], 
+                        backgroundColor: hasData ? ['#2196F3', '#F3BA2F', '#4CAF50'] : ['#444'], 
+                        borderWidth: 0, 
+                        hoverOffset: 4 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { 
+                        legend: { 
+                            display: hasData,
+                            labels: { color: 'white' } 
+                        },
+                        tooltip: {
+                            enabled: hasData
+                        }
+                    } 
+                } 
             }); 
         }
 
@@ -800,7 +1016,7 @@
             for(let key in subsMap) { 
                 if(subsMap[key].count > 1) { 
                     ghostSubsSum += subsMap[key].amount; 
-                    subTexts.push(`${key} (${subsMap[key].amount})`); 
+                    subTexts.push(key + ' (' + subsMap[key].amount + ')'); 
                 } 
             } 
             let totalUsdEquiv = balances.facebank + balances.binance; 
@@ -808,18 +1024,18 @@
             else if (window.rateBcvVal > 0) totalUsdEquiv += (balances.bs / window.rateBcvVal); 
             
             let safeToSpend = totalUsdEquiv - ghostSubsSum; 
-            document.getElementById('stsValue').innerText = `≈ $${safeToSpend.toFixed(2)} USD`; 
+            document.getElementById('stsValue').innerText = '≈ $' + safeToSpend.toFixed(2) + ' USD'; 
             if (subTexts.length > 0) { 
-                document.getElementById('stsSubs').innerText = `👻 Peligro detectado: -${ghostSubsSum} reservados para: ${subTexts.join(', ')}`; 
+                document.getElementById('stsSubs').innerText = '👻 Peligro detectado: -' + ghostSubsSum + ' reservados para: ' + subTexts.join(', '); 
                 document.getElementById('stsSubs').style.color = "var(--warning)"; 
             } else { 
-                document.getElementById('stsSubs').innerText = `✅ No detecto suscripciones inminentes este mes.`; 
+                document.getElementById('stsSubs').innerText = '✅ No detecto suscripciones inminentes este mes.'; 
                 document.getElementById('stsSubs').style.color = "#4CAF50"; 
             } 
         };
 
         window.updateBalance = (accKey, accName) => { 
-            const input = prompt(`Ingresa tu pool real actual en ${accName}:\n(Usa punto para decimales)`); 
+            const input = prompt('Ingresa tu pool real actual en ' + accName + ':\n(Usa punto para decimales)'); 
             if (input !== null && !isNaN(input)) { 
                 balances[accKey] = parseFloat(input); 
                 recordActivity(); 
@@ -834,7 +1050,7 @@
             const account = document.getElementById('expAccount').value; 
             if (desc.trim() === '' || amount === '' || parseFloat(amount) <= 0 || account === '') return alert("Llena todos los campos."); 
             const numAmount = parseFloat(amount); 
-            if (numAmount > balances[account] && !confirm(`Gasto mayor al saldo. ¿Continuar?`)) return; 
+            if (numAmount > balances[account] && !confirm('Gasto mayor al saldo. ¿Continuar?')) return; 
             balances[account] -= numAmount; 
             const today = new Date().toLocaleString('es-VE'); 
             let eqUsd = null, eqUsdt = null, eqEur = null; 
@@ -852,13 +1068,13 @@
         };
 
         function renderBalances() { 
-            document.getElementById('balFacebank').innerText = `$${parseFloat(balances.facebank).toFixed(2)}`; 
-            document.getElementById('balBinance').innerText = `₮${parseFloat(balances.binance).toFixed(2)}`; 
-            document.getElementById('balBs').innerText = `Bs. ${parseFloat(balances.bs).toFixed(2)}`; 
+            document.getElementById('balFacebank').innerText = '$' + parseFloat(balances.facebank).toFixed(2); 
+            document.getElementById('balBinance').innerText = '₮' + parseFloat(balances.binance).toFixed(2); 
+            document.getElementById('balBs').innerText = 'Bs. ' + parseFloat(balances.bs).toFixed(2); 
             let bs = balances.bs || 0; let eq = []; 
-            if(window.rateBcvVal > 0) eq.push(`🇺🇸 BCV: $${(bs / window.rateBcvVal).toFixed(2)}`); 
-            if(window.rateBinanceVal > 0) eq.push(`🟡 BIN: ₮${(bs / window.rateBinanceVal).toFixed(2)}`); 
-            if(window.rateEuroVal > 0) eq.push(`🇪🇺 EUR: €${(bs / window.rateEuroVal).toFixed(2)}`); 
+            if(window.rateBcvVal > 0) eq.push('🇺🇸 BCV: $' + (bs / window.rateBcvVal).toFixed(2)); 
+            if(window.rateBinanceVal > 0) eq.push('🟡 BIN: ₮' + (bs / window.rateBinanceVal).toFixed(2)); 
+            if(window.rateEuroVal > 0) eq.push('🇪🇺 EUR: €' + (bs / window.rateEuroVal).toFixed(2)); 
             
             document.getElementById('bsEquiv').innerHTML = eq.length > 0 ? eq.join('<br>') : '≈ Sincroniza tasas'; 
             window.calculateSafeToSpend(); 
@@ -947,10 +1163,10 @@
                     } 
                 } 
                 window.rateBcvVal = bcvVal; window.rateBinanceVal = binanceVal; window.rateEuroVal = euroVal; 
-                document.getElementById('rateBcv').innerText = `Bs. ${parseFloat(bcvVal).toFixed(2)}`; 
-                document.getElementById('rateBinance').innerText = `Bs. ${parseFloat(binanceVal).toFixed(2)}`; 
-                document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(euroVal).toFixed(2)}`; 
-                document.getElementById('rateLastUpdate').innerText = `Última act: ${new Date().toLocaleTimeString('es-VE')}`; 
+                document.getElementById('rateBcv').innerText = 'Bs. ' + parseFloat(bcvVal).toFixed(2); 
+                document.getElementById('rateBinance').innerText = 'Bs. ' + parseFloat(binanceVal).toFixed(2); 
+                document.getElementById('rateEuro').innerText = 'Bs. ' + parseFloat(euroVal).toFixed(2); 
+                document.getElementById('rateLastUpdate').innerText = 'Última act: ' + new Date().toLocaleTimeString('es-VE'); 
                 renderBalances(); renderExpenses(); btn.innerText = '📡 Sincronizar'; 
             } catch(err) { btn.innerText = '⚠️ Reintentar'; } 
         };
@@ -958,13 +1174,12 @@
         // UI Base (Tareas, Actividades, Recordatorios, Checklists)
         let timerInterval, timeLeft = 25 * 60; 
         
-        // REPARADO: Pomodoro usa el nuevo sistema de alertas
         window.startTimer = () => { 
             clearInterval(timerInterval); 
             timerInterval = setInterval(() => { 
                 if(timeLeft>0) { 
                     timeLeft--; 
-                    document.getElementById('timer').innerText = `${Math.floor(timeLeft/60).toString().padStart(2,'0')}:${(timeLeft%60).toString().padStart(2,'0')}`; 
+                    document.getElementById('timer').innerText = Math.floor(timeLeft/60).toString().padStart(2,'0') + ':' + (timeLeft%60).toString().padStart(2,'0'); 
                 } else { 
                     clearInterval(timerInterval); 
                     window.triggerModal("Pomodoro", "¡Bloque de Enfoque Terminado!", () => {
@@ -972,7 +1187,6 @@
                         recordActivity();
                         saveDataToCloud();
                     }, () => {
-                        // Posponer pomodoro añade 5 mins
                         timeLeft = 5 * 60;
                         window.startTimer();
                     });
@@ -981,19 +1195,85 @@
         }; 
         window.resetTimer = () => { clearInterval(timerInterval); timeLeft = 25 * 60; document.getElementById('timer').innerText = "25:00"; };
         
-        window.addTask = () => { const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); if (input.value.trim() === '') return alert('Escribe.'); tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); input.value = ''; dateInput.value = ''; recordActivity(); saveDataToCloud(); };
-        function renderTasks() { const pendingList = document.getElementById('pendingList'); const completedList = document.getElementById('completedList'); pendingList.innerHTML = ''; completedList.innerHTML = ''; tasks.forEach((task, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; checkbox.onchange = () => { tasks[index].completed = !tasks[index].completed; if(tasks[index].completed) recordActivity(); saveDataToCloud(); }; const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>`; const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
+        window.addTask = () => { 
+            const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
+            if (input.value.trim() === '') return alert('Escribe.'); 
+            tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); 
+            input.value = ''; dateInput.value = ''; 
+            recordActivity(); saveDataToCloud(); 
+        };
+
+        // FIX 1: renderTasks - ahora las tareas completadas se muestran correctamente en "Actividades Completadas"
+        function renderTasks() { 
+            const pendingList = document.getElementById('pendingList'); 
+            const completedList = document.getElementById('completedList'); 
+            if (!pendingList || !completedList) return;
+            pendingList.innerHTML = ''; 
+            completedList.innerHTML = ''; 
+            
+            tasks.forEach((task, index) => { 
+                const li = document.createElement('li'); 
+                const checkbox = document.createElement('input'); 
+                checkbox.type = 'checkbox'; 
+                checkbox.checked = task.completed; 
+                checkbox.onchange = () => { 
+                    tasks[index].completed = !tasks[index].completed; 
+                    // Guardar fecha de completado
+                    if(tasks[index].completed) {
+                        tasks[index].completedAt = new Date().toLocaleString('es-VE');
+                        recordActivity(); 
+                    } else {
+                        tasks[index].completedAt = null;
+                    }
+                    saveDataToCloud(); 
+                    renderTasks(); // Re-render inmediatamente para mover el elemento
+                }; 
+                const contentDiv = document.createElement('div'); 
+                contentDiv.className = 'task-content'; 
+                let dateDisplay = task.date || 'Sin fecha';
+                let completedInfo = '';
+                if (task.completed && task.completedAt) {
+                    completedInfo = '<br><span style="font-size: 0.8em; color: var(--secondary);">✅ Completada: ' + task.completedAt + '</span>';
+                }
+                contentDiv.innerHTML = '<strong>' + task.text + '</strong><br><span class="task-date">📅 ' + dateDisplay + '</span>' + completedInfo; 
+                const badge = document.createElement('span'); 
+                badge.className = 'badge pri-' + task.priority; 
+                badge.innerText = task.priority; 
+                const deleteBtn = document.createElement('button'); 
+                deleteBtn.innerText = 'X'; 
+                deleteBtn.style.background = '#cf6679'; 
+                deleteBtn.style.padding = '5px 10px'; 
+                deleteBtn.style.marginLeft = '10px'; 
+                deleteBtn.onclick = () => { tasks.splice(index, 1); saveDataToCloud(); renderTasks(); }; 
+                li.append(checkbox, contentDiv, badge, deleteBtn); 
+                
+                if (task.completed) { 
+                    li.classList.add('completed-task'); 
+                    completedList.appendChild(li); 
+                } else { 
+                    pendingList.appendChild(li); 
+                }
+            }); 
+            
+            // Mostrar mensaje si no hay completadas
+            if (completedList.children.length === 0) {
+                completedList.innerHTML = '<li style="justify-content:center; color:#555; font-style: italic;">Aún no has completado ninguna actividad.</li>';
+            }
+            if (pendingList.children.length === 0) {
+                pendingList.innerHTML = '<li style="justify-content:center; color:#555; font-style: italic;">¡No hay tareas pendientes! 🎉</li>';
+            }
+        }
         
         window.addRecurringTask = () => { const input = document.getElementById('recTaskInput'), startInput = document.getElementById('recTaskStart'), intervalInput = document.getElementById('recTaskInterval'), freqInput = document.getElementById('recTaskFreq'); if (input.value.trim() === '' || startInput.value === '') return alert('Escribe.'); recurringTasks.push({ text: input.value, nextTrigger: startInput.value, interval: parseInt(intervalInput.value), freq: freqInput.value, notified: false }); input.value = ''; startInput.value = ''; intervalInput.value = '1'; recordActivity(); saveDataToCloud(); };
         window.rescheduleRecurring = (task) => { let date = new Date(task.nextTrigger); let now = new Date(); if (date < now) date = now; if(task.freq === 'minutos') date.setMinutes(date.getMinutes() + task.interval); if(task.freq === 'horas') date.setHours(date.getHours() + task.interval); if(task.freq === 'dias') date.setDate(date.getDate() + task.interval); if(task.freq === 'meses') date.setMonth(date.getMonth() + task.interval); const tzOffset = date.getTimezoneOffset() * 60000; task.nextTrigger = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16); task.notified = false; };
-        function renderRecurringTasks() { const list = document.getElementById('recurringList'); list.innerHTML = ''; recurringTasks.forEach((rec, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; checkbox.onchange = () => { window.rescheduleRecurring(recurringTasks[index]); recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rec.nextTrigger); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge rec-badge`; badge.innerText = `Cada ${rec.interval} ${rec.freq}`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { recurringTasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); }); }
+        function renderRecurringTasks() { const list = document.getElementById('recurringList'); if(!list) return; list.innerHTML = ''; recurringTasks.forEach((rec, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; checkbox.onchange = () => { window.rescheduleRecurring(recurringTasks[index]); recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rec.nextTrigger); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = '<strong>' + rec.text + '</strong><br><span class="task-date">Próximo: ⏰ ' + dateString + '</span>'; const badge = document.createElement('span'); badge.className = 'badge rec-badge'; badge.innerText = 'Cada ' + rec.interval + ' ' + rec.freq; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { recurringTasks.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); }); }
         
         window.addReminder = () => { const input = document.getElementById('remInput'), datetimeInput = document.getElementById('remDatetime'), snoozeInput = document.getElementById('snoozeInput'); if (input.value.trim() === '' || datetimeInput.value === '') return alert('Escribe.'); reminders.push({ text: input.value, datetime: datetimeInput.value, snoozeMins: parseInt(snoozeInput.value), completed: false, notified: false }); input.value = ''; datetimeInput.value = ''; recordActivity(); saveDataToCloud(); };
-        function renderReminders() { const pendingList = document.getElementById('pendingReminders'); const completedList = document.getElementById('completedReminders'); pendingList.innerHTML = ''; completedList.innerHTML = ''; reminders.forEach((rem, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = rem.completed; checkbox.onchange = () => { reminders[index].completed = !reminders[index].completed; if(!reminders[index].completed) reminders[index].notified = false; else recordActivity(); saveDataToCloud(); }; const dateObj = new Date(rem.datetime); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = `<strong>${rem.text}</strong><br><span class="task-date">⏰ ${dateString}</span>`; const badge = document.createElement('span'); badge.className = `badge snooze-badge`; badge.innerText = `Snooze: ${rem.snoozeMins}m`; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { reminders.splice(index, 1); saveDataToCloud(); }; li.append(checkbox, contentDiv, badge, deleteBtn); rem.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
+        function renderReminders() { const pendingList = document.getElementById('pendingReminders'); const completedList = document.getElementById('completedReminders'); if(!pendingList || !completedList) return; pendingList.innerHTML = ''; completedList.innerHTML = ''; reminders.forEach((rem, index) => { const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = rem.completed; checkbox.onchange = () => { reminders[index].completed = !reminders[index].completed; if(!reminders[index].completed) reminders[index].notified = false; else recordActivity(); saveDataToCloud(); renderReminders(); }; const dateObj = new Date(rem.datetime); const dateString = dateObj.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; contentDiv.innerHTML = '<strong>' + rem.text + '</strong><br><span class="task-date">⏰ ' + dateString + '</span>'; const badge = document.createElement('span'); badge.className = 'badge snooze-badge'; badge.innerText = 'Snooze: ' + rem.snoozeMins + 'm'; const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; deleteBtn.onclick = () => { reminders.splice(index, 1); saveDataToCloud(); renderReminders(); }; li.append(checkbox, contentDiv, badge, deleteBtn); rem.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li); }); }
         
         // CHECKLISTS
         window.addTempChecklistItem = () => { const input = document.getElementById('clNewItem'); if(input.value.trim() === '') return; window.tempChecklistItems.push({ text: input.value, checked: false, checkedAt: null, editedAt: null }); input.value = ''; renderTempChecklist(); }; 
-        function renderTempChecklist() { const ul = document.getElementById('clTempList'); ul.innerHTML = ''; window.tempChecklistItems.forEach((item, i) => { const li = document.createElement('li'); li.style.padding = "5px"; li.style.marginBottom = "5px"; li.innerHTML = `<span style="flex-grow:1;">- ${item.text.substring(0,30)}...</span> <button onclick="window.tempChecklistItems.splice(${i},1); renderTempChecklist()" style="background:#cf6679; padding:2px 5px;">X</button>`; ul.appendChild(li); }); } 
+        function renderTempChecklist() { const ul = document.getElementById('clTempList'); ul.innerHTML = ''; window.tempChecklistItems.forEach((item, i) => { const li = document.createElement('li'); li.style.padding = "5px"; li.style.marginBottom = "5px"; li.innerHTML = '<span style="flex-grow:1;">- ' + item.text.substring(0,30) + '...</span> <button onclick="window.tempChecklistItems.splice(' + i + ',1); renderTempChecklist()" style="background:#cf6679; padding:2px 5px;">X</button>'; ul.appendChild(li); }); } 
         
         window.saveNewChecklist = () => { 
             const title = document.getElementById('clTitle').value; 
@@ -1009,16 +1289,19 @@
         }; 
         
         function renderChecklists() { 
-            const pendingList = document.getElementById('clPending'); pendingList.innerHTML = ''; 
-            const completedList = document.getElementById('clCompleted'); completedList.innerHTML = ''; 
+            const pendingList = document.getElementById('clPending'); 
+            const completedList = document.getElementById('clCompleted'); 
+            if(!pendingList || !completedList) return;
+            pendingList.innerHTML = ''; 
+            completedList.innerHTML = ''; 
             checklists.forEach((listData, listIndex) => { 
                 const li = document.createElement('li'); li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
                 const isCompleted = listData.items.length > 0 && listData.items.every(item => item.checked); 
                 const listId = listData.id || listData.createdAt; 
                 const header = document.createElement('div'); header.className = 'note-header'; 
-                let editMsg = listData.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Última modificación: ${listData.editedAt}</span>` : ''; 
+                let editMsg = listData.editedAt ? '<span style="font-size: 0.7em; color: var(--secondary);">Última modificación: ' + listData.editedAt + '</span>' : ''; 
                 const isOpen = window.openChecklists.has(listId); const arrow = isOpen ? '▲' : '▼'; 
-                header.innerHTML = `<div style="flex-grow: 1;"><strong>${listData.title}</strong><br><span class="task-date">Creado el: 📅 ${listData.createdAt}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">${arrow}</span>`; 
+                header.innerHTML = '<div style="flex-grow: 1;"><strong>' + listData.title + '</strong><br><span class="task-date">Creado el: 📅 ' + listData.createdAt + '</span> <br> ' + editMsg + '</div><span style="font-size: 1.2em; color: var(--secondary);">' + arrow + '</span>'; 
                 const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
                 const editTitleBtn = document.createElement('button'); editTitleBtn.innerText = '📝'; editTitleBtn.style.background = '#444'; editTitleBtn.style.padding = '5px'; 
                 editTitleBtn.onclick = (e) => { e.stopPropagation(); let newTitle = prompt("Editar Título:", listData.title); if(newTitle) { listData.title = newTitle; listData.editedAt = new Date().toLocaleString('es-VE'); saveDataToCloud(); renderChecklists(); } }; 
@@ -1041,12 +1324,12 @@
         }
 
         // TABLAS MD
-        window.isEditingPreview = false; window.htmlTableToMd = (tableEl) => { let md = "\n"; const rows = tableEl.querySelectorAll('tr'); rows.forEach((row, rowIndex) => { let rowMd = "|"; const cells = row.querySelectorAll('th, td'); cells.forEach(cell => { let text = cell.innerText.replace(/\n/g, ' ').trim(); if(text === '') text = ' '; rowMd += ` ${text} |`; }); md += rowMd + "\n"; if (rowIndex === 0) { let sepMd = "|"; cells.forEach(() => { sepMd += "---|"; }); md += sepMd + "\n"; } }); return md + "\n"; }; window.syncTableToMd = (tableIndex, tableEl, textareaEl, forceRender = false) => { const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); if(!tableTokens[tableIndex]) return; const oldMd = tableTokens[tableIndex].raw; const newMd = window.htmlTableToMd(tableEl); textareaEl.value = textareaEl.value.replace(oldMd, newMd); if (forceRender) { window.isEditingPreview = false; textareaEl.dispatchEvent(new Event('input')); } }; window.modifyTable = (tableIndex, action, textareaEl, previewEl) => { const tables = previewEl.querySelectorAll('table'); const table = tables[tableIndex]; if(!table) return; const tbody = table.querySelector('tbody') || table; const thead = table.querySelector('thead'); if(action === 'addCol') { table.querySelectorAll('tr').forEach((row, i) => { const cell = document.createElement(row.parentNode === thead ? 'th' : 'td'); cell.innerText = 'Dato'; row.appendChild(cell); }); } else if(action === 'remCol') { table.querySelectorAll('tr').forEach(row => { if(row.children.length > 1) row.removeChild(row.lastElementChild); }); } else if(action === 'addRow') { const row = document.createElement('tr'); const colCount = table.querySelector('tr').children.length; for(let i=0; i<colCount; i++) { const cell = document.createElement('td'); cell.innerText = 'Dato'; row.appendChild(cell); } tbody.appendChild(row); } else if(action === 'remRow') { if(tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild); } window.syncTableToMd(tableIndex, table, textareaEl, true); }; window.renderLivePreview = (textareaEl, previewEl) => { if (window.isEditingPreview) return; if(textareaEl.value.trim() !== '') { previewEl.style.display = 'block'; previewEl.innerHTML = window.parseMarkdown(textareaEl.value); } else { previewEl.style.display = 'none'; return; } const tables = previewEl.querySelectorAll('table'); const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); tables.forEach((table, i) => { if(!tableTokens[i]) return; const wrapper = document.createElement('div'); wrapper.className = 'table-editor-wrapper'; table.parentNode.insertBefore(wrapper, table); wrapper.appendChild(table); const controls = document.createElement('div'); controls.className = 'table-controls'; const addColBtn = document.createElement('button'); addColBtn.className = 't-btn'; addColBtn.innerText = '+ Columna'; addColBtn.onclick = () => window.modifyTable(i, 'addCol', textareaEl, previewEl); const remColBtn = document.createElement('button'); remColBtn.className = 't-btn t-btn-del'; remColBtn.innerText = '- Columna'; remColBtn.onclick = () => window.modifyTable(i, 'remCol', textareaEl, previewEl); const addRowBtn = document.createElement('button'); addRowBtn.className = 't-btn'; addRowBtn.innerText = '+ Fila'; addRowBtn.onclick = () => window.modifyTable(i, 'addRow', textareaEl, previewEl); const remRowBtn = document.createElement('button'); remRowBtn.className = 't-btn t-btn-del'; remRowBtn.innerText = '- Fila'; remRowBtn.onclick = () => window.modifyTable(i, 'remRow', textareaEl, previewEl); controls.append(addColBtn, remColBtn, addRowBtn, remRowBtn); wrapper.insertBefore(controls, table); table.querySelectorAll('th, td').forEach(cell => { cell.setAttribute('contenteditable', 'true'); cell.addEventListener('input', () => { window.isEditingPreview = true; window.syncTableToMd(i, table, textareaEl, false); window.isEditingPreview = false; }); }); }); };
+        window.isEditingPreview = false; window.htmlTableToMd = (tableEl) => { let md = "\n"; const rows = tableEl.querySelectorAll('tr'); rows.forEach((row, rowIndex) => { let rowMd = "|"; const cells = row.querySelectorAll('th, td'); cells.forEach(cell => { let text = cell.innerText.replace(/\n/g, ' ').trim(); if(text === '') text = ' '; rowMd += " " + text + " |"; }); md += rowMd + "\n"; if (rowIndex === 0) { let sepMd = "|"; cells.forEach(() => { sepMd += "---|"; }); md += sepMd + "\n"; } }); return md + "\n"; }; window.syncTableToMd = (tableIndex, tableEl, textareaEl, forceRender = false) => { const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); if(!tableTokens[tableIndex]) return; const oldMd = tableTokens[tableIndex].raw; const newMd = window.htmlTableToMd(tableEl); textareaEl.value = textareaEl.value.replace(oldMd, newMd); if (forceRender) { window.isEditingPreview = false; textareaEl.dispatchEvent(new Event('input')); } }; window.modifyTable = (tableIndex, action, textareaEl, previewEl) => { const tables = previewEl.querySelectorAll('table'); const table = tables[tableIndex]; if(!table) return; const tbody = table.querySelector('tbody') || table; const thead = table.querySelector('thead'); if(action === 'addCol') { table.querySelectorAll('tr').forEach((row, i) => { const cell = document.createElement(row.parentNode === thead ? 'th' : 'td'); cell.innerText = 'Dato'; row.appendChild(cell); }); } else if(action === 'remCol') { table.querySelectorAll('tr').forEach(row => { if(row.children.length > 1) row.removeChild(row.lastElementChild); }); } else if(action === 'addRow') { const row = document.createElement('tr'); const colCount = table.querySelector('tr').children.length; for(let i=0; i<colCount; i++) { const cell = document.createElement('td'); cell.innerText = 'Dato'; row.appendChild(cell); } tbody.appendChild(row); } else if(action === 'remRow') { if(tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild); } window.syncTableToMd(tableIndex, table, textareaEl, true); }; window.renderLivePreview = (textareaEl, previewEl) => { if (window.isEditingPreview) return; if(textareaEl.value.trim() !== '') { previewEl.style.display = 'block'; previewEl.innerHTML = window.parseMarkdown(textareaEl.value); } else { previewEl.style.display = 'none'; return; } const tables = previewEl.querySelectorAll('table'); const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); tables.forEach((table, i) => { if(!tableTokens[i]) return; const wrapper = document.createElement('div'); wrapper.className = 'table-editor-wrapper'; table.parentNode.insertBefore(wrapper, table); wrapper.appendChild(table); const controls = document.createElement('div'); controls.className = 'table-controls'; const addColBtn = document.createElement('button'); addColBtn.className = 't-btn'; addColBtn.innerText = '+ Columna'; addColBtn.onclick = () => window.modifyTable(i, 'addCol', textareaEl, previewEl); const remColBtn = document.createElement('button'); remColBtn.className = 't-btn t-btn-del'; remColBtn.innerText = '- Columna'; remColBtn.onclick = () => window.modifyTable(i, 'remCol', textareaEl, previewEl); const addRowBtn = document.createElement('button'); addRowBtn.className = 't-btn'; addRowBtn.innerText = '+ Fila'; addRowBtn.onclick = () => window.modifyTable(i, 'addRow', textareaEl, previewEl); const remRowBtn = document.createElement('button'); remRowBtn.className = 't-btn t-btn-del'; remRowBtn.innerText = '- Fila'; remRowBtn.onclick = () => window.modifyTable(i, 'remRow', textareaEl, previewEl); controls.append(addColBtn, remColBtn, addRowBtn, remRowBtn); wrapper.insertBefore(controls, table); table.querySelectorAll('th, td').forEach(cell => { cell.setAttribute('contenteditable', 'true'); cell.addEventListener('input', () => { window.isEditingPreview = true; window.syncTableToMd(i, table, textareaEl, false); window.isEditingPreview = false; }); }); }); };
         
         const noteContentInput = document.getElementById('noteContent'); const notePreviewDiv = document.getElementById('newNotePreview'); noteContentInput.addEventListener('input', () => window.renderLivePreview(noteContentInput, notePreviewDiv));
-        const mdToolbar = document.getElementById('mdToolbar'); document.addEventListener('focusin', (e) => { if (e.target.tagName === 'TEXTAREA') { activeTextarea = e.target; const rect = e.target.getBoundingClientRect(); mdToolbar.style.display = 'flex'; mdToolbar.style.top = (rect.top + window.scrollY - 45) + 'px'; mdToolbar.style.left = rect.left + 'px'; } }); document.addEventListener('focusout', (e) => { if (e.target.tagName === 'TEXTAREA') { setTimeout(()=> mdToolbar.style.display = 'none', 150); } }); window.applyMd = (e, prefix, suffix) => { e.preventDefault(); if (!activeTextarea) return; const start = activeTextarea.selectionStart; const end = activeTextarea.selectionEnd; const text = activeTextarea.value; const selected = text.substring(start, end); activeTextarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end); activeTextarea.focus(); activeTextarea.selectionStart = start + prefix.length; activeTextarea.selectionEnd = end + prefix.length; activeTextarea.dispatchEvent(new Event('input')); }; window.applyMdTable = (e) => { e.preventDefault(); if (!activeTextarea) return; const tableTemplate = `\n| Encabezado 1 | Encabezado 2 | Encabezado 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n| Dato 4 | Dato 5 | Dato 6 |\n\n`; const start = activeTextarea.selectionStart; const text = activeTextarea.value; activeTextarea.value = text.substring(0, start) + tableTemplate + text.substring(start); activeTextarea.focus(); activeTextarea.selectionStart = start + tableTemplate.length; activeTextarea.selectionEnd = start + tableTemplate.length; activeTextarea.dispatchEvent(new Event('input')); }; 
+        const mdToolbar = document.getElementById('mdToolbar'); document.addEventListener('focusin', (e) => { if (e.target.tagName === 'TEXTAREA') { activeTextarea = e.target; const rect = e.target.getBoundingClientRect(); mdToolbar.style.display = 'flex'; mdToolbar.style.top = (rect.top + window.scrollY - 45) + 'px'; mdToolbar.style.left = rect.left + 'px'; } }); document.addEventListener('focusout', (e) => { if (e.target.tagName === 'TEXTAREA') { setTimeout(()=> mdToolbar.style.display = 'none', 150); } }); window.applyMd = (e, prefix, suffix) => { e.preventDefault(); if (!activeTextarea) return; const start = activeTextarea.selectionStart; const end = activeTextarea.selectionEnd; const text = activeTextarea.value; const selected = text.substring(start, end); activeTextarea.value = text.substring(0, start) + prefix + selected + suffix + text.substring(end); activeTextarea.focus(); activeTextarea.selectionStart = start + prefix.length; activeTextarea.selectionEnd = end + prefix.length; activeTextarea.dispatchEvent(new Event('input')); }; window.applyMdTable = (e) => { e.preventDefault(); if (!activeTextarea) return; const tableTemplate = "\n| Encabezado 1 | Encabezado 2 | Encabezado 3 |\n|---|---|---|\n| Dato 1 | Dato 2 | Dato 3 |\n| Dato 4 | Dato 5 | Dato 6 |\n\n"; const start = activeTextarea.selectionStart; const text = activeTextarea.value; activeTextarea.value = text.substring(0, start) + tableTemplate + text.substring(start); activeTextarea.focus(); activeTextarea.selectionStart = start + tableTemplate.length; activeTextarea.selectionEnd = start + tableTemplate.length; activeTextarea.dispatchEvent(new Event('input')); }; 
 
-        // NOTAS
+        // FIX 2: NOTAS - renderNotes ahora siempre muestra todas las notas en "Mi Bóveda de Notas"
         window.addNote = () => { 
             const title = document.getElementById('noteTitle').value;
             const content = document.getElementById('noteContent').value; 
@@ -1061,15 +1344,22 @@
 
         function renderNotes() { 
             const list = document.getElementById('notesList'); 
+            if (!list) return;
             list.innerHTML = ''; 
+            
+            if (notes.length === 0) {
+                list.innerHTML = '<li style="justify-content:center; color:#555; font-style: italic;">No hay notas guardadas aún. ¡Crea tu primera nota!</li>';
+                return;
+            }
+            
             [...notes].reverse().forEach((note, revIndex) => { 
                 const index = notes.length - 1 - revIndex; 
                 const li = document.createElement('li'); 
                 li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
                 const header = document.createElement('div'); 
                 header.className = 'note-header'; 
-                let editMsg = note.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Editada: ${note.editedAt}</span>` : ''; 
-                header.innerHTML = `<div style="flex-grow: 1;"><strong>${note.title}</strong><br><span class="task-date">📅 ${note.date}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">▼</span>`; 
+                let editMsg = note.editedAt ? '<span style="font-size: 0.7em; color: var(--secondary);">Editada: ' + note.editedAt + '</span>' : ''; 
+                header.innerHTML = '<div style="flex-grow: 1;"><strong>' + note.title + '</strong><br><span class="task-date">📅 ' + note.date + '</span> <br> ' + editMsg + '</div><span style="font-size: 1.2em; color: var(--secondary);">▼</span>'; 
                 const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
                 const editBtn = document.createElement('button'); editBtn.innerText = '✏️'; editBtn.style.background = '#444'; editBtn.style.padding = '5px'; 
                 const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; 
@@ -1112,14 +1402,21 @@
 
         window.searchAndOpenNote = (title) => { 
             switchTab('notas'); 
-            const noteElements = document.querySelectorAll('#notesList li'); 
-            noteElements.forEach(li => { 
-                if(li.innerHTML.includes(`<strong>${title}</strong>`)) { 
-                    li.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
-                    li.style.border = "2px solid var(--secondary)"; 
-                    setTimeout(() => li.style.border = "none", 2000); 
-                } 
-            }); 
+            // Wait for render to complete
+            setTimeout(() => {
+                const noteElements = document.querySelectorAll('#notesList li'); 
+                noteElements.forEach(li => { 
+                    const strongEl = li.querySelector('strong');
+                    if(strongEl && strongEl.textContent === title) { 
+                        li.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                        li.style.border = "2px solid var(--secondary)"; 
+                        // Expand the note
+                        const body = li.querySelector('.note-body');
+                        if (body) body.style.display = 'block';
+                        setTimeout(() => li.style.border = "none", 2000); 
+                    } 
+                }); 
+            }, 100);
         };
 
         window.toggleNotesGraph = () => { 
@@ -1174,12 +1471,12 @@
                 const eqUsd = e.eqUsd ? e.eqUsd.toFixed(2) : "0.00";
                 const eqUsdt = e.eqUsdt ? e.eqUsdt.toFixed(2) : "0.00";
                 const eqEur = e.eqEur ? e.eqEur.toFixed(2) : "0.00";
-                csvContent += [`"${e.date}"`, `"${e.desc}"`, `"${e.account}"`, `"${e.amount}"`, `"${eqUsd}"`, `"${eqUsdt}"`, `"${eqEur}"`].join(',') + "\n"; 
+                csvContent += ['"' + e.date + '"', '"' + e.desc + '"', '"' + e.account + '"', '"' + e.amount + '"', '"' + eqUsd + '"', '"' + eqUsdt + '"', '"' + eqEur + '"'].join(',') + "\n"; 
             }); 
             const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); 
             const link = document.createElement("a"); 
             link.setAttribute("href", URL.createObjectURL(blob)); 
-            link.setAttribute("download", `Reporte_Finanzas_MetaOS.csv`); 
+            link.setAttribute("download", "Reporte_Finanzas_MetaOS.csv"); 
             link.style.visibility = 'hidden'; 
             document.body.appendChild(link); 
             link.click(); 
