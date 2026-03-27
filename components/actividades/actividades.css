@@ -15,7 +15,6 @@ body[data-theme="actividades"] {
 #tab-actividades.active {
     background-color: #1a1c23 !important;
     color: #00a8ff !important; /* Azul eléctrico */
-    border: #e2e8f0;
     border-bottom: 3px solid #00a8ff !important;
     font-family: 'Poppins', sans-serif !important;
     font-weight: 700 !important;
