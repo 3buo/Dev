@@ -1,17 +1,114 @@
-/* 1. Cambiar el color de la propia pestaña Actividades en el menú superior */
+/* Importar una fuente única solo para este módulo */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* 1. PERSONALIZACIÓN DEL BOTÓN DE LA PESTAÑA SUPERIOR */
 #tab-actividades.active {
-    color: #ff5252 !important; /* Rojo vibrante */
-    border-bottom-color: #ff5252 !important;
+    background-color: #1a1c23 !important;
+    color: #00a8ff !important; /* Azul eléctrico */
+    border-bottom: 3px solid #00a8ff !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
 }
 
-/* 2. Personalizar elementos dentro del módulo de actividades */
-/* Por ejemplo, darle un borde especial al contenedor de Nueva Actividad */
-#tab-content-container .container:first-of-type {
-    border-top: 3px solid #ff5252;
+/* 2. ESTILO BASE DEL MÓDULO (Aislado) */
+#view-actividades {
+    font-family: 'Poppins', sans-serif;
+    color: #e2e8f0; /* Texto base más claro/azulado */
 }
 
-/* 3. Cambiar el color de fondo solo del botón de 'Agregar' tarea */
-#tab-content-container button[onclick="addTask()"] {
-    background-color: #ff5252;
-    color: white;
+/* 3. CONTENEDORES (Fondo y Bordes) */
+#view-actividades .container {
+    background: linear-gradient(145deg, #1a1c23 0%, #15161c 100%);
+    border: 1px solid #2d3446;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
+
+/* 4. TÍTULOS DE SEGMENTOS */
+#view-actividades h2 {
+    color: #00a8ff;
+    border-bottom: 1px dashed #2d3446;
+    text-transform: uppercase;
+    font-size: 1.1em;
+    letter-spacing: 1px;
+}
+
+/* Colores específicos para títulos particulares */
+#view-actividades h2.title-heatmap {
+    color: #4cd137; /* Verde vibrante */
+}
+#view-actividades h2.title-habits {
+    color: #e84118; /* Naranja/Rojo intenso */
+}
+
+/* 5. INPUTS Y CAMPOS DE TEXTO */
+#view-actividades input, 
+#view-actividades select {
+    background: #0f1015;
+    border: 1px solid #00a8ff;
+    color: #fff;
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    transition: box-shadow 0.3s ease;
+}
+
+#view-actividades input:focus, 
+#view-actividades select:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 168, 255, 0.3);
+}
+
+/* 6. BOTONES GLOBALES DEL MÓDULO */
+#view-actividades button {
+    background-color: #00a8ff;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3);
+    transition: transform 0.1s ease, background 0.3s;
+}
+
+#view-actividades button:hover {
+    background-color: #0097e6;
+    transform: translateY(-2px);
+}
+
+/* Botón específico de Hábitos */
+#view-actividades button.btn-habits {
+    background-color: #e84118;
+    box-shadow: 0 4px 10px rgba(232, 65, 24, 0.3);
+}
+#view-actividades button.btn-habits:hover {
+    background-color: #c23616;
+}
+
+/* 7. ESTILOS DE LA LISTA DE TAREAS */
+#view-actividades li {
+    background: #22252e;
+    border-left: 4px solid #00a8ff;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+#view-actividades li.completed-task {
+    background: #15161c;
+    border-left: 4px solid #4cd137; /* Tarea completada = Verde */
+    opacity: 0.6;
+}
+
+#view-actividades .task-content strong {
+    font-size: 1.05em;
+    color: #fff;
+}
+
+#view-actividades .task-date {
+    color: #8ba4b5;
+    font-size: 0.8em;
+}
+
+/* 8. BADGES (Etiquetas de prioridad) */
+#view-actividades .badge.pri-Alta { background-color: #e84118; color: white; }
+#view-actividades .badge.pri-Media { background-color: #fbc531; color: black; }
+#view-actividades .badge.pri-Baja { background-color: #00a8ff; color: white; }
