@@ -3,7 +3,7 @@
 
 /* 1. PERSONALIZACIÓN DEL BOTÓN DE LA PESTAÑA SUPERIOR */
 #tab-actividades.active {
-    background-color: #1a1c23 !important;
+    background-color: #ffffff !important;
     color: #00a8ff !important; /* Azul eléctrico */
     border-bottom: 3px solid #00a8ff !important;
     font-family: 'Poppins', sans-serif !important;
