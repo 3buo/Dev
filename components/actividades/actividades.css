@@ -7,7 +7,7 @@
 body[data-theme="actividades"] {
     background-color: #ffffff; /* Un fondo súper oscuro casi negro */
     /* Un degradado radial azul oscuro en la parte superior para dar profundidad */
-    background-image: radial-gradient(circle at top center, #0f1c2e 0%, #050608 60%);
+    background-image: radial-gradient(circle at top center, #011127 0%, #2c4475 60%);
     background-attachment: fixed; /* Evita que el gradiente se mueva al hacer scroll */
 }
 
