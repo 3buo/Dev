@@ -3,7 +3,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthState
 import { state, initCloudData, clearLocalData, unsubSnapshot, saveDataToCloud } from './store.js';
 
 const loadedModules = new Set();
-const loadedCSS = new Set(); // Nuevo: Rastreador de estilos cargados
+const loadedCSS = new Set(); 
 let currentTab = null;
 
 // --- SISTEMA MODULAR DE PESTAÑAS Y CSS DINÁMICO ---
@@ -14,17 +14,18 @@ window.switchTab = async (tabName) => {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${tabName}`).classList.add('active');
     
+    // 🔥 ESTA ES LA MAGIA: Le decimos al body en qué pestaña estamos
+    document.body.setAttribute('data-theme', tabName);
+    
     const container = document.getElementById('tab-content-container');
     container.innerHTML = '<div style="text-align:center; padding: 40px; color: #aaa;">Cargando interfaz...</div>';
 
     try {
-        // 2. Inyectamos el CSS dinámicamente (Solo la primera vez)
+        // 2. Inyectamos el CSS dinámicamente
         if (!loadedCSS.has(tabName)) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = `components/${tabName}/${tabName}.css`;
-            
-            // Si el archivo CSS no existe, no romperá la app, solo dará un error 404 silencioso en la consola
             document.head.appendChild(link);
             loadedCSS.add(tabName);
         }
@@ -39,7 +40,6 @@ window.switchTab = async (tabName) => {
             if (module.init) module.init();
             loadedModules.add(tabName);
         } else {
-            // Si ya estaba cargado, forzamos un repintado local
             window.dispatchEvent(new Event('stateChanged'));
         }
     } catch (e) {
@@ -47,25 +47,21 @@ window.switchTab = async (tabName) => {
     }
 };
 
-// --- DRAG AND DROP DE PESTAÑAS (SORTABLE.JS) ---
-// Inicializamos el drag and drop
+// --- DRAG AND DROP DE PESTAÑAS ---
 Sortable.create(document.getElementById('tabContainer'), { 
     animation: 150, 
     ghostClass: 'sortable-ghost', 
     onEnd: function () { 
-        // Cuando terminas de arrastrar, guardamos el nuevo orden en el estado global y en la nube
         state.tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); 
         saveDataToCloud(); 
     } 
 });
 
-// Cuando la app carga los datos de Firebase, reordenamos visualmente los botones
 window.addEventListener('stateChanged', () => {
     if (state.tabOrder && state.tabOrder.length > 0) { 
         const container = document.getElementById('tabContainer'); 
         state.tabOrder.forEach(id => { 
             const btn = document.getElementById(id); 
-            // Añadir al final reordena físicamente el nodo en el DOM
             if (btn) container.appendChild(btn); 
         }); 
     } 
@@ -77,12 +73,13 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('authScreen').style.display = 'none'; 
         document.getElementById('mainApp').style.display = 'block'; 
         initCloudData(user.uid); 
-        window.switchTab('actividades'); // Pestaña por defecto
+        window.switchTab('actividades'); 
     } else { 
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('mainApp').style.display = 'none'; 
         if (unsubSnapshot) unsubSnapshot(); 
         clearLocalData(); 
+        document.body.removeAttribute('data-theme'); // Limpiamos el tema al salir
     } 
 });
 
@@ -99,7 +96,7 @@ window.appRegister = () => {
 window.appResetPassword = () => { const e = prompt("Correo:"); if(e) sendPasswordResetEmail(auth, e).then(() => alert("Enviado!")).catch(err=>alert(err.message)); };
 window.appLogout = () => { if(confirm("¿Cerrar sesión?")) signOut(auth); };
 
-// --- PALETA DE COMANDOS (CTRL + K) ---
+// --- PALETA DE COMANDOS ---
 const cmdOverlay = document.getElementById('cmdOverlay'), cmdInput = document.getElementById('cmdInput'), cmdResults = document.getElementById('cmdResults'); 
 let cmdOptions = [ 
     { name: "💰 Nuevo Gasto", action: () => { window.switchTab('finanzas'); setTimeout(()=>document.getElementById('expDesc')?.focus(), 500); } }, 
