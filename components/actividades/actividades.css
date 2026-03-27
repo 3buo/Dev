@@ -55,8 +55,8 @@ body[data-theme="actividades"] {
 /* 5. INPUTS Y CAMPOS DE TEXTO */
 #view-actividades input, 
 #view-actividades select {
-    background: #0f1015;
-    border: 1px solid #00a8ff;
+    background: #000000;
+    border: 1px solid #ffffff;
     color: #fff;
     border-radius: 6px;
     font-family: 'Poppins', sans-serif;
