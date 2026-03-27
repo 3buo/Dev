@@ -1,11 +1,21 @@
 /* Importar una fuente única solo para este módulo */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
+/* =========================================
+   ESTILO GLOBAL DEL FONDO PARA ESTA PESTAÑA
+   ========================================= */
+body[data-theme="actividades"] {
+    background-color: #050608; /* Un fondo súper oscuro casi negro */
+    /* Un degradado radial azul oscuro en la parte superior para dar profundidad */
+    background-image: radial-gradient(circle at top center, #0f1c2e 0%, #050608 60%);
+    background-attachment: fixed; /* Evita que el gradiente se mueva al hacer scroll */
+}
+
 /* 1. PERSONALIZACIÓN DEL BOTÓN DE LA PESTAÑA SUPERIOR */
 #tab-actividades.active {
-    background-color: #000000 !important;
-    color: #00ff80 !important; /* Azul eléctrico */
-    border-bottom: 3px solid #00ff80 !important;
+    background-color: #1a1c23 !important;
+    color: #00a8ff !important; /* Azul eléctrico */
+    border-bottom: 3px solid #00a8ff !important;
     font-family: 'Poppins', sans-serif !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px;
@@ -20,15 +30,15 @@
 /* 3. CONTENEDORES (Fondo y Bordes) */
 #view-actividades .container {
     background: linear-gradient(145deg, #1a1c23 0%, #15161c 100%);
-    border: 1px solid #ffffff;
+    border: 1px solid #2d3446;
     border-radius: 12px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 /* 4. TÍTULOS DE SEGMENTOS */
 #view-actividades h2 {
-    color: #00ff80;
-    border-bottom: 1px dashed #5e5e5f;
+    color: #00a8ff;
+    border-bottom: 1px dashed #2d3446;
     text-transform: uppercase;
     font-size: 1.1em;
     letter-spacing: 1px;
@@ -39,14 +49,14 @@
     color: #4cd137; /* Verde vibrante */
 }
 #view-actividades h2.title-habits {
-    color: #4cd137; /* Naranja/Rojo intenso */
+    color: #e84118; /* Naranja/Rojo intenso */
 }
 
 /* 5. INPUTS Y CAMPOS DE TEXTO */
 #view-actividades input, 
 #view-actividades select {
-    background: #000000;
-    border: 1px solid #00ff80;
+    background: #0f1015;
+    border: 1px solid #00a8ff;
     color: #fff;
     border-radius: 6px;
     font-family: 'Poppins', sans-serif;
@@ -62,7 +72,7 @@
 /* 6. BOTONES GLOBALES DEL MÓDULO */
 #view-actividades button {
     background-color: #00a8ff;
-    color: #dddcdc;
+    color: #fff;
     text-transform: uppercase;
     letter-spacing: 1px;
     border-radius: 6px;
@@ -111,4 +121,4 @@
 /* 8. BADGES (Etiquetas de prioridad) */
 #view-actividades .badge.pri-Alta { background-color: #e84118; color: white; }
 #view-actividades .badge.pri-Media { background-color: #fbc531; color: black; }
-#view-actividades .badge.pri-Baja { background-color: #adc2cc; color: white; }
+#view-actividades .badge.pri-Baja { background-color: #00a8ff; color: white; }
