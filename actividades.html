@@ -1,0 +1,50 @@
+<div class="container pomodoro">
+    <h2>Bloque de Enfoque (Pomodoro) <div class="tooltip">?<span class="tooltiptext">Temporizador de 25 minutos. Úsalo para trabajar sin distracciones. Sonará al terminar.</span></div></h2>
+    <div id="timer">25:00</div>
+    <button onclick="startTimer()">Iniciar Enfoque</button>
+    <button onclick="resetTimer()" style="background:#444; color:white;">Reset</button>
+</div>
+<div class="container">
+    <h2>Nueva Actividad <div class="tooltip">?<span class="tooltiptext">Crea tareas sueltas para hoy. Al completarlas y tacharlas se sumarán a tu Mapa de Productividad.</span></div> <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
+    <div class="input-group">
+        <input type="text" id="taskInput" placeholder="¿Qué necesitas lograr hoy?">
+        <input type="date" id="dateInput">
+        <select id="priorityInput">
+            <option value="Alta">Alta</option>
+            <option value="Media" selected>Media</option>
+            <option value="Baja">Baja</option>
+        </select>
+        <button onclick="addTask()">Agregar</button>
+    </div>
+    <ul id="pendingList" class="pending-list-style"></ul>
+</div>
+
+<div class="container">
+    <h2 style="color: #39d353;">Mapa de Productividad (Heatmap) <div class="tooltip">?<span class="tooltiptext">Al estilo de GitHub. Cada vez que cumples una tarea o registras información, el día de hoy se pintará más verde. ¡No rompas la racha!</span></div></h2>
+    <div class="heatmap-container">
+        <div id="heatmapGrid" class="heatmap-grid"></div>
+        <span style="font-size: 0.7em; color: #aaa; margin-top: 10px;">Menos ← ■ ■ ■ ■ → Más Productivo</span>
+    </div>
+</div>
+
+<div class="container">
+    <h2 style="color: #ff9800; border-bottom-color: #ff9800;">Hábitos y Rutinas <div class="tooltip">?<span class="tooltiptext">Para tareas que se repiten. Si pones 'Tomar agua cada 2 horas', al completarla, la app volverá a crear la tarea automáticamente sumándole 2 horas al reloj.</span></div></h2>
+    <div class="input-group">
+        <input type="text" id="recTaskInput" placeholder="Ej: Tomar agua, Pagar luz...">
+        <input type="datetime-local" id="recTaskStart" title="Fecha y hora de inicio">
+        <span style="color: #aaa;">Cada:</span>
+        <input type="number" id="recTaskInterval" min="1" value="1" style="width: 60px;">
+        <select id="recTaskFreq" style="width: 110px;">
+            <option value="minutos">Minuto(s)</option>
+            <option value="horas" selected>Hora(s)</option>
+            <option value="dias">Día(s)</option>
+            <option value="meses">Mes(es)</option>
+        </select>
+        <button onclick="addRecurringTask()" style="background-color: #ff9800;">Crear</button>
+    </div>
+    <ul id="recurringList" class="pending-list-style"></ul>
+</div>
+<div class="container">
+    <h2>Actividades Completadas</h2>
+    <ul id="completedList"></ul>
+</div>
