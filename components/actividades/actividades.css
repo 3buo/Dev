@@ -1,0 +1,17 @@
+/* 1. Cambiar el color de la propia pestaña Actividades en el menú superior */
+#tab-actividades.active {
+    color: #ff5252 !important; /* Rojo vibrante */
+    border-bottom-color: #ff5252 !important;
+}
+
+/* 2. Personalizar elementos dentro del módulo de actividades */
+/* Por ejemplo, darle un borde especial al contenedor de Nueva Actividad */
+#tab-content-container .container:first-of-type {
+    border-top: 3px solid #ff5252;
+}
+
+/* 3. Cambiar el color de fondo solo del botón de 'Agregar' tarea */
+#tab-content-container button[onclick="addTask()"] {
+    background-color: #ff5252;
+    color: white;
+}
