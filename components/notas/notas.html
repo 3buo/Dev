@@ -4,8 +4,13 @@
         <h2>Notas</h2>
         <div class="input-group" style="flex-direction: column; margin-top: 15px;">
             
-            <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap; align-items: center;">
                 <input type="text" id="noteTitle" placeholder="Título de la nota" style="flex-grow: 1;">
+                
+                <div class="color-picker-wrapper" title="Elige el color de la nota">
+                    <input type="color" id="noteColor" value="#bb86fc">
+                </div>
+
                 <select id="noteCategorySelect" style="width: auto; min-width: 150px;">
                     <option value="Sin clasificar">Sin clasificar</option>
                     </select>
@@ -31,4 +36,5 @@
             </div>
     </div>
 
+</div>
 </div>
