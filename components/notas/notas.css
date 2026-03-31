@@ -3,7 +3,7 @@
    ========================================= */
 body[data-theme="notas"] {
     background-color: #ffffff; 
-    background-image: radial-gradient(circle at top center, #e6e5c1 0%, #cdcf3a 60%);
+    background-image: radial-gradient(circle at top center, #e6e5c1 0%, #dfdfdf 60%);
     background-attachment: fixed;
 }
 
