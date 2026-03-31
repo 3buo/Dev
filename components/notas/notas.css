@@ -2,8 +2,8 @@
    ESTILO GLOBAL DEL FONDO PARA ESTA PESTAÑA
    ========================================= */
 body[data-theme="notas"] {
-    background-color: #121212; 
-    background-image: radial-gradient(circle at top center, #1f1135 0%, #121212 60%);
+    background-color: #ffffff; 
+    background-image: radial-gradient(circle at top center, #e6e5c1 0%, #cdcf3a 60%);
     background-attachment: fixed;
 }
 
@@ -16,7 +16,7 @@ body[data-theme="notas"] {
 
 #view-notas h2 {
     color: #bb86fc;
-    border-bottom: 1px dashed #333;
+    border-bottom: 1px dashed #ffffff;
 }
 
 #view-notas button {
