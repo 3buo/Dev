@@ -1,0 +1,117 @@
+/* =========================================
+   ESTILO GLOBAL DEL FONDO PARA ESTA PESTAÑA
+   (Requiere que app.js tenga la lógica de data-theme="notas")
+   ========================================= */
+body[data-theme="notas"] {
+    background-color: #121212; 
+    /* Un ligero matiz morado para Notes */
+    background-image: radial-gradient(circle at top center, #1f1135 0%, #121212 60%);
+    background-attachment: fixed;
+}
+
+/* =========================================
+   ESTILOS AISLADOS (SCOPED) DE LA PESTAÑA
+   ========================================= */
+#view-notas {
+    color: #e0e0e0;
+}
+
+/* Color principal para las notas */
+#view-notas h2 {
+    color: #bb86fc;
+    border-bottom: 1px dashed #333;
+}
+
+#view-notas button {
+    background-color: #bb86fc;
+    color: #000;
+}
+
+#view-notas button:hover {
+    background-color: #9965f4;
+}
+
+/* Estructura visual de las Categorías */
+#view-notas .note-category-box {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+#view-notas .category-header {
+    background: #2a2a2a;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+}
+
+#view-notas .category-header h3 {
+    margin: 0;
+    color: #bb86fc;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#view-notas .cat-count {
+    background: #444;
+    color: white;
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+#view-notas .btn-del-cat {
+    background: transparent;
+    color: #cf6679;
+    padding: 5px;
+    font-size: 0.85em;
+    border: none;
+    box-shadow: none;
+}
+
+#view-notas .btn-del-cat:hover {
+    background: #cf6679;
+    color: black;
+}
+
+/* La zona donde se sueltan las notas (Drag & Drop) */
+#view-notas .notes-drag-list {
+    min-height: 60px; /* Importante: espacio mínimo para poder soltar cosas aunque esté vacía */
+    padding: 10px;
+    background: #151515;
+    transition: background 0.3s;
+}
+
+#view-notas .empty-cat-msg {
+    text-align: center;
+    color: #555;
+    font-style: italic;
+    padding: 15px;
+    border: 2px dashed #333;
+    border-radius: 6px;
+    pointer-events: none; /* Que no estorbe al arrastrar encima */
+}
+
+/* Estilo de la nota individual siendo arrastrada */
+#view-notas .draggable-note {
+    cursor: grab;
+    border-left: 4px solid #bb86fc;
+}
+
+#view-notas .draggable-note:active {
+    cursor: grabbing;
+}
+
+/* Estilo del "fantasma" que Sortablejs crea cuando arrastras */
+.sortable-ghost {
+    opacity: 0.3;
+    background-color: #bb86fc !important;
+    color: black !important;
+    border: 1px dashed white;
+}

@@ -4,7 +4,7 @@ import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 window.parseMarkdown = (text) => {
     if (!text) return "";
     let processed = text.replace(/\[\[(.*?)\]\]/g, '<span class="zk-link" onclick="window.searchAndOpenNote(\'$1\')">#$1</span>');
-    return marked ? marked.parse(processed) : processed; // fallback en caso de que tarde en cargar
+    return marked ? marked.parse(processed) : processed; 
 };
 
 window.activeTextarea = null;
@@ -21,63 +21,195 @@ window.syncTableToMd = (tableIndex, tableEl, textareaEl, forceRender = false) =>
 window.modifyTable = (tableIndex, action, textareaEl, previewEl) => { const tables = previewEl.querySelectorAll('table'); const table = tables[tableIndex]; if(!table) return; const tbody = table.querySelector('tbody') || table; const thead = table.querySelector('thead'); if(action === 'addCol') { table.querySelectorAll('tr').forEach((row) => { const cell = document.createElement(row.parentNode === thead ? 'th' : 'td'); cell.innerText = 'Dato'; row.appendChild(cell); }); } else if(action === 'remCol') { table.querySelectorAll('tr').forEach(row => { if(row.children.length > 1) row.removeChild(row.lastElementChild); }); } else if(action === 'addRow') { const row = document.createElement('tr'); const colCount = table.querySelector('tr').children.length; for(let i=0; i<colCount; i++) { const cell = document.createElement('td'); cell.innerText = 'Dato'; row.appendChild(cell); } tbody.appendChild(row); } else if(action === 'remRow') { if(tbody.children.length > 1) tbody.removeChild(tbody.lastElementChild); } window.syncTableToMd(tableIndex, table, textareaEl, true); }; 
 window.renderLivePreview = (textareaEl, previewEl) => { if (window.isEditingPreview) return; if(textareaEl.value.trim() !== '') { previewEl.style.display = 'block'; previewEl.innerHTML = window.parseMarkdown(textareaEl.value); } else { previewEl.style.display = 'none'; return; } const tables = previewEl.querySelectorAll('table'); const tokens = marked.lexer(textareaEl.value); const tableTokens = tokens.filter(t => t.type === 'table'); tables.forEach((table, i) => { if(!tableTokens[i]) return; const wrapper = document.createElement('div'); wrapper.className = 'table-editor-wrapper'; table.parentNode.insertBefore(wrapper, table); wrapper.appendChild(table); const controls = document.createElement('div'); controls.className = 'table-controls'; const addColBtn = document.createElement('button'); addColBtn.className = 't-btn'; addColBtn.innerText = '+ Columna'; addColBtn.onclick = () => window.modifyTable(i, 'addCol', textareaEl, previewEl); const remColBtn = document.createElement('button'); remColBtn.className = 't-btn t-btn-del'; remColBtn.innerText = '- Columna'; remColBtn.onclick = () => window.modifyTable(i, 'remCol', textareaEl, previewEl); const addRowBtn = document.createElement('button'); addRowBtn.className = 't-btn'; addRowBtn.innerText = '+ Fila'; addRowBtn.onclick = () => window.modifyTable(i, 'addRow', textareaEl, previewEl); const remRowBtn = document.createElement('button'); remRowBtn.className = 't-btn t-btn-del'; remRowBtn.innerText = '- Fila'; remRowBtn.onclick = () => window.modifyTable(i, 'remRow', textareaEl, previewEl); controls.append(addColBtn, remColBtn, addRowBtn, remRowBtn); wrapper.insertBefore(controls, table); table.querySelectorAll('th, td').forEach(cell => { cell.setAttribute('contenteditable', 'true'); cell.addEventListener('input', () => { window.isEditingPreview = true; window.syncTableToMd(i, table, textareaEl, false); window.isEditingPreview = false; }); }); }); };
 
-// --- LOGICA DE LA PESTAÑA ---
+// --- LOGICA DE CATEGORÍAS Y NOTAS ---
+
+window.addNoteCategory = () => {
+    const input = document.getElementById('newCategoryInput');
+    const catName = input.value.trim();
+    if (catName === '') return alert("Escribe un nombre para la categoría.");
+    if (state.noteCategories.includes(catName) || catName === 'Sin clasificar') return alert("Esta categoría ya existe.");
+    
+    state.noteCategories.push(catName);
+    input.value = '';
+    saveDataToCloud();
+    window.renderNotes();
+};
+
+window.deleteNoteCategory = (catName) => {
+    if(!confirm(`¿Eliminar la categoría "${catName}"? Las notas que contenga se moverán a "Sin clasificar".`)) return;
+    
+    // Mover notas a Sin clasificar
+    state.notes.forEach(n => {
+        if (n.category === catName) n.category = 'Sin clasificar';
+    });
+    
+    // Eliminar la categoría de la lista
+    state.noteCategories = state.noteCategories.filter(c => c !== catName);
+    saveDataToCloud();
+    window.renderNotes();
+};
+
 window.addNote = () => { 
-    const title = document.getElementById('noteTitle').value, content = document.getElementById('noteContent').value; 
+    const title = document.getElementById('noteTitle').value;
+    const content = document.getElementById('noteContent').value; 
+    const category = document.getElementById('noteCategorySelect').value;
+
     if (title.trim() === '' || content.trim() === '') return alert("Llenar campos."); 
-    state.notes.push({ title, content, date: new Date().toLocaleString('es-VE'), editedAt: null }); 
-    document.getElementById('noteTitle').value = ''; document.getElementById('noteContent').value = ''; document.getElementById('newNotePreview').style.display = 'none'; 
+    
+    state.notes.push({ 
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5), // ID único para el drag and drop
+        title, 
+        content, 
+        category,
+        date: new Date().toLocaleString('es-VE'), 
+        editedAt: null 
+    }); 
+    
+    document.getElementById('noteTitle').value = ''; 
+    document.getElementById('noteContent').value = ''; 
+    document.getElementById('newNotePreview').style.display = 'none'; 
     recordActivity(); saveDataToCloud(); window.renderNotes();
 };
 
 window.renderNotes = () => { 
-    const list = document.getElementById('notesList'); if (!list) return; list.innerHTML = ''; 
-    if (state.notes.length === 0) { list.innerHTML = '<li style="justify-content:center; color:#555; font-style: italic;">No hay notas guardadas aún.</li>'; return; }
-    
-    [...state.notes].reverse().forEach((note, revIndex) => { 
-        const index = state.notes.length - 1 - revIndex; 
-        const li = document.createElement('li'); li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
-        const header = document.createElement('div'); header.className = 'note-header'; 
-        let editMsg = note.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Editada: ${note.editedAt}</span>` : ''; 
-        header.innerHTML = `<div style="flex-grow: 1;"><strong>${note.title}</strong><br><span class="task-date">📅 ${note.date}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">▼</span>`; 
+    // Asegurar que exista el arreglo de categorías en el estado
+    if (!state.noteCategories) state.noteCategories = [];
+
+    // Migración silenciosa: Darle ID y Categoría a las notas viejas
+    let needsSave = false;
+    state.notes.forEach(n => {
+        if (!n.id) { n.id = Date.now().toString() + Math.random().toString(36).substr(2, 5); needsSave = true; }
+        if (!n.category) { n.category = 'Sin clasificar'; needsSave = true; }
+    });
+    if (needsSave) saveDataToCloud();
+
+    // Actualizar el Dropdown de crear notas
+    const catSelect = document.getElementById('noteCategorySelect');
+    if (catSelect) {
+        catSelect.innerHTML = '<option value="Sin clasificar">Sin clasificar</option>';
+        state.noteCategories.forEach(cat => {
+            catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    }
+
+    const container = document.getElementById('categoriesContainer'); 
+    if (!container) return; 
+    container.innerHTML = ''; 
+
+    // Lista combinada (siempre mostrar 'Sin clasificar' primero o último)
+    const allCategories = ['Sin clasificar', ...state.noteCategories];
+
+    allCategories.forEach(cat => {
+        const catNotes = state.notes.filter(n => n.category === cat);
         
-        const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
-        const editBtn = document.createElement('button'); editBtn.innerText = '✏️'; editBtn.style.background = '#444'; editBtn.style.padding = '5px'; 
-        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; 
-        deleteBtn.onclick = (e) => { e.stopPropagation(); if(confirm("¿Borrar nota?")) { state.notes.splice(index, 1); saveDataToCloud(); window.renderNotes(); } }; 
-        btnBox.append(editBtn, deleteBtn); header.appendChild(btnBox); 
+        // Contenedor visual de la categoría
+        const catDiv = document.createElement('div');
+        catDiv.className = 'note-category-box';
         
-        const body = document.createElement('div'); body.className = 'note-body markdown-content'; body.innerHTML = window.parseMarkdown(note.content); 
-        const editArea = document.createElement('div'); editArea.style.display = 'none'; editArea.style.width = '100%'; editArea.style.marginTop = '15px'; 
-        const editTitle = document.createElement('input'); editTitle.type = 'text'; editTitle.value = note.title; editTitle.style.width = '100%'; editTitle.style.marginBottom = '10px'; 
-        const editText = document.createElement('textarea'); editText.value = note.content; editText.style.width = '100%'; editText.style.minHeight = '150px'; 
+        // Botón de eliminar categoría (oculto para 'Sin clasificar')
+        const deleteCatBtn = cat !== 'Sin clasificar' ? `<button onclick="deleteNoteCategory('${cat}')" class="btn-del-cat">X Eliminar</button>` : '';
+
+        catDiv.innerHTML = `
+            <div class="category-header">
+                <h3>📁 ${cat} <span class="cat-count">${catNotes.length}</span></h3>
+                ${deleteCatBtn}
+            </div>
+            <ul class="notes-drag-list" data-category="${cat}"></ul>
+        `;
+        container.appendChild(catDiv);
+
+        const ul = catDiv.querySelector('ul');
         
-        const editPreview = document.createElement('div'); editPreview.className = 'markdown-content live-preview-box'; 
-        editText.addEventListener('input', () => window.renderLivePreview(editText, editPreview)); 
-        const saveEditBtn = document.createElement('button'); saveEditBtn.innerText = 'Guardar'; saveEditBtn.style.marginTop = '15px'; 
-        saveEditBtn.onclick = () => { 
-            if (editTitle.value.trim() === '' || editText.value.trim() === '') return; 
-            state.notes[index].title = editTitle.value; state.notes[index].content = editText.value; state.notes[index].editedAt = new Date().toLocaleString('es-VE'); 
-            recordActivity(); saveDataToCloud(); window.renderNotes();
-        }; 
-        editArea.append(editTitle, editText, editPreview, saveEditBtn); 
-        
-        header.onclick = (e) => { 
-            if(e.target === editBtn) return; const isHidden = body.style.display === 'none' || body.style.display === ''; 
-            body.style.display = isHidden ? 'block' : 'none'; editArea.style.display = 'none'; header.querySelector('span').innerText = isHidden ? '▲' : '▼'; 
-        }; 
-        editBtn.onclick = (e) => { 
-            e.stopPropagation(); body.style.display = 'none'; editArea.style.display = 'block'; header.querySelector('span').innerText = '▲'; 
-            window.renderLivePreview(editText, editPreview); 
-        }; 
-        li.appendChild(header); li.appendChild(body); li.appendChild(editArea); list.appendChild(li); 
-    }); 
+        // Si no hay notas, mostramos un mensaje fantasma para guiar al usuario
+        if (catNotes.length === 0) {
+            ul.innerHTML = `<div class="empty-cat-msg">Arrastra una nota aquí...</div>`;
+        }
+
+        // Renderizar notas de esta categoría
+        [...catNotes].reverse().forEach((note) => { 
+            const realIndex = state.notes.findIndex(n => n.id === note.id);
+            if (realIndex === -1) return;
+
+            const li = document.createElement('li'); 
+            li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; 
+            li.dataset.id = note.id; // Clave para el Drag & Drop
+            li.className = 'draggable-note';
+
+            const header = document.createElement('div'); header.className = 'note-header'; 
+            let editMsg = note.editedAt ? `<span style="font-size: 0.7em; color: var(--secondary);">Editada: ${note.editedAt}</span>` : ''; 
+            header.innerHTML = `<div style="flex-grow: 1;"><strong>${note.title}</strong><br><span class="task-date">📅 ${note.date}</span> <br> ${editMsg}</div><span style="font-size: 1.2em; color: var(--secondary);">▼</span>`; 
+            
+            const btnBox = document.createElement('div'); btnBox.style.display = 'flex'; btnBox.style.gap = '5px'; 
+            const editBtn = document.createElement('button'); editBtn.innerText = '✏️'; editBtn.style.background = '#444'; editBtn.style.padding = '5px'; 
+            const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; 
+            
+            deleteBtn.onclick = (e) => { 
+                e.stopPropagation(); 
+                if(confirm("¿Borrar nota?")) { 
+                    state.notes.splice(realIndex, 1); saveDataToCloud(); window.renderNotes(); 
+                } 
+            }; 
+            btnBox.append(editBtn, deleteBtn); header.appendChild(btnBox); 
+            
+            const body = document.createElement('div'); body.className = 'note-body markdown-content'; body.innerHTML = window.parseMarkdown(note.content); 
+            const editArea = document.createElement('div'); editArea.style.display = 'none'; editArea.style.width = '100%'; editArea.style.marginTop = '15px'; 
+            
+            const editTitle = document.createElement('input'); editTitle.type = 'text'; editTitle.value = note.title; editTitle.style.width = '100%'; editTitle.style.marginBottom = '10px'; 
+            const editText = document.createElement('textarea'); editText.value = note.content; editText.style.width = '100%'; editText.style.minHeight = '150px'; 
+            
+            const editPreview = document.createElement('div'); editPreview.className = 'markdown-content live-preview-box'; 
+            editText.addEventListener('input', () => window.renderLivePreview(editText, editPreview)); 
+            
+            const saveEditBtn = document.createElement('button'); saveEditBtn.innerText = 'Guardar'; saveEditBtn.style.marginTop = '15px'; 
+            saveEditBtn.onclick = () => { 
+                if (editTitle.value.trim() === '' || editText.value.trim() === '') return; 
+                state.notes[realIndex].title = editTitle.value; 
+                state.notes[realIndex].content = editText.value; 
+                state.notes[realIndex].editedAt = new Date().toLocaleString('es-VE'); 
+                recordActivity(); saveDataToCloud(); window.renderNotes();
+            }; 
+            editArea.append(editTitle, editText, editPreview, saveEditBtn); 
+            
+            header.onclick = (e) => { 
+                if(e.target === editBtn) return; const isHidden = body.style.display === 'none' || body.style.display === ''; 
+                body.style.display = isHidden ? 'block' : 'none'; editArea.style.display = 'none'; header.querySelector('span').innerText = isHidden ? '▲' : '▼'; 
+            }; 
+            editBtn.onclick = (e) => { 
+                e.stopPropagation(); body.style.display = 'none'; editArea.style.display = 'block'; header.querySelector('span').innerText = '▲'; 
+                window.renderLivePreview(editText, editPreview); 
+            }; 
+            li.appendChild(header); li.appendChild(body); li.appendChild(editArea); ul.appendChild(li); 
+        }); 
+
+        // Inicializar Drag & Drop para esta lista de categoría
+        Sortable.create(ul, {
+            group: 'shared-notes-categories', // Permite arrastrar entre diferentes <ul>
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            delay: 100, // Previene que arrastres por error al dar click rápido en el header
+            delayOnTouchOnly: true,
+            onEnd: function (evt) {
+                const itemEl = evt.item;  
+                const newCategory = evt.to.dataset.category; // La categoría donde lo soltaste
+                const noteId = itemEl.dataset.id; // El ID de la nota
+
+                // Buscar la nota real y actualizarle la categoría
+                const realIndex = state.notes.findIndex(n => n.id === noteId);
+                if (realIndex !== -1 && state.notes[realIndex].category !== newCategory) {
+                    state.notes[realIndex].category = newCategory;
+                    recordActivity();
+                    saveDataToCloud();
+                    window.renderNotes(); // Re-renderizar para actualizar contadores
+                }
+            }
+        });
+    });
 };
 
 window.searchAndOpenNote = (title) => { 
     if(window.switchTab) window.switchTab('notas'); 
     setTimeout(() => {
-        const noteElements = document.querySelectorAll('#notesList li'); 
+        const noteElements = document.querySelectorAll('.draggable-note'); 
         noteElements.forEach(li => { 
             const strongEl = li.querySelector('strong');
             if(strongEl && strongEl.textContent === title) { 
@@ -89,23 +221,10 @@ window.searchAndOpenNote = (title) => {
     }, 100);
 };
 
-window.toggleNotesGraph = () => { 
-    const container = document.getElementById('networkGraph'); 
-    if(container.style.display === 'block') { container.style.display = 'none'; return; } 
-    container.style.display = 'block'; 
-    let nodesArray = [], edgesArray = []; 
-    state.notes.forEach((n) => { 
-        nodesArray.push({ id: n.title, label: n.title, shape: 'dot', size: 15, color: '#bb86fc', font: {color: 'white'} }); 
-        const matches = n.content.match(/\[\[(.*?)\]\]/g); 
-        if(matches) matches.forEach(match => edgesArray.push({ from: n.title, to: match.replace('[[', '').replace(']]', ''), color: '#03dac6', arrows: 'to' })); 
-    }); 
-    new vis.Network(container, { nodes: new vis.DataSet(nodesArray), edges: new vis.DataSet(edgesArray) }, { physics: { barnesHut: { gravitationalConstant: -2000 } } }); 
-};
-
 export function init() {
     window.renderNotes();
     
-    // Adjuntar el listener de markdown al input principal cada vez que se carga la pestaña
+    // Listener dinámico para markdown preview
     const noteContentInput = document.getElementById('noteContent'); 
     const notePreviewDiv = document.getElementById('newNotePreview'); 
     if(noteContentInput && !noteContentInput.dataset.listener) {
@@ -114,4 +233,4 @@ export function init() {
     }
 }
 
-window.addEventListener('stateChanged', () => { if(document.getElementById('notesList')) init(); });
+window.addEventListener('stateChanged', () => { if(document.getElementById('categoriesContainer')) init(); });
