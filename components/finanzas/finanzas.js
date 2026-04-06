@@ -27,7 +27,11 @@ window.changePin = () => {
 
 window.applyFilters = () => { window.renderExpenses(); }; 
 window.clearFilters = () => { 
-    document.getElementById('filterDate').value = ''; document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; document.getElementById('filterAccount').value = 'all'; 
+    document.getElementById('filterText').value = '';
+    document.getElementById('filterDate').value = ''; 
+    document.getElementById('filterStartDate').value = ''; 
+    document.getElementById('filterEndDate').value = ''; 
+    document.getElementById('filterAccount').value = 'all'; 
     window.renderExpenses(); 
 };
 
@@ -45,12 +49,17 @@ function getLocalYMD(dateObj) {
 window.renderExpenses = () => { 
     const list = document.getElementById('expenseList'); if (!list) return; list.innerHTML = ''; 
     
+    const fText = document.getElementById('filterText')?.value.toLowerCase() || '';
     const fDate = document.getElementById('filterDate')?.value || '';
     const fStart = document.getElementById('filterStartDate')?.value || '';
     const fEnd = document.getElementById('filterEndDate')?.value || '';
     const fAcc = document.getElementById('filterAccount')?.value || 'all';
     
     let filtered = state.expenses.map((exp, originalIndex) => ({...exp, originalIndex})); 
+    
+    // Filtro por texto / detalle
+    if(fText !== '') filtered = filtered.filter(e => e.desc.toLowerCase().includes(fText));
+    
     if(fAcc !== 'all') filtered = filtered.filter(e => e.account === fAcc); 
     if(fDate) filtered = filtered.filter(e => getLocalYMD(parseVeDate(e.date)) === fDate); 
     else if (fStart && fEnd) filtered = filtered.filter(e => { const dYMD = getLocalYMD(parseVeDate(e.date)); return dYMD >= fStart && dYMD <= fEnd; }); 
@@ -67,11 +76,11 @@ window.renderExpenses = () => {
         const amountSpan = document.createElement('span'); amountSpan.className = 'expense-amount'; amountSpan.innerText = `-${symbol}${parseFloat(exp.amount).toFixed(2)}`; 
         const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'Deshacer'; deleteBtn.style.background = '#444'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; 
         deleteBtn.onclick = () => { 
-            if(confirm("¿Devolver gasto al saldo?")) { state.balances[exp.account] += parseFloat(exp.amount); state.expenses.splice(exp.originalIndex, 1); saveDataToCloud(); window.renderExpenses(); window.calculateSafeToSpend(); } 
+            if(confirm("¿Devolver gasto al saldo?")) { state.balances[exp.account] += parseFloat(exp.amount); state.expenses.splice(exp.originalIndex, 1); saveDataToCloud(); window.renderExpenses(); window.renderBalances(); } 
         }; 
         li.append(contentDiv, amountSpan, deleteBtn); list.appendChild(li); 
     }); 
-    if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No hay gastos.</li>'; 
+    if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#aaa;">No se encontraron gastos.</li>'; 
     
     let sumFb = 0, sumBin = 0, sumBs = 0; 
     filtered.forEach(e => { if(e.account === 'facebank') sumFb += parseFloat(e.amount); if(e.account === 'binance') sumBin += parseFloat(e.amount); if(e.account === 'bs') sumBs += parseFloat(e.amount); }); 
@@ -79,34 +88,45 @@ window.renderExpenses = () => {
 };
 
 window.updateFinanceChart = (sumFb, sumBin, sumBs) => {
-    const ctx = document.getElementById('financeChart'); if(!ctx) return;
+    const canvas = document.getElementById('financeChart'); if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const type = document.getElementById('chartSettingsType')?.value || 'bar';
+    
     if(financeChartInstance) { financeChartInstance.destroy(); financeChartInstance = null; }
     const hasData = (sumFb + sumBin + sumBs) > 0;
-    financeChartInstance = new Chart(ctx, { 
-        type: 'doughnut', 
-        data: { labels: ['Facebank ($)', 'Binance (USDT)', 'Bolívares (Bs)'], datasets: [{ data: hasData ? [sumFb, sumBin, sumBs] : [1], backgroundColor: hasData ? ['#2196F3', '#F3BA2F', '#4CAF50'] : ['#444'], borderWidth: 0, hoverOffset: 4 }] }, 
-        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: hasData, labels: { color: 'white' } }, tooltip: { enabled: hasData } } } 
-    }); 
-};
 
-window.calculateSafeToSpend = () => { 
-    let ghostSubsSum = 0; const subsMap = {}; const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); 
-    state.expenses.forEach(e => { 
-        const d = parseVeDate(e.date); 
-        if(d >= thirtyDaysAgo) { const key = e.desc.toLowerCase().trim(); if(!subsMap[key]) subsMap[key] = { count: 0, amount: parseFloat(e.amount), account: e.account }; subsMap[key].count++; } 
+    // Efectos de Gradiente 3D para darle ese toque profesional a las barras
+    const gFb = ctx.createLinearGradient(0, 0, 0, 400); gFb.addColorStop(0, '#42a5f5'); gFb.addColorStop(1, '#0d47a1');
+    const gBin = ctx.createLinearGradient(0, 0, 0, 400); gBin.addColorStop(0, '#fbc02d'); gBin.addColorStop(1, '#f57f17');
+    const gBs = ctx.createLinearGradient(0, 0, 0, 400); gBs.addColorStop(0, '#66bb6a'); gBs.addColorStop(1, '#1b5e20');
+
+    financeChartInstance = new Chart(ctx, { 
+        type: type, 
+        data: { 
+            labels: ['Facebank ($)', 'Binance (USDT)', 'Bolívares (Bs)'], 
+            datasets: [{ 
+                label: 'Gastos Filtrados',
+                data: hasData ? [sumFb, sumBin, sumBs] : [1, 1, 1], 
+                backgroundColor: hasData ? [gFb, gBin, gBs] : ['#444', '#444', '#444'], 
+                borderColor: hasData ? ['#bbdefb', '#fff9c4', '#c8e6c9'] : ['#555', '#555', '#555'],
+                borderWidth: type === 'bar' ? 2 : 0, 
+                borderRadius: type === 'bar' ? 6 : 0, // Bordes redondeados en barras
+                hoverOffset: 6
+            }] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: true, 
+            plugins: { 
+                legend: { display: type !== 'bar', labels: { color: 'white' } }, 
+                tooltip: { enabled: hasData } 
+            },
+            scales: type === 'bar' ? {
+                y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#aaa' } },
+                x: { grid: { display: false }, ticks: { color: '#aaa' } }
+            } : {}
+        } 
     }); 
-    let subTexts = []; for(let key in subsMap) { if(subsMap[key].count > 1) { ghostSubsSum += subsMap[key].amount; subTexts.push(`${key} (${subsMap[key].amount})`); } } 
-    let totalUsdEquiv = state.balances.facebank + state.balances.binance; 
-    if (window.rateBinanceVal > 0) totalUsdEquiv += (state.balances.bs / window.rateBinanceVal); 
-    else if (window.rateBcvVal > 0) totalUsdEquiv += (state.balances.bs / window.rateBcvVal); 
-    
-    let safeToSpend = totalUsdEquiv - ghostSubsSum; 
-    const stsValue = document.getElementById('stsValue'); if (stsValue) stsValue.innerText = `≈ $${safeToSpend.toFixed(2)} USD`; 
-    const stsSubs = document.getElementById('stsSubs');
-    if (stsSubs) {
-        if (subTexts.length > 0) { stsSubs.innerText = `👻 Peligro: -${ghostSubsSum} reservados para: ${subTexts.join(', ')}`; stsSubs.style.color = "var(--warning)"; } 
-        else { stsSubs.innerText = '✅ No detecto suscripciones inminentes este mes.'; stsSubs.style.color = "#4CAF50"; }
-    }
 };
 
 window.updateBalance = (accKey, accName) => { 
@@ -128,7 +148,7 @@ window.addExpense = () => {
     } 
     state.expenses.push({ desc, amount: numAmount, account, date: new Date().toLocaleString('es-VE'), eqUsd, eqUsdt, eqEur }); 
     document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; document.getElementById('expAccount').selectedIndex = 0; 
-    recordActivity(); saveDataToCloud(); window.renderExpenses(); window.calculateSafeToSpend(); window.renderBalances();
+    recordActivity(); saveDataToCloud(); window.renderExpenses(); window.renderBalances();
 };
 
 window.renderBalances = () => { 
@@ -141,7 +161,6 @@ window.renderBalances = () => {
     if(window.rateBinanceVal > 0) eq.push(`🟡 BIN: ₮${(bs / window.rateBinanceVal).toFixed(2)}`); 
     if(window.rateEuroVal > 0) eq.push(`🇪🇺 EUR: €${(bs / window.rateEuroVal).toFixed(2)}`); 
     document.getElementById('bsEquiv').innerHTML = eq.length > 0 ? eq.join('<br>') : '≈ Sincroniza tasas'; 
-    window.calculateSafeToSpend(); 
 };
 
 window.downloadChartPNG = () => { const canvas = document.getElementById('financeChart'); const link = document.createElement('a'); link.download = 'Distribucion_Gastos_MetaOS.png'; link.href = canvas.toDataURL('image/png'); link.click(); };
@@ -202,10 +221,9 @@ window.exportToCSV = () => {
 };
 
 export function init() {
-    if(!isUnlocked) return; // Esperar a que el usuario desbloquee la bóveda para pintar data sensible.
+    if(!isUnlocked) return;
     window.renderBalances();
     window.renderExpenses();
 }
 
-// Ocultar si cambia el estado pero aún no hay login
 window.addEventListener('stateChanged', () => { if(document.getElementById('expenseList') && isUnlocked) init(); });
