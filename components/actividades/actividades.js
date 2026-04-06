@@ -39,7 +39,6 @@ window.addRecurringTask = () => {
     const interval = document.getElementById('recTaskInterval').value;
     const freq = document.getElementById('recTaskFreq').value;
     
-    // Recoger los días seleccionados
     const dayCheckboxes = document.querySelectorAll('#recTaskDays input[type="checkbox"]:checked');
     const selectedDays = Array.from(dayCheckboxes).map(cb => parseInt(cb.value));
 
@@ -51,7 +50,6 @@ window.addRecurringTask = () => {
         baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
     }
     
-    // Si la hora inicial configurada ya pasó hoy, empezamos a evaluar desde mañana
     if (baseDate <= new Date()) {
         baseDate.setDate(baseDate.getDate() + 1);
     }
@@ -64,9 +62,7 @@ window.addRecurringTask = () => {
         notified: false 
     };
 
-    // Calcular el primer trigger real usando nuestra nueva función
     newTask.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
-    // Aplicamos reschedule para asegurarnos de que caiga en el día correcto inmediatamente
     window.rescheduleRecurring(newTask, true);
 
     state.recurringTasks.push(newTask); 
@@ -78,23 +74,15 @@ window.addRecurringTask = () => {
 };
 
 window.rescheduleRecurring = (task, isInitialSetup = false) => { 
-    // Usamos de base matemática la fecha ORIGINAL en que debía sonar, NO LA HORA ACTUAL
     let date = new Date(task.nextTrigger); 
     const now = new Date(); 
     
     if (task.days && task.days.length > 0) {
-        // Lógica de "Días de la semana"
-        // Si no es la configuración inicial, avanzamos un día para no repetir hoy
         if (!isInitialSetup) date.setDate(date.getDate() + 1);
-        
-        // Buscamos el próximo día que haga match con el array
         while (!task.days.includes(date.getDay())) {
             date.setDate(date.getDate() + 1);
         }
     } else {
-        // Lógica de Intervalos clásico
-        // Se ejecuta un bucle para sumar el intervalo a la base original hasta que quede en el futuro.
-        // Esto evita que "la hora se pierda" si le das clic horas o días tarde.
         do {
             if(task.freq === 'minutos') date.setMinutes(date.getMinutes() + task.interval); 
             if(task.freq === 'horas') date.setHours(date.getHours() + task.interval); 
@@ -114,7 +102,6 @@ window.renderRecurringTasks = () => {
         checkbox.onchange = () => { window.rescheduleRecurring(state.recurringTasks[index]); recordActivity(); saveDataToCloud(); window.renderRecurringTasks(); }; 
         const dateString = new Date(rec.nextTrigger).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
         
-        // Crear un label bonito para mostrar el patrón
         const dayMap = {1:'L', 2:'M', 3:'X', 4:'J', 5:'V', 6:'S', 0:'D'};
         let patternStr = rec.days ? `Días: ${rec.days.map(d => dayMap[d]).join(', ')}` : `Cada ${rec.interval} ${rec.freq}`;
 
@@ -127,20 +114,9 @@ window.renderRecurringTasks = () => {
     }); 
 };
 
-window.renderHeatmap = () => { 
-    const grid = document.getElementById('heatmapGrid'); if(!grid) return; grid.innerHTML = ''; const today = new Date(); 
-    for(let i = 29; i >= 0; i--) { 
-        const d = new Date(today); d.setDate(today.getDate() - i); const dateStr = d.toISOString().split('T')[0]; const count = state.activityLog[dateStr] || 0; 
-        const cell = document.createElement('div'); cell.className = 'heat-cell'; 
-        if(count > 0 && count <= 2) cell.classList.add('heat-lvl-1'); else if(count > 2 && count <= 5) cell.classList.add('heat-lvl-2'); else if(count > 5 && count <= 8) cell.classList.add('heat-lvl-3'); else if(count > 8) cell.classList.add('heat-lvl-4'); 
-        cell.title = `${dateStr}: ${count} acciones`; grid.appendChild(cell); 
-    } 
-};
-
 export function init() {
     window.renderTasks();
     window.renderRecurringTasks();
-    window.renderHeatmap();
 }
 
 window.addEventListener('stateChanged', () => {
