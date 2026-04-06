@@ -1,4 +1,5 @@
 <div class="container" style="padding: 0; background: transparent; box-shadow: none;">
+    
     <div id="vaultOverlay" class="vault-overlay">
         <h1 style="color: var(--warning);">🔒 Bóveda Segura</h1>
         <p>Ingresa tu PIN Maestro para desencriptar</p>
@@ -9,21 +10,35 @@
     </div>
     
     <div id="vaultContent" class="vault-hidden">
+        
         <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
             <button type="button" onclick="changePin()" style="background: var(--surface); color: #aaa; border: 1px solid #444; font-size: 0.8em; padding: 5px 10px; border-radius: 4px;">🔑 Cambiar PIN</button>
         </div>
 
         <div class="dashboard">
-            <div class="balance-card bc-facebank"><span class="b-title">Facebank</span><span class="b-amount" id="balFacebank">$0.00</span><button class="b-btn" onclick="updateBalance('facebank', 'Facebank ($)')">Actualizar</button></div>
-            <div class="balance-card bc-binance"><span class="b-title">Binance</span><span class="b-amount" id="balBinance">₮0.00</span><button class="b-btn" onclick="updateBalance('binance', 'Binance (USDT)')">Actualizar</button></div>
-            <div class="balance-card bc-bs"><span class="b-title">Bolívares</span><span class="b-amount" id="balBs">Bs. 0.00</span><div id="bsEquiv">≈ Sincroniza tasas</div><button class="b-btn" onclick="updateBalance('bs', 'Bolívares (Bs)')">Actualizar</button></div>
+            <div class="balance-card bc-facebank">
+                <span class="b-title">Facebank</span>
+                <span class="b-amount" id="balFacebank">$0.00</span>
+                <button class="b-btn" onclick="updateBalance('facebank', 'Facebank ($)')">Actualizar</button>
+            </div>
+            <div class="balance-card bc-binance">
+                <span class="b-title">Binance</span>
+                <span class="b-amount" id="balBinance">₮0.00</span>
+                <button class="b-btn" onclick="updateBalance('binance', 'Binance (USDT)')">Actualizar</button>
+            </div>
+            <div class="balance-card bc-bs">
+                <span class="b-title">Bolívares</span>
+                <span class="b-amount" id="balBs">Bs. 0.00</span>
+                <div id="bsEquiv">≈ Sincroniza tasas</div>
+                <button class="b-btn" onclick="updateBalance('bs', 'Bolívares (Bs)')">Actualizar</button>
+            </div>
         </div>
 
         <div class="container" style="text-align: center;">
             <h2>
                 Distribución de Gastos 📊 
                 <div style="display: flex; gap: 5px; margin-left: auto;">
-                    <select id="chartSettingsType" onchange="window.renderExpenses()" style="font-size: 0.6em; padding: 3px; border-radius: 4px; background: #333; color: white;">
+                    <select id="chartSettingsType" onchange="window.renderExpenses()" style="font-size: 0.6em; padding: 3px; border-radius: 4px; background: #333; color: white; border: 1px solid #444; outline: none;">
                         <option value="bar">Barras 3D</option>
                         <option value="doughnut">Dona Simple</option>
                         <option value="pie">Torta</option>
@@ -31,11 +46,13 @@
                     <button type="button" onclick="downloadChartPNG()" style="font-size: 0.6em; padding: 5px 10px; background: var(--secondary); color: black;">⬇️ PNG</button>
                 </div>
             </h2>
-            <div class="chart-container"><canvas id="financeChart"></canvas></div>
+            <div class="chart-container">
+                <canvas id="financeChart"></canvas>
+            </div>
         </div>
         
         <div class="container">
-            <h2>Oráculo de Tasas <button id="btnSyncRates" onclick="fetchExchangeRates()" style="font-size: 0.6em; padding: 5px 10px; margin-left: auto;">📡 Sincronizar</button></h2>
+            <h2>Tasas de cambio <button id="btnSyncRates" onclick="fetchExchangeRates()" style="font-size: 0.6em; padding: 5px 10px; margin-left: auto;">📡 Sincronizar</button></h2>
             <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
                 <div class="rate-card">🇺🇸 BCV:<br><strong id="rateBcv">Bs. 0.00</strong></div>
                 <div class="rate-card">🟡 Binance:<br><strong id="rateBinance">Bs. 0.00</strong></div>
@@ -60,19 +77,24 @@
         </div>
         
         <div class="container">
-            <h2>Historial <button type="button" onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black;">📥 CSV</button></h2>
+            <h2>Historial <button type="button" onclick="exportToCSV()" style="font-size: 0.65em; padding: 6px 12px; background: var(--secondary); color: black; margin-left: auto;">📥 CSV</button></h2>
             <div class="filter-bar">
-                <label style="width: 100%;">🔍 <input type="text" id="filterText" oninput="window.applyFilters()" placeholder="Buscar por detalle (Ej: Comida...)" style="flex-grow: 1;"></label>
+                <label style="width: 100%;">🔍 <input type="text" id="filterText" oninput="window.applyFilters()" placeholder="Buscar por detalle (Ej: Comida, Netflix...)" style="flex-grow: 1; padding: 8px;"></label>
+                
                 <label>📅 Día: <input type="date" id="filterDate" onchange="window.applyFilters()"></label>
                 <label>🗓️ Rango: <input type="date" id="filterStartDate" onchange="window.applyFilters()"> <span>a</span> <input type="date" id="filterEndDate" onchange="window.applyFilters()"></label>
                 <label>💵 
                     <select id="filterAccount" onchange="window.applyFilters()">
-                        <option value="all">Todas</option><option value="bs">Bolívares</option><option value="binance">Binance</option><option value="facebank">Facebank</option>
+                        <option value="all">Todas</option>
+                        <option value="bs">Bolívares</option>
+                        <option value="binance">Binance</option>
+                        <option value="facebank">Facebank</option>
                     </select>
                 </label>
-                <button type="button" onclick="window.clearFilters()" style="padding: 5px 10px; font-size: 0.9em; background: #cf6679; margin-left: auto;">✖ Limpiar</button>
+                <button type="button" onclick="window.clearFilters()" style="padding: 5px 10px; font-size: 0.9em; background: #cf6679; color: black; font-weight: bold; margin-left: auto;">✖ Limpiar</button>
             </div>
             <ul id="expenseList"></ul>
         </div>
+
     </div>
 </div>
