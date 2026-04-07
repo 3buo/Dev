@@ -78,19 +78,25 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
     const now = new Date(); 
     
     if (task.days && task.days.length > 0) {
+        // Lógica para Días específicos
         if (!isInitialSetup) date.setDate(date.getDate() + 1);
-        while (!task.days.includes(date.getDay())) {
+        
+        let safeCounter = 0;
+        // getDay() 0=Domingo, 1=Lunes, 2=Martes...
+        while (!task.days.includes(date.getDay()) && safeCounter < 8) {
             date.setDate(date.getDate() + 1);
+            safeCounter++;
         }
     } else {
+        // Lógica para Intervalo (cada X horas/días)
         do {
             if(task.freq === 'minutos') date.setMinutes(date.getMinutes() + task.interval); 
             if(task.freq === 'horas') date.setHours(date.getHours() + task.interval); 
             if(task.freq === 'dias') date.setDate(date.getDate() + task.interval); 
-            if(task.freq === 'meses') date.setMonth(date.getMonth() + task.interval); 
         } while (date <= now && !isInitialSetup); 
     }
     
+    // Devolver al formato guardado
     task.nextTrigger = (new Date(date.getTime() - (date.getTimezoneOffset() * 60000))).toISOString().slice(0, 16); 
     task.notified = false; 
 };
