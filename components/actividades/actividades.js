@@ -2,7 +2,7 @@ import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 
 window.addTask = () => { 
     const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
-    if (input.value.trim() === '') return alert('Escribe.'); 
+    if (input.value.trim() === '') return alert('Escribe la actividad.'); 
     state.tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); 
     input.value = ''; dateInput.value = ''; 
     recordActivity(); saveDataToCloud(); window.renderTasks(); 
@@ -50,14 +50,15 @@ window.addRecurringTask = () => {
         baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
     }
     
+    // Si la hora ya pasó hoy, empezar a revisar desde mañana
     if (baseDate <= new Date()) {
         baseDate.setDate(baseDate.getDate() + 1);
     }
 
     const newTask = { 
         text: input.value, 
-        interval: parseInt(interval), 
-        freq: freq, 
+        interval: parseInt(interval) || 1, // Evitar NaNs
+        freq: freq || 'horas', 
         days: selectedDays.length > 0 ? selectedDays : null,
         notified: false 
     };
@@ -77,6 +78,10 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
     let date = new Date(task.nextTrigger); 
     const now = new Date(); 
     
+    // Validación de seguridad para datos guardados antiguos
+    const interval = parseInt(task.interval) || 1;
+    const freq = task.freq || 'horas';
+
     if (task.days && task.days.length > 0) {
         // Lógica para Días específicos
         if (!isInitialSetup) date.setDate(date.getDate() + 1);
@@ -87,16 +92,36 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
             date.setDate(date.getDate() + 1);
             safeCounter++;
         }
+
+        // Cortafuegos: Si el usuario llega semanas tarde, saltamos hasta llevarlo al futuro
+        let weekJumper = 0;
+        while (date <= now && !isInitialSetup && weekJumper < 52) {
+            date.setDate(date.getDate() + 7);
+            weekJumper++;
+        }
+
     } else {
         // Lógica para Intervalo (cada X horas/días)
+        let loopLimiter = 0;
         do {
-            if(task.freq === 'minutos') date.setMinutes(date.getMinutes() + task.interval); 
-            if(task.freq === 'horas') date.setHours(date.getHours() + task.interval); 
-            if(task.freq === 'dias') date.setDate(date.getDate() + task.interval); 
+            if(freq === 'minutos') date.setMinutes(date.getMinutes() + interval); 
+            else if(freq === 'horas') date.setHours(date.getHours() + interval); 
+            else if(freq === 'dias') date.setDate(date.getDate() + interval); 
+            else {
+                // Fallback absoluto por si el dato está corrupto
+                date.setHours(date.getHours() + 1);
+            }
+            
+            loopLimiter++;
+            if(loopLimiter > 1000) {
+                console.error("⚠️ Bucle infinito detectado y detenido en la reprogramación del hábito.");
+                break; // Cortafuegos que evita que la app se congele
+            }
+            
         } while (date <= now && !isInitialSetup); 
     }
     
-    // Devolver al formato guardado
+    // Devolver al formato guardado compensando la zona horaria local
     task.nextTrigger = (new Date(date.getTime() - (date.getTimezoneOffset() * 60000))).toISOString().slice(0, 16); 
     task.notified = false; 
 };
@@ -104,19 +129,48 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
 window.renderRecurringTasks = () => { 
     const list = document.getElementById('recurringList'); if(!list) return; list.innerHTML = ''; 
     state.recurringTasks.forEach((rec, index) => { 
-        const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; 
-        checkbox.onchange = () => { window.rescheduleRecurring(state.recurringTasks[index]); recordActivity(); saveDataToCloud(); window.renderRecurringTasks(); }; 
-        const dateString = new Date(rec.nextTrigger).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
+        const li = document.createElement('li'); 
+        const checkbox = document.createElement('input'); 
+        checkbox.type = 'checkbox'; 
+        checkbox.checked = false; 
+        
+        checkbox.onchange = () => { 
+            window.rescheduleRecurring(state.recurringTasks[index]); 
+            recordActivity(); 
+            saveDataToCloud(); 
+            window.renderRecurringTasks(); 
+        }; 
+        
+        // Parse seguro de fecha para render
+        let dateString = "Fecha inválida";
+        if(rec.nextTrigger) {
+            const nextD = new Date(rec.nextTrigger);
+            if(!isNaN(nextD)) {
+                dateString = nextD.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
+            }
+        }
         
         const dayMap = {1:'L', 2:'M', 3:'X', 4:'J', 5:'V', 6:'S', 0:'D'};
         let patternStr = rec.days ? `Días: ${rec.days.map(d => dayMap[d]).join(', ')}` : `Cada ${rec.interval} ${rec.freq}`;
 
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
         contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; 
+        
         const badge = document.createElement('span'); badge.className = 'badge rec-badge'; badge.innerText = patternStr; 
-        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
-        deleteBtn.onclick = () => { state.recurringTasks.splice(index, 1); saveDataToCloud(); window.renderRecurringTasks(); }; 
-        li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); 
+        
+        const deleteBtn = document.createElement('button'); 
+        deleteBtn.innerText = 'X'; 
+        deleteBtn.style.background = '#cf6679'; 
+        deleteBtn.style.padding = '5px 10px'; 
+        deleteBtn.style.marginLeft = '10px'; 
+        deleteBtn.onclick = () => { 
+            state.recurringTasks.splice(index, 1); 
+            saveDataToCloud(); 
+            window.renderRecurringTasks(); 
+        }; 
+        
+        li.append(checkbox, contentDiv, badge, deleteBtn); 
+        list.appendChild(li); 
     }); 
 };
 
