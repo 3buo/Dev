@@ -19,7 +19,7 @@ window.unlockVault = () => {
         init();
         
         if(window.rateBcvVal === 0) {
-            window.fetchExchangeRates();
+            window.fetchExchangeRates(true); // true = llamada automática
         }
     } else { 
         alert("PIN Incorrecto."); 
@@ -235,14 +235,19 @@ window.renderBalances = () => {
     document.getElementById('bsEquiv').innerHTML = eq.length > 0 ? eq.join('<br>') : '≈ Sincroniza tasas'; 
 };
 
-window.fetchExchangeRates = async () => { 
+
+// EL SISTEMA DE CAZA DE DATOS (Data Hunter)
+window.fetchExchangeRates = async (isAutoCall = false) => { 
+    // Si viene de un click del botón de HTML, isAutoCall será un Evento, no un booleano.
+    const isManualClick = (isAutoCall !== true); 
+    
     const btn = document.getElementById('btnSyncRates'); 
     if(btn) btn.innerText = '📡 Sync...'; 
     
     try { 
         let bcvVal = 0, binanceVal = 0, euroVal = 0; 
         
-        // 1. Dólar BCV y Euro a través de DolarAPI (Estable)
+        // 1. Obtener BCV y Euro (Servidores de DolarAPI - Robustos)
         const fetchWithFallback = async (url) => { 
             try { 
                 let res = await fetch(url); 
@@ -250,82 +255,82 @@ window.fetchExchangeRates = async () => {
             } catch(e) {} 
             return null; 
         }; 
-        
         const dataBcv = await fetchWithFallback('https://ve.dolarapi.com/v1/dolares/oficial'); 
         if (dataBcv) bcvVal = dataBcv.promedio || dataBcv.venta || 0; 
-        
         const dataEur = await fetchWithFallback('https://ve.dolarapi.com/v1/euros/oficial'); 
         if (dataEur) euroVal = dataEur.promedio || dataEur.venta || 0; 
         
 
-        // 2. TÉCNICA AVANZADA: Scraping a DolarToday usando CodeTabs + tu XPath
-        const proxyUrls = [
-            'https://api.codetabs.com/v1/proxy?quest=https://dolartoday.com/',
-            'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://dolartoday.com/')
+        // 2. LA CACERÍA DE BINANCE (Evadiendo CORS y Cloudflare)
+        const binanceSources = [
+            { url: 'https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=binance', type: 'direct' },
+            { url: 'https://api.pydolarvenezuela.com/api/v1/dollar?page=binance', type: 'direct' },
+            // Proxy AllOrigins inyectando la API pura para burlar la seguridad del navegador local
+            { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://api.pydolarvenezuela.com/api/v1/dollar'), type: 'proxy' },
+            { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://pydolarvenezuela-api.vercel.app/api/v1/dollar'), type: 'proxy' }
         ];
 
-        for (let proxy of proxyUrls) {
+        for (let source of binanceSources) {
             if (binanceVal > 0) break;
             try {
-                let res = await fetch(proxy);
+                let res = await fetch(source.url, { cache: "no-store" });
                 if (!res.ok) continue;
-                let htmlText = await res.text();
-
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
-
-                // TÉCNICA A: TU XPATH EXACTO
-                const xpath = '/html/body/div[1]/div/section[1]/div[1]/div[4]/div[1]/div[2]/span';
-                const node = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                 
-                if (node) {
-                    let textClean = node.textContent.replace(/[^\d,.]/g, '').replace(',', '.');
-                    let parsedVal = parseFloat(textClean);
-                    if (!isNaN(parsedVal) && parsedVal > 0) {
-                        binanceVal = parsedVal;
-                        console.log("Éxito usando XPath:", binanceVal);
-                        break;
-                    }
+                let data = await res.json();
+                
+                // Si usamos el Proxy AllOrigins, la data real viene como texto dentro de "contents"
+                if (source.type === 'proxy' && data.contents) {
+                    data = JSON.parse(data.contents);
                 }
 
-                // TÉCNICA B: EXPRESIÓN REGULAR (Respaldo inteligente si el DOM se altera por el proxy)
-                if (binanceVal === 0) {
-                    let regex = /Binance[\s\S]{1,100}?(?:Bs\.?|VES)?\s*(\d{2,3}[,.]\d{2})/i;
-                    let match = htmlText.match(regex);
-                    if (match) {
-                        binanceVal = parseFloat(match[1].replace(',', '.'));
-                        console.log("Éxito usando Regex:", binanceVal);
-                        break;
+                // Buscador Recursivo: No importa cómo cambie la API, si dice "binance" y tiene un precio, lo atrapa.
+                let found = null;
+                const deepSearch = (obj) => {
+                    if (!obj || typeof obj !== 'object') return;
+                    for (let k in obj) {
+                        if (k.toLowerCase().includes('binance')) {
+                            if (obj[k].price) { found = parseFloat(obj[k].price); return; }
+                            if (obj[k].promedio) { found = parseFloat(obj[k].promedio); return; }
+                            if (typeof obj[k] === 'number') { found = obj[k]; return; }
+                        }
+                        if (!found) deepSearch(obj[k]);
                     }
+                };
+                
+                deepSearch(data);
+                
+                if (found && found > 20) { // Validador lógico (el dólar es mayor a 20 Bs)
+                    binanceVal = found;
                 }
             } catch (e) {
-                console.warn("Fallo el proxy actual, probando el siguiente...");
+                // Falla silenciosa, pasa a la siguiente fuente
             }
         }
 
-        // 3. TÉCNICA C: Respaldo final a PyDolarVenezuela
-        if (binanceVal === 0) {
-            try {
-                let res = await fetch('https://pydolarvenezuela-api.vercel.app/api/v1/dollar');
-                if (res.ok) {
-                    let data = await res.json();
-                    if (data && data.monitors && data.monitors.binance && data.monitors.binance.price) {
-                        binanceVal = parseFloat(data.monitors.binance.price);
-                        console.log("Éxito usando PyDolarVenezuela API:", binanceVal);
-                    }
-                }
-            } catch(e) {}
+        // 3. SISTEMA DE EMERGENCIA (Fallback)
+        // Si el usuario le dio clic manual y TODO falló (por caída del internet nacional, etc.)
+        if (binanceVal === 0 && isManualClick) {
+            let manualVal = prompt("⚠️ No se pudo conectar con los servidores de Binance.\n\nPara no bloquear tu uso, ingresa la tasa Binance actual manualmente (Ej: 39.50):");
+            if (manualVal && !isNaN(parseFloat(manualVal.replace(',', '.')))) {
+                binanceVal = parseFloat(manualVal.replace(',', '.'));
+            }
         }
         
-        // 4. Actualizar Valores y UI
-        window.rateBcvVal = bcvVal; 
-        window.rateBinanceVal = binanceVal; 
-        window.rateEuroVal = euroVal; 
+        // 4. Asignación y Renderizado Global
+        window.rateBcvVal = bcvVal > 0 ? bcvVal : window.rateBcvVal; 
+        window.rateBinanceVal = binanceVal > 0 ? binanceVal : window.rateBinanceVal; 
+        window.rateEuroVal = euroVal > 0 ? euroVal : window.rateEuroVal; 
         
         if(document.getElementById('rateBcv')) {
-            document.getElementById('rateBcv').innerText = `Bs. ${parseFloat(bcvVal).toFixed(2)}`; 
-            document.getElementById('rateBinance').innerText = binanceVal > 0 ? `Bs. ${parseFloat(binanceVal).toFixed(2)}` : '⚠️ Error'; 
-            document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(euroVal).toFixed(2)}`; 
+            document.getElementById('rateBcv').innerText = `Bs. ${parseFloat(window.rateBcvVal).toFixed(2)}`; 
+            
+            if (window.rateBinanceVal > 0) {
+                document.getElementById('rateBinance').innerText = `Bs. ${parseFloat(window.rateBinanceVal).toFixed(2)}`;
+            } else {
+                document.getElementById('rateBinance').innerHTML = `<span style="color:var(--warning); font-size:0.7em;">Clic Sincronizar</span>`;
+            }
+            
+            document.getElementById('rateEuro').innerText = `Bs. ${parseFloat(window.rateEuroVal).toFixed(2)}`; 
             document.getElementById('rateLastUpdate').innerText = `Última act: ${new Date().toLocaleTimeString('es-VE')}`; 
             
             window.renderBalances(); 
@@ -334,7 +339,7 @@ window.fetchExchangeRates = async () => {
         if(btn) btn.innerText = '📡 Sincronizar'; 
         
     } catch(err) { 
-        console.error("Error global de sincronización:", err);
+        console.error("Error crítico general:", err);
         if(btn) btn.innerText = '⚠️ Reintentar'; 
     } 
 };
@@ -364,8 +369,9 @@ export function init() {
     window.renderBalances();
     window.renderExpenses();
     
-    if(window.rateBcvVal === 0) {
-        window.fetchExchangeRates();
+    // Auto-sync solo si no tenemos el dato
+    if(window.rateBcvVal === 0 || window.rateBinanceVal === 0) {
+        window.fetchExchangeRates(true); // "true" le dice que es automático, para que no salte el prompt manual de emergencia.
     }
 }
 
