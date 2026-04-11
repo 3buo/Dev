@@ -2,7 +2,7 @@ import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 
 window.addTask = () => { 
     const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
-    if (input.value.trim() === '') return alert('Escribe.'); 
+    if (input.value.trim() === '') return alert('Escribe la actividad.'); 
     state.tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); 
     input.value = ''; dateInput.value = ''; 
     recordActivity(); saveDataToCloud(); window.renderTasks(); 
@@ -35,24 +35,33 @@ window.renderTasks = () => {
 
 window.addRecurringTask = () => { 
     const input = document.getElementById('recTaskInput');
-    const timeInput = document.getElementById('recTaskTime');
+    const dateInput = document.getElementById('recTaskDate').value;
+    const timeInput = document.getElementById('recTaskTime').value;
     const interval = document.getElementById('recTaskInterval').value;
     const freq = document.getElementById('recTaskFreq').value;
     
     const dayCheckboxes = document.querySelectorAll('#recTaskDays input[type="checkbox"]:checked');
     const selectedDays = Array.from(dayCheckboxes).map(cb => parseInt(cb.value));
 
-    if (input.value.trim() === '') return alert('Escribe el nombre del hábito.'); 
-    
-    let baseDate = new Date();
-    if (timeInput.value) {
-        const [hours, mins] = timeInput.value.split(':');
-        baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+    if (input.value.trim() === '' || !timeInput) {
+        return alert('⚠️ Escribe el nombre del hábito y asegúrate de elegir al menos la hora de inicio.'); 
     }
     
-    // Si la hora inicial ya pasó hoy, empezamos mañana para evitar alertas inmediatas
+    let baseDate = new Date();
+    
+    // Si el usuario elige una fecha, la aplicamos con cuidado para evitar bugs de zona horaria
+    if (dateInput) {
+        const [year, month, day] = dateInput.split('-');
+        baseDate.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    
+    // Aplicamos la hora elegida
+    const [hours, mins] = timeInput.split(':');
+    baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+
+    // VIGILANTE: Bloquear fechas en el pasado
     if (baseDate <= new Date()) {
-        baseDate.setDate(baseDate.getDate() + 1);
+        return alert("⛔ La fecha y hora de inicio que elegiste ya pasó. Por favor, elige un momento en el futuro.");
     }
 
     const newTask = { 
@@ -63,16 +72,18 @@ window.addRecurringTask = () => {
         notified: false 
     };
 
-    // Formatear fecha inicial
+    // Guardar la fecha base exacta como el primer gatillo (Trigger)
     newTask.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
     
-    // Ejecutar reprogramación inicial para ajustar a días de la semana si aplica
+    // Ejecutar lógica de validación inicial
     window.rescheduleRecurring(newTask, true);
 
     state.recurringTasks.push(newTask); 
     
-    // Limpiar campos
-    input.value = ''; timeInput.value = ''; 
+    // Limpiar UI
+    input.value = ''; 
+    document.getElementById('recTaskDate').value = ''; 
+    document.getElementById('recTaskTime').value = ''; 
     document.querySelectorAll('#recTaskDays input').forEach(cb => cb.checked = false);
     
     recordActivity(); saveDataToCloud(); window.renderRecurringTasks();
@@ -87,24 +98,36 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
     if (task.days && task.days.length > 0) {
         // Lógica de Días de la Semana
         if (!isInitialSetup) date.setDate(date.getDate() + 1);
+        
         let safeCounter = 0;
+        // Si es el setup inicial pero el día elegido no coincide con los días marcados, se mueve al próximo válido
         while (!task.days.includes(date.getDay()) && safeCounter < 365) {
             date.setDate(date.getDate() + 1);
             safeCounter++;
         }
+
+        let weekJumper = 0;
+        while (date <= now && !isInitialSetup && weekJumper < 52) {
+            date.setDate(date.getDate() + 7);
+            weekJumper++;
+        }
+
     } else {
-        // Lógica de Intervalos (Minutos, Horas, Días, Meses)
-        let loopLimiter = 0;
-        do {
-            if(freq === 'minutos') date.setMinutes(date.getMinutes() + interval); 
-            else if(freq === 'horas') date.setHours(date.getHours() + interval); 
-            else if(freq === 'dias') date.setDate(date.getDate() + interval); 
-            else if(freq === 'meses') date.setMonth(date.getMonth() + interval); // Lógica añadida
-            else date.setHours(date.getHours() + 1); // Fallback de seguridad
-            
-            loopLimiter++;
-            if(loopLimiter > 1000) break; // Evita congelamiento
-        } while (date <= now && !isInitialSetup); 
+        // Lógica de Intervalos
+        // IMPORTANTE: Si es el setup inicial, NO SUMAMOS NADA. Respetamos la fecha/hora elegida.
+        if (!isInitialSetup) {
+            let loopLimiter = 0;
+            do {
+                if(freq === 'minutos') date.setMinutes(date.getMinutes() + interval); 
+                else if(freq === 'horas') date.setHours(date.getHours() + interval); 
+                else if(freq === 'dias') date.setDate(date.getDate() + interval); 
+                else if(freq === 'meses') date.setMonth(date.getMonth() + interval); 
+                else date.setHours(date.getHours() + 1); 
+                
+                loopLimiter++;
+                if(loopLimiter > 1000) break; // Evita congelamiento
+            } while (date <= now); 
+        }
     }
     
     // Guardar fecha ISO local
