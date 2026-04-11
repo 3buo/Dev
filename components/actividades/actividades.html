@@ -16,11 +16,13 @@
     </div>
 
     <div class="container">
-        <h2 class="title-habits">Hábitos y Rutinas <div class="tooltip">?<span class="tooltiptext">Si eliges días específicos, el hábito sonará siempre a la hora marcada. Si usas intervalos, se sumará el tiempo desde la última ejecución programada.</span></div></h2>
+        <h2 class="title-habits">Hábitos y Rutinas <div class="tooltip">?<span class="tooltiptext">Si eliges días específicos, el hábito sonará a la hora marcada. Si usas intervalos, empezará a contar desde la fecha y hora de inicio exactas que elijas.</span></div></h2>
         
         <div class="input-group" style="flex-direction: column; align-items: flex-start; background: #0f1015; padding: 15px; border-radius: 8px; border: 1px dashed #2d3446;">
-            <div style="display: flex; gap: 10px; width: 100%;">
-                <input type="text" id="recTaskInput" placeholder="Nombre de la rutina (Ej: Gimnasio, Leer)">
+            
+            <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+                <input type="text" id="recTaskInput" placeholder="Nombre de la rutina (Ej: Gimnasio, Leer)" style="flex-grow: 1; min-width: 200px;">
+                <input type="date" id="recTaskDate" title="Fecha de primer inicio">
                 <input type="time" id="recTaskTime" title="Hora exacta de la alarma">
             </div>
             
@@ -37,14 +39,15 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; align-items: center; width: 100%; margin-top: 15px; border-top: 1px solid #2d3446; padding-top: 15px;">
+            <div style="display: flex; gap: 10px; align-items: center; width: 100%; margin-top: 15px; border-top: 1px solid #2d3446; padding-top: 15px; flex-wrap: wrap;">
                 <span style="font-size: 0.85em; color: #8ba4b5;">O usar intervalo clásico:</span>
                 <input type="number" id="recTaskInterval" min="1" value="1" style="width: 60px;">
                 <select id="recTaskFreq" style="width: 110px;">
                     <option value="minutos">Minutos</option>
                     <option value="horas" selected>Horas</option>
                     <option value="dias">Días</option>
-                    <option value="meses">Meses</option> </select>
+                    <option value="meses">Meses</option>
+                </select>
                 <button onclick="addRecurringTask()" class="btn-habits" style="margin-left: auto;">Programar</button>
             </div>
         </div>
