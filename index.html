@@ -71,3 +71,62 @@
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
+
+<script type="module">
+        import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@latest';
+
+        console.log("🚀 Pretext activado: Optimizando cajas de texto en segundo plano.");
+
+        const autoResizeTextarea = (textarea) => {
+            // Evitar procesar si la caja está oculta en otra pestaña
+            if (textarea.clientWidth === 0) return;
+
+            // Tomamos el texto escrito, o un espacio en blanco si está vacío
+            const text = textarea.value || textarea.placeholder || " ";
+            const style = window.getComputedStyle(textarea);
+
+            // Extraemos la fuente y los márgenes internos que definiste en tu CSS
+            const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+            const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+            const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+
+            // Ancho matemático disponible para las letras
+            const availableWidth = textarea.clientWidth - paddingX;
+
+            // Altura de cada línea (Fallback matemático si el CSS dice 'normal')
+            let lineHeight = parseFloat(style.lineHeight);
+            if (isNaN(lineHeight)) lineHeight = parseFloat(style.fontSize) * 1.5;
+
+            try {
+                // 1. LA MAGIA: Pretext prepara y mide las letras usando la GPU
+                const prepared = prepare(text, font);
+                
+                // 2. Calcula los saltos de línea sin congelar el navegador
+                const result = layout(prepared, availableWidth, lineHeight);
+
+                // 3. Aplicamos la altura matemática exacta al elemento HTML
+                const finalHeight = Math.max(result.height + paddingY, 80); // 80px es tu min-height del CSS
+                textarea.style.height = `${finalHeight}px`;
+                textarea.style.overflowY = 'hidden'; // Escondemos el scroll porque ya no se necesita
+            } catch (error) {
+                // Fallback silencioso (si el CDN de Pretext falla, usa el método clásico del navegador)
+                textarea.style.height = 'auto';
+                textarea.style.height = (textarea.scrollHeight) + 'px';
+            }
+        };
+
+        // Escucha global: Cada vez que escribes algo, en cualquier parte de la app
+        document.addEventListener('input', (e) => {
+            if (e.target.tagName.toLowerCase() === 'textarea') {
+                autoResizeTextarea(e.target);
+            }
+        });
+
+        // Escucha global: Cuando cambias de pestaña, ajusta los textos que ya estaban escritos
+        window.addEventListener('stateChanged', () => {
+            // Un pequeño retraso para asegurar que el HTML de la nueva pestaña ya cargó
+            setTimeout(() => {
+                document.querySelectorAll('textarea').forEach(autoResizeTextarea);
+            }, 100);
+        });
+    </script>
