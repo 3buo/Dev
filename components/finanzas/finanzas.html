@@ -11,28 +11,28 @@
     
     <div id="vaultContent" class="vault-hidden">
         
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
+            <button type="button" onclick="openWalletModal()" style="background: rgba(3, 218, 198, 0.1); color: var(--secondary); border: 1px solid var(--secondary); font-size: 0.8em; padding: 5px 10px; border-radius: 4px; font-weight: bold;">➕ Añadir Cartera</button>
             <button type="button" onclick="changePin()" style="background: var(--surface); color: #aaa; border: 1px solid #444; font-size: 0.8em; padding: 5px 10px; border-radius: 4px;">🔑 Cambiar PIN</button>
         </div>
 
-        <div class="dashboard">
-            <div class="balance-card bc-facebank">
-                <span class="b-title">Facebank</span>
-                <span class="b-amount" id="balFacebank">$0.00</span>
-                <button class="b-btn" onclick="updateBalance('facebank', 'Facebank ($)')">Actualizar</button>
-            </div>
-            <div class="balance-card bc-binance">
-                <span class="b-title">Binance</span>
-                <span class="b-amount" id="balBinance">₮0.00</span>
-                <button class="b-btn" onclick="updateBalance('binance', 'Binance (USDT)')">Actualizar</button>
-            </div>
-            <div class="balance-card bc-bs">
-                <span class="b-title">Bolívares</span>
-                <span class="b-amount" id="balBs">Bs. 0.00</span>
-                <div id="bsEquiv">≈ Sincroniza tasas</div>
-                <button class="b-btn" onclick="updateBalance('bs', 'Bolívares (Bs)')">Actualizar</button>
+        <div id="walletModal" class="vault-overlay vault-hidden" style="z-index: 60;">
+            <div class="auth-container" style="max-width: 350px;">
+                <h2 style="color: var(--primary); margin-top: 0; border: none; justify-content: center;">Nueva Cartera</h2>
+                <input type="text" id="newWalletName" placeholder="Nombre (Ej: Zinli, PayPal)" class="auth-input">
+                <input type="text" id="newWalletSymbol" placeholder="Símbolo (Ej: $, €, Bs)" class="auth-input">
+                
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: #222; padding: 10px; border-radius: 6px; border: 1px solid #444;">
+                    <span style="color: #aaa; font-size: 0.9em;">Color de la etiqueta:</span>
+                    <input type="color" id="newWalletColor" value="#ff0055" style="background: transparent; border: none; cursor: pointer; height: 35px; width: 50px; padding: 0;">
+                </div>
+
+                <button onclick="saveNewWallet()" style="width: 100%; margin-bottom: 10px;">Guardar Cartera</button>
+                <button onclick="closeWalletModal()" style="width: 100%; background: transparent; color: #aaa; border: 1px solid #444;">Cancelar</button>
             </div>
         </div>
+
+        <div id="walletsContainer" class="dashboard"></div>
 
         <div class="container" style="text-align: center;">
             <h2>
@@ -66,12 +66,7 @@
             <div class="input-group">
                 <input type="text" id="expDesc" placeholder="Detalle del gasto">
                 <input type="number" id="expAmount" placeholder="Monto" step="0.01" min="0.01">
-                <select id="expAccount">
-                    <option value="" disabled selected>-- Elige cuenta --</option>
-                    <option value="facebank">Facebank</option>
-                    <option value="binance">Binance</option>
-                    <option value="bs">Bolívares</option>
-                </select>
+                <select id="expAccount"></select>
                 <button onclick="addExpense()">Descontar</button>
             </div>
         </div>
@@ -84,12 +79,7 @@
                 <label>📅 Día: <input type="date" id="filterDate" onchange="window.applyFilters()"></label>
                 <label>🗓️ Rango: <input type="date" id="filterStartDate" onchange="window.applyFilters()"> <span>a</span> <input type="date" id="filterEndDate" onchange="window.applyFilters()"></label>
                 <label>💵 
-                    <select id="filterAccount" onchange="window.applyFilters()">
-                        <option value="all">Todas</option>
-                        <option value="bs">Bolívares</option>
-                        <option value="binance">Binance</option>
-                        <option value="facebank">Facebank</option>
-                    </select>
+                    <select id="filterAccount" onchange="window.applyFilters()"></select>
                 </label>
                 <button type="button" onclick="window.clearFilters()" style="padding: 5px 10px; font-size: 0.9em; background: #cf6679; color: black; font-weight: bold; margin-left: auto;">✖ Limpiar</button>
             </div>
