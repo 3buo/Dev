@@ -1,6 +1,5 @@
 import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 
-// Inicialización de variables de tasa en el objeto window para persistencia entre cambios de tab
 window.rateBcvVal = window.rateBcvVal || 0; 
 window.rateBinanceVal = window.rateBinanceVal || 0; 
 window.rateEuroVal = window.rateEuroVal || 0;
@@ -17,12 +16,9 @@ window.unlockVault = () => {
         
         if(navigator.vibrate) navigator.vibrate([50, 50, 50]); 
         
-        // Ejecutar inicialización de datos
         init();
         
-        // FORZAR Sincronización inmediata si los valores están en 0
         if(window.rateBcvVal === 0) {
-            console.log("Sincronizando tasas por primera vez...");
             window.fetchExchangeRates();
         }
     } else { 
@@ -245,6 +241,8 @@ window.fetchExchangeRates = async () => {
     
     try { 
         let bcvVal = 0, binanceVal = 0, euroVal = 0; 
+        
+        // 1. Fetching normal via DolarAPI (BCV y EUR)
         const fetchWithFallback = async (url) => { 
             try { 
                 let res = await fetch(url); 
@@ -259,36 +257,67 @@ window.fetchExchangeRates = async () => {
         const dataEur = await fetchWithFallback('https://ve.dolarapi.com/v1/euros/oficial'); 
         if (dataEur) euroVal = dataEur.promedio || 0; 
         
-        // Lógica de Binance
-        const endpoints = ['https://pydolarve.org/api/v1/dollar?page=binance','https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=binance','https://api.pydolarvenezuela.com/api/v1/dollar?page=binance']; 
-        const proxies = ['', 'https://corsproxy.io/?']; 
-        let bypassSuccess = false; 
-        
-        for (let endpoint of endpoints) { 
-            if (bypassSuccess) break; 
-            for (let proxy of proxies) { 
-                try { 
-                    let res = await fetch(proxy ? proxy + encodeURIComponent(endpoint) : endpoint, { cache: "no-store" }); 
-                    if (!res.ok) continue; 
-                    let data = await res.json(); 
-                    let foundPrice = 0; 
-                    
-                    const searchPrice = (obj) => { 
-                        if (!obj || typeof obj !== 'object') return; 
-                        for (let key in obj) { 
-                            if (key.toLowerCase().includes('binance')) { 
-                                if (obj[key].price) { foundPrice = parseFloat(obj[key].price); return; } 
-                                if (typeof obj[key] === 'number') { foundPrice = obj[key]; return; } 
+        // 2. SCRAPING AVANZADO DolarToday (XPath Binance)
+        try {
+            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://dolartoday.com/');
+            const dtRes = await fetch(proxyUrl);
+            const htmlText = await dtRes.text();
+
+            // Convertir texto a DOM manipulable
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+
+            // Evaluar el XPath exacto proporcionado
+            const xpath = '/html/body/div[1]/div/section[1]/div[1]/div[4]/div[1]/div[2]/span';
+            const node = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
+            if (node) {
+                // El texto suele venir como "Bs. 45,50". Extraemos y limpiamos:
+                // Reemplazamos todo lo que NO sea dígito o coma, luego la coma por un punto.
+                let textClean = node.textContent.replace(/[^\d,]/g, '').replace(',', '.');
+                let parsedVal = parseFloat(textClean);
+                
+                if (!isNaN(parsedVal) && parsedVal > 0) {
+                    binanceVal = parsedVal;
+                }
+            }
+        } catch (e) {
+            console.warn("Fallo el scraping XPath de DolarToday:", e);
+        }
+
+        // 3. PLAN B (Por si la página de DolarToday cambia su HTML en el futuro)
+        if (binanceVal === 0) {
+            const endpoints = ['https://pydolarve.org/api/v1/dollar?page=binance','https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=binance']; 
+            const proxies = ['', 'https://corsproxy.io/?']; 
+            let bypassSuccess = false; 
+            
+            for (let endpoint of endpoints) { 
+                if (bypassSuccess) break; 
+                for (let proxy of proxies) { 
+                    try { 
+                        let res = await fetch(proxy ? proxy + encodeURIComponent(endpoint) : endpoint, { cache: "no-store" }); 
+                        if (!res.ok) continue; 
+                        let data = await res.json(); 
+                        let foundPrice = 0; 
+                        
+                        const searchPrice = (obj) => { 
+                            if (!obj || typeof obj !== 'object') return; 
+                            for (let key in obj) { 
+                                if (key.toLowerCase().includes('binance')) { 
+                                    if (obj[key].price) { foundPrice = parseFloat(obj[key].price); return; } 
+                                    if (typeof obj[key] === 'number') { foundPrice = obj[key]; return; } 
+                                } 
+                                if (foundPrice === 0) searchPrice(obj[key]); 
                             } 
-                            if (foundPrice === 0) searchPrice(obj[key]); 
-                        } 
-                    }; 
-                    searchPrice(data); 
-                    if (foundPrice > 0) { binanceVal = foundPrice; bypassSuccess = true; break; } 
-                } catch(e) {} 
-            } 
+                        }; 
+                        searchPrice(data); 
+                        if (foundPrice > 0) { binanceVal = foundPrice; bypassSuccess = true; break; } 
+                    } catch(e) {} 
+                } 
+            }
         } 
         
+        // Asignación Global
         window.rateBcvVal = bcvVal; 
         window.rateBinanceVal = binanceVal; 
         window.rateEuroVal = euroVal; 
@@ -330,19 +359,16 @@ window.downloadChartPNG = () => {
     link.click(); 
 };
 
-// Función de inicialización del módulo
 export function init() {
     if(!isUnlocked) return;
     window.renderBalances();
     window.renderExpenses();
     
-    // Si los valores son 0, intentamos sincronizar
     if(window.rateBcvVal === 0) {
         window.fetchExchangeRates();
     }
 }
 
-// Escucha global de cambios de estado (Nube)
 window.addEventListener('stateChanged', () => { 
     if(document.getElementById('expenseList') && isUnlocked) {
         init();
