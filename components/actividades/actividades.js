@@ -44,25 +44,17 @@ window.addRecurringTask = () => {
     const selectedDays = Array.from(dayCheckboxes).map(cb => parseInt(cb.value));
 
     if (input.value.trim() === '' || !timeInput) {
-        return alert('⚠️ Escribe el nombre del hábito y asegúrate de elegir al menos la hora de inicio.'); 
+        return alert('⚠️ Escribe el nombre del hábito y elige una hora.'); 
     }
     
     let baseDate = new Date();
-    
-    // Si el usuario elige una fecha, la aplicamos con cuidado para evitar bugs de zona horaria
     if (dateInput) {
         const [year, month, day] = dateInput.split('-');
         baseDate.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
     }
     
-    // Aplicamos la hora elegida
     const [hours, mins] = timeInput.split(':');
     baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
-
-    // VIGILANTE: Bloquear fechas en el pasado
-    if (baseDate <= new Date()) {
-        return alert("⛔ La fecha y hora de inicio que elegiste ya pasó. Por favor, elige un momento en el futuro.");
-    }
 
     const newTask = { 
         text: input.value, 
@@ -72,18 +64,19 @@ window.addRecurringTask = () => {
         notified: false 
     };
 
-    // Guardar la fecha base exacta como el primer gatillo (Trigger)
     newTask.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
     
-    // Ejecutar lógica de validación inicial
-    window.rescheduleRecurring(newTask, true);
+    // Si la fecha elegida está en el pasado, "false" hace que el sistema calcule los ciclos 
+    // hasta encontrar la próxima fecha válida en el futuro.
+    if (baseDate <= new Date()) {
+        window.rescheduleRecurring(newTask, false); 
+    } else {
+        window.rescheduleRecurring(newTask, true); 
+    }
 
     state.recurringTasks.push(newTask); 
     
-    // Limpiar UI
-    input.value = ''; 
-    document.getElementById('recTaskDate').value = ''; 
-    document.getElementById('recTaskTime').value = ''; 
+    input.value = ''; document.getElementById('recTaskDate').value = ''; document.getElementById('recTaskTime').value = ''; 
     document.querySelectorAll('#recTaskDays input').forEach(cb => cb.checked = false);
     
     recordActivity(); saveDataToCloud(); window.renderRecurringTasks();
@@ -96,25 +89,18 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
     const freq = task.freq;
     
     if (task.days && task.days.length > 0) {
-        // Lógica de Días de la Semana
         if (!isInitialSetup) date.setDate(date.getDate() + 1);
-        
         let safeCounter = 0;
-        // Si es el setup inicial pero el día elegido no coincide con los días marcados, se mueve al próximo válido
         while (!task.days.includes(date.getDay()) && safeCounter < 365) {
             date.setDate(date.getDate() + 1);
             safeCounter++;
         }
-
         let weekJumper = 0;
         while (date <= now && !isInitialSetup && weekJumper < 52) {
             date.setDate(date.getDate() + 7);
             weekJumper++;
         }
-
     } else {
-        // Lógica de Intervalos
-        // IMPORTANTE: Si es el setup inicial, NO SUMAMOS NADA. Respetamos la fecha/hora elegida.
         if (!isInitialSetup) {
             let loopLimiter = 0;
             do {
@@ -125,14 +111,57 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
                 else date.setHours(date.getHours() + 1); 
                 
                 loopLimiter++;
-                if(loopLimiter > 1000) break; // Evita congelamiento
+                if(loopLimiter > 1000) break; 
             } while (date <= now); 
         }
     }
     
-    // Guardar fecha ISO local
     task.nextTrigger = (new Date(date.getTime() - (date.getTimezoneOffset() * 60000))).toISOString().slice(0, 16); 
     task.notified = false; 
+};
+
+// --- EDICIÓN DE HÁBITOS ---
+window.openEditHabitModal = (index) => {
+    const task = state.recurringTasks[index];
+    document.getElementById('editHabitIndex').value = index;
+    document.getElementById('editHabitName').value = task.text;
+    
+    // Extraer fecha y hora actual para el Modal
+    const d = new Date(task.nextTrigger);
+    document.getElementById('editHabitDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    document.getElementById('editHabitTime').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    
+    document.getElementById('editHabitModal').style.display = 'flex';
+};
+
+window.closeEditHabitModal = () => { document.getElementById('editHabitModal').style.display = 'none'; };
+
+window.saveEditHabit = () => {
+    const index = document.getElementById('editHabitIndex').value;
+    const text = document.getElementById('editHabitName').value;
+    const dateInput = document.getElementById('editHabitDate').value;
+    const timeInput = document.getElementById('editHabitTime').value;
+
+    if (!text || !timeInput || !dateInput) return alert("Completa todos los campos");
+
+    const task = state.recurringTasks[index];
+    task.text = text;
+
+    let baseDate = new Date();
+    const [year, month, day] = dateInput.split('-');
+    baseDate.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const [hours, mins] = timeInput.split(':');
+    baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+
+    task.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
+
+    // Reprogramar si se eligió el pasado accidentalmente
+    if (baseDate <= new Date()) window.rescheduleRecurring(task, false); 
+    else window.rescheduleRecurring(task, true); 
+
+    saveDataToCloud();
+    window.closeEditHabitModal();
+    window.renderRecurringTasks();
 };
 
 window.renderRecurringTasks = () => { 
@@ -147,9 +176,7 @@ window.renderRecurringTasks = () => {
         let dateString = "Fecha inválida";
         if(rec.nextTrigger) {
             const nextD = new Date(rec.nextTrigger);
-            if(!isNaN(nextD)) {
-                dateString = nextD.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
-            }
+            if(!isNaN(nextD)) dateString = nextD.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
         }
         
         const dayMap = {1:'L', 2:'M', 3:'X', 4:'J', 5:'V', 6:'S', 0:'D'};
@@ -158,9 +185,18 @@ window.renderRecurringTasks = () => {
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
         contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; 
         const badge = document.createElement('span'); badge.className = 'badge rec-badge'; badge.innerText = patternStr; 
-        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
+        
+        const btnBox = document.createElement('div');
+        btnBox.style.display = 'flex'; btnBox.style.marginLeft = 'auto'; btnBox.style.gap = '5px';
+        
+        const editBtn = document.createElement('button'); editBtn.innerText = '✏️'; editBtn.style.background = 'var(--secondary)'; editBtn.style.padding = '5px 10px'; editBtn.style.color = 'black';
+        editBtn.onclick = () => window.openEditHabitModal(index);
+        
+        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; 
         deleteBtn.onclick = () => { state.recurringTasks.splice(index, 1); saveDataToCloud(); window.renderRecurringTasks(); }; 
-        li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); 
+        
+        btnBox.append(editBtn, deleteBtn);
+        li.append(checkbox, contentDiv, badge, btnBox); list.appendChild(li); 
     }); 
 };
 
@@ -169,6 +205,4 @@ export function init() {
     window.renderRecurringTasks();
 }
 
-window.addEventListener('stateChanged', () => {
-    if(document.getElementById('pendingList')) init();
-});
+window.addEventListener('stateChanged', () => { if(document.getElementById('pendingList')) init(); });
