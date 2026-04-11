@@ -2,7 +2,7 @@ import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 
 window.addTask = () => { 
     const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
-    if (input.value.trim() === '') return alert('Escribe la actividad.'); 
+    if (input.value.trim() === '') return alert('Escribe.'); 
     state.tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); 
     input.value = ''; dateInput.value = ''; 
     recordActivity(); saveDataToCloud(); window.renderTasks(); 
@@ -50,24 +50,28 @@ window.addRecurringTask = () => {
         baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
     }
     
-    // Si la hora ya pasó hoy, empezar a revisar desde mañana
+    // Si la hora inicial ya pasó hoy, empezamos mañana para evitar alertas inmediatas
     if (baseDate <= new Date()) {
         baseDate.setDate(baseDate.getDate() + 1);
     }
 
     const newTask = { 
         text: input.value, 
-        interval: parseInt(interval) || 1, // Evitar NaNs
-        freq: freq || 'horas', 
+        interval: parseInt(interval) || 1, 
+        freq: freq, 
         days: selectedDays.length > 0 ? selectedDays : null,
         notified: false 
     };
 
+    // Formatear fecha inicial
     newTask.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
+    
+    // Ejecutar reprogramación inicial para ajustar a días de la semana si aplica
     window.rescheduleRecurring(newTask, true);
 
     state.recurringTasks.push(newTask); 
     
+    // Limpiar campos
     input.value = ''; timeInput.value = ''; 
     document.querySelectorAll('#recTaskDays input').forEach(cb => cb.checked = false);
     
@@ -77,51 +81,33 @@ window.addRecurringTask = () => {
 window.rescheduleRecurring = (task, isInitialSetup = false) => { 
     let date = new Date(task.nextTrigger); 
     const now = new Date(); 
-    
-    // Validación de seguridad para datos guardados antiguos
     const interval = parseInt(task.interval) || 1;
-    const freq = task.freq || 'horas';
-
+    const freq = task.freq;
+    
     if (task.days && task.days.length > 0) {
-        // Lógica para Días específicos
+        // Lógica de Días de la Semana
         if (!isInitialSetup) date.setDate(date.getDate() + 1);
-        
         let safeCounter = 0;
-        // getDay() 0=Domingo, 1=Lunes, 2=Martes...
-        while (!task.days.includes(date.getDay()) && safeCounter < 8) {
+        while (!task.days.includes(date.getDay()) && safeCounter < 365) {
             date.setDate(date.getDate() + 1);
             safeCounter++;
         }
-
-        // Cortafuegos: Si el usuario llega semanas tarde, saltamos hasta llevarlo al futuro
-        let weekJumper = 0;
-        while (date <= now && !isInitialSetup && weekJumper < 52) {
-            date.setDate(date.getDate() + 7);
-            weekJumper++;
-        }
-
     } else {
-        // Lógica para Intervalo (cada X horas/días)
+        // Lógica de Intervalos (Minutos, Horas, Días, Meses)
         let loopLimiter = 0;
         do {
             if(freq === 'minutos') date.setMinutes(date.getMinutes() + interval); 
             else if(freq === 'horas') date.setHours(date.getHours() + interval); 
             else if(freq === 'dias') date.setDate(date.getDate() + interval); 
-            else {
-                // Fallback absoluto por si el dato está corrupto
-                date.setHours(date.getHours() + 1);
-            }
+            else if(freq === 'meses') date.setMonth(date.getMonth() + interval); // Lógica añadida
+            else date.setHours(date.getHours() + 1); // Fallback de seguridad
             
             loopLimiter++;
-            if(loopLimiter > 1000) {
-                console.error("⚠️ Bucle infinito detectado y detenido en la reprogramación del hábito.");
-                break; // Cortafuegos que evita que la app se congele
-            }
-            
+            if(loopLimiter > 1000) break; // Evita congelamiento
         } while (date <= now && !isInitialSetup); 
     }
     
-    // Devolver al formato guardado compensando la zona horaria local
+    // Guardar fecha ISO local
     task.nextTrigger = (new Date(date.getTime() - (date.getTimezoneOffset() * 60000))).toISOString().slice(0, 16); 
     task.notified = false; 
 };
@@ -129,19 +115,12 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
 window.renderRecurringTasks = () => { 
     const list = document.getElementById('recurringList'); if(!list) return; list.innerHTML = ''; 
     state.recurringTasks.forEach((rec, index) => { 
-        const li = document.createElement('li'); 
-        const checkbox = document.createElement('input'); 
-        checkbox.type = 'checkbox'; 
-        checkbox.checked = false; 
-        
+        const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; 
         checkbox.onchange = () => { 
             window.rescheduleRecurring(state.recurringTasks[index]); 
-            recordActivity(); 
-            saveDataToCloud(); 
-            window.renderRecurringTasks(); 
+            recordActivity(); saveDataToCloud(); window.renderRecurringTasks(); 
         }; 
         
-        // Parse seguro de fecha para render
         let dateString = "Fecha inválida";
         if(rec.nextTrigger) {
             const nextD = new Date(rec.nextTrigger);
@@ -155,22 +134,10 @@ window.renderRecurringTasks = () => {
 
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
         contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; 
-        
         const badge = document.createElement('span'); badge.className = 'badge rec-badge'; badge.innerText = patternStr; 
-        
-        const deleteBtn = document.createElement('button'); 
-        deleteBtn.innerText = 'X'; 
-        deleteBtn.style.background = '#cf6679'; 
-        deleteBtn.style.padding = '5px 10px'; 
-        deleteBtn.style.marginLeft = '10px'; 
-        deleteBtn.onclick = () => { 
-            state.recurringTasks.splice(index, 1); 
-            saveDataToCloud(); 
-            window.renderRecurringTasks(); 
-        }; 
-        
-        li.append(checkbox, contentDiv, badge, deleteBtn); 
-        list.appendChild(li); 
+        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
+        deleteBtn.onclick = () => { state.recurringTasks.splice(index, 1); saveDataToCloud(); window.renderRecurringTasks(); }; 
+        li.append(checkbox, contentDiv, badge, deleteBtn); list.appendChild(li); 
     }); 
 };
 
