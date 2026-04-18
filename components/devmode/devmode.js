@@ -8,14 +8,13 @@ let isInspectorActive = false;
 let currentTargetElement = null;
 let currentSelectorTarget = null;
 
-// Extracción segura de la base de datos (Evita que la app colapse si hay datos corruptos)
+// Extracción segura de BBDD
 let dynamicStylesDB = {};
 let dynamicContentDB = {};
 try {
     dynamicStylesDB = JSON.parse(localStorage.getItem('dev_dynamic_styles')) || {};
     dynamicContentDB = JSON.parse(localStorage.getItem('dev_dynamic_content')) || {};
-} catch (error) {
-    console.warn("DevMode: Memoria local corrupta. Reiniciando a fábrica.");
+} catch (e) {
     localStorage.removeItem('dev_dynamic_styles');
     localStorage.removeItem('dev_dynamic_content');
 }
@@ -26,14 +25,14 @@ export function initDevMode() {
     injectDynamicStyleSheet();
     applyContentOverrides();
     
-    // Vigila toda la app para inyectar textos incluso si el DOM cambia dinámicamente
+    // Vigilante de DOM (Re-inyecta textos si cambia de pestaña)
     const observer = new MutationObserver(() => applyContentOverrides());
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Enlazar eventos de color
+    // FIX 1: Enlazar sincronización bidireccional y PREVIEW EN TIEMPO REAL
     bindColorSyncEvents();
     
-    // Mostrar/Ocultar select de animaciones (Validación extra)
+    // Checkbox Animaciones
     const animCheck = document.getElementById('devAnimEnable');
     if(animCheck) {
         animCheck.addEventListener('change', (e) => {
@@ -41,23 +40,13 @@ export function initDevMode() {
         });
     }
 
-    // Atajo Maestro Blindado (Soporta e.code y e.key por si el teclado cambia de idioma)
     document.addEventListener('keydown', (e) => {
         if (e.altKey && e.shiftKey && (e.code === 'KeyD' || e.key.toLowerCase() === 'd')) {
             e.preventDefault();
-            
             const modal = document.getElementById('devLoginModal');
-            if (!modal) {
-                return console.error("⚠️ CRÍTICO: No se encontró el HTML del modal 'devLoginModal'. ¿Olvidaste pegarlo en el index.html?");
-            }
-
             if(!isDevModeActive) {
                 modal.style.display = 'flex';
-                // Pequeño retraso para asegurar que el input sea enfocable
-                setTimeout(() => {
-                    const userInput = document.getElementById('devUser');
-                    if(userInput) userInput.focus();
-                }, 50);
+                setTimeout(() => { document.getElementById('devUser')?.focus(); }, 50);
             } else {
                 window.closeDevPanel();
             }
@@ -66,24 +55,31 @@ export function initDevMode() {
 }
 
 function bindColorSyncEvents() {
-    const sync = (colorInputId, textInputId) => {
+    // Sincroniza Color Picker <-> Input Texto y aplica el estilo al DOM en vivo
+    const sync = (colorInputId, textInputId, cssProp) => {
         const colorInput = document.getElementById(colorInputId);
         const textInput = document.getElementById(textInputId);
         if(!colorInput || !textInput) return;
 
         colorInput.addEventListener('input', (e) => {
             textInput.value = e.target.value;
+            if (currentTargetElement) {
+                currentTargetElement.style[cssProp] = e.target.value;
+            }
         });
         
         textInput.addEventListener('input', (e) => {
-            if(e.target.value.startsWith('#') && (e.target.value.length === 7 || e.target.value.length === 9)) {
-                colorInput.value = e.target.value.substring(0, 7);
+            if (currentTargetElement) {
+                currentTargetElement.style[cssProp] = e.target.value;
+            }
+            if(e.target.value.startsWith('#') && e.target.value.length === 7) {
+                colorInput.value = e.target.value;
             }
         });
     };
-    sync('devBgColor', 'devBgText');
-    sync('devTextColor', 'devTextText');
-    sync('devBorderColor', 'devBorderText');
+    sync('devBgColor', 'devBgText', 'backgroundColor');
+    sync('devTextColor', 'devTextText', 'color');
+    sync('devBorderColor', 'devBorderText', 'borderColor');
 }
 
 window.authenticateDev = () => {
@@ -94,47 +90,29 @@ window.authenticateDev = () => {
         isDevModeActive = true; 
         document.getElementById('devUser').value = ''; 
         document.getElementById('devPass').value = '';
-        openDevPanel();
+        const panel = document.getElementById('devEditorPanel');
+        if(panel) { panel.style.display = 'flex'; activateInspector(); }
     } else { 
         alert("Acceso denegado."); 
     }
 };
 
-window.closeDevLogin = () => { 
-    document.getElementById('devLoginModal').style.display = 'none'; 
-};
-
-function openDevPanel() { 
-    const panel = document.getElementById('devEditorPanel');
-    if(panel) {
-        panel.style.display = 'flex'; 
-        activateInspector(); 
-    }
-}
-
+window.closeDevLogin = () => { document.getElementById('devLoginModal').style.display = 'none'; };
 window.closeDevPanel = () => { 
     const panel = document.getElementById('devEditorPanel');
     if(panel) panel.style.display = 'none'; 
-    deactivateInspector(); 
-    isDevModeActive = false; 
+    deactivateInspector(); isDevModeActive = false; 
 };
 
 // ==========================================
 // MODO INSPECTOR
 // ==========================================
-window.toggleInspectorMode = () => { 
-    isInspectorActive ? deactivateInspector() : activateInspector(); 
-};
+window.toggleInspectorMode = () => { isInspectorActive ? deactivateInspector() : activateInspector(); };
 
 function activateInspector() {
     isInspectorActive = true;
     const btn = document.getElementById('btnInspectorToggle');
-    if(btn) {
-        btn.innerText = 'Inspeccionar: ON'; 
-        btn.style.color = '#39ff14'; 
-        btn.style.borderColor = '#39ff14';
-    }
-    
+    if(btn) { btn.innerText = 'Inspeccionar: ON'; btn.style.color = '#39ff14'; btn.style.borderColor = '#39ff14'; }
     document.addEventListener('mouseover', handleDevHover);
     document.addEventListener('mouseout', handleDevMouseOut);
     document.addEventListener('click', handleDevClick, { capture: true });
@@ -143,39 +121,24 @@ function activateInspector() {
 function deactivateInspector() {
     isInspectorActive = false;
     const btn = document.getElementById('btnInspectorToggle');
-    if(btn) {
-        btn.innerText = 'Inspeccionar: OFF'; 
-        btn.style.color = '#8b949e'; 
-        btn.style.borderColor = '#30363d';
-    }
-    
+    if(btn) { btn.innerText = 'Inspeccionar: OFF'; btn.style.color = '#8b949e'; btn.style.borderColor = '#30363d'; }
     document.removeEventListener('mouseover', handleDevHover);
     document.removeEventListener('mouseout', handleDevMouseOut);
     document.removeEventListener('click', handleDevClick, { capture: true });
-    
     if (currentTargetElement) { 
         currentTargetElement.classList.remove('dev-selected-target', 'dev-hover-target'); 
         currentTargetElement = null; 
     }
 }
 
-function handleDevHover(e) { 
-    if(isInspectorActive && !e.target.closest('#devEditorPanel')) {
-        e.target.classList.add('dev-hover-target'); 
-    }
-}
-
-function handleDevMouseOut(e) { 
-    if(isInspectorActive) e.target.classList.remove('dev-hover-target'); 
-}
+function handleDevHover(e) { if(isInspectorActive && !e.target.closest('#devEditorPanel')) e.target.classList.add('dev-hover-target'); }
+function handleDevMouseOut(e) { if(isInspectorActive) e.target.classList.remove('dev-hover-target'); }
 
 function handleDevClick(e) {
     if(!isInspectorActive || e.target.closest('#devEditorPanel')) return;
-    e.preventDefault(); 
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
 
     if (currentTargetElement) currentTargetElement.classList.remove('dev-selected-target');
-    
     currentTargetElement = e.target;
     currentTargetElement.classList.add('dev-selected-target');
     currentTargetElement.classList.remove('dev-hover-target');
@@ -185,9 +148,8 @@ function handleDevClick(e) {
 }
 
 // ==========================================
-// LECTURA Y MAPEO
+// LECTURA DE ELEMENTOS AL PANEL
 // ==========================================
-
 function getShorthand(computed, type) {
     if (type === 'padding') {
         if(computed.padding && computed.padding !== '') return computed.padding;
@@ -200,8 +162,22 @@ function getShorthand(computed, type) {
     return '';
 }
 
+function rgbToStrictHex(rgba) {
+    // Si es transparente o vacío, forzar a negro para que el <input type="color"> no crashee
+    if (!rgba || rgba === 'rgba(0, 0, 0, 0)' || rgba === 'transparent') return '#000000';
+    if (rgba.startsWith('#')) return rgba.substring(0, 7); // Limitar a 6 caracteres (7 con el #)
+    
+    const rgb = rgba.match(/\d+/g);
+    if (!rgb || rgb.length < 3) return '#000000';
+    
+    const r = parseInt(rgb[0]).toString(16).padStart(2, '0');
+    const g = parseInt(rgb[1]).toString(16).padStart(2, '0');
+    const b = parseInt(rgb[2]).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
+}
+
 function loadElementDataIntoPanel(element) {
-    // 1. Selector jerárquico
+    // Generar Selector
     if (element.id && element.id !== '') { 
         currentSelectorTarget = `#${element.id}`; 
     } else if (element.classList.length > 0) {
@@ -212,19 +188,18 @@ function loadElementDataIntoPanel(element) {
     }
     
     document.getElementById('devTargetSelector').innerText = currentSelectorTarget;
-    
-    // 2. Extraer estilos del navegador
     const computed = window.getComputedStyle(element);
     
-    const bgHex = rgbToHex(computed.backgroundColor); 
-    const textHex = rgbToHex(computed.color);
-    const bcHex = rgbToHex(computed.borderColor);
+    // Cargar Colores (Asegurando hex estricto para los inputs)
+    const bgHex = rgbToStrictHex(computed.backgroundColor); 
+    const textHex = rgbToStrictHex(computed.color);
+    const bcHex = rgbToStrictHex(computed.borderColor);
     
-    document.getElementById('devBgColor').value = bgHex !== '#00000000' ? bgHex : '#000000';
+    document.getElementById('devBgColor').value = bgHex;
     document.getElementById('devBgText').value = computed.backgroundColor;
-    document.getElementById('devTextColor').value = textHex !== '#00000000' ? textHex : '#ffffff';
+    document.getElementById('devTextColor').value = textHex;
     document.getElementById('devTextText').value = computed.color;
-    document.getElementById('devBorderColor').value = bcHex !== '#00000000' ? bcHex : '#000000';
+    document.getElementById('devBorderColor').value = bcHex;
     document.getElementById('devBorderText').value = computed.borderColor;
     
     document.getElementById('devBorderBottom').value = computed.borderBottom;
@@ -232,17 +207,22 @@ function loadElementDataIntoPanel(element) {
     document.getElementById('devPadding').value = getShorthand(computed, 'padding');
     document.getElementById('devFontSize').value = computed.fontSize;
 
-    // 3. Lógica para Textos
-    if(element.children.length === 0 || (element.children.length === 1 && element.children[0].tagName === 'I')) {
+    // FIX 2: Lógica Segura para mostrar Caja de Texto (Lista Blanca de Tags)
+    const textEditableTags = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','BUTTON','LABEL','STRONG','EM','LI','TH','TD', 'DIV'];
+    const tagName = element.tagName.toUpperCase();
+    
+    // Mostramos si está en la lista blanca, pero no si es un Div con demasiados componentes complejos hijos
+    if(textEditableTags.includes(tagName) && element.children.length < 3) {
         document.getElementById('devTextGroup').style.display = 'flex';
-        document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.innerHTML.trim();
+        document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.innerText.trim();
     } else {
         document.getElementById('devTextGroup').style.display = 'none';
         document.getElementById('devElementText').value = '';
     }
 
-    // 4. Lógica de Animaciones
-    const isClickable = element.tagName === 'BUTTON' || element.tagName === 'A' || computed.cursor === 'pointer' || element.classList.contains('tab-btn');
+    // FIX 3: Lógica para mostrar Animaciones (Revisa si él o su padre es un botón)
+    const isClickable = ['BUTTON', 'A'].includes(tagName) || element.classList.contains('tab-btn') || element.classList.contains('md-btn') || computed.cursor === 'pointer' || element.closest('button') !== null;
+    
     if (isClickable) {
         document.getElementById('devAnimGroup').style.display = 'flex';
         const activeSel = currentSelectorTarget + ':active';
@@ -259,15 +239,15 @@ function loadElementDataIntoPanel(element) {
 }
 
 // ==========================================
-// GUARDAR Y APLICAR
+// GUARDAR Y APLICAR AL DOM
 // ==========================================
 
 window.applyAndSaveDevStyles = () => {
     if (!currentSelectorTarget) return alert("Selecciona un elemento primero.");
     
-    // 1. Guardar Estilos (Usando !important)
+    // 1. Guardar Estilos (Las variables usan nombres CSS correctos)
     const newStyles = {
-        'background': document.getElementById('devBgText').value,
+        'background-color': document.getElementById('devBgText').value,
         'color': document.getElementById('devTextText').value,
         'border-color': document.getElementById('devBorderText').value,
         'border-bottom': document.getElementById('devBorderBottom').value,
@@ -289,11 +269,9 @@ window.applyAndSaveDevStyles = () => {
             dynamicStylesDB[currentSelectorTarget]['transition'] = 'all 0.2s ease !important'; 
             
             dynamicStylesDB[activeSel] = {};
-            if(animType === 'scale-down') { 
-                dynamicStylesDB[activeSel]['transform'] = 'scale(0.92)'; 
-            } else if(animType === 'scale-up') { 
-                dynamicStylesDB[activeSel]['transform'] = 'scale(1.05)'; 
-            } else if(animType === 'pulse-glow') {
+            if(animType === 'scale-down') { dynamicStylesDB[activeSel]['transform'] = 'scale(0.92)'; } 
+            else if(animType === 'scale-up') { dynamicStylesDB[activeSel]['transform'] = 'scale(1.05)'; } 
+            else if(animType === 'pulse-glow') {
                 dynamicStylesDB[activeSel]['box-shadow'] = '0 0 15px var(--note-accent)';
                 dynamicStylesDB[activeSel]['transform'] = 'scale(0.98)';
             }
@@ -320,7 +298,7 @@ window.applyAndSaveDevStyles = () => {
     // Feedback
     const btn = document.querySelector('.dev-btn'); 
     const originalText = btn.innerText;
-    btn.innerText = '✅ Guardado!'; 
+    btn.innerText = '✅ ¡Guardado!'; 
     setTimeout(() => btn.innerText = originalText, 1500);
 };
 
@@ -351,6 +329,7 @@ function applyContentOverrides() {
     for(let selector in dynamicContentDB) {
         try {
             document.querySelectorAll(selector).forEach(el => {
+                // Solo reemplazar si es diferente para evitar ciclos infinitos del MutationObserver
                 if(el.innerHTML !== dynamicContentDB[selector]) {
                     el.innerHTML = dynamicContentDB[selector];
                 }
@@ -360,7 +339,7 @@ function applyContentOverrides() {
 }
 
 // ==========================================
-// REINICIOS Y LIMPIEZA
+// REINICIOS
 // ==========================================
 
 window.resetTargetStyles = () => {
@@ -373,8 +352,7 @@ window.resetTargetStyles = () => {
     localStorage.setItem('dev_dynamic_content', JSON.stringify(dynamicContentDB));
     
     injectDynamicStyleSheet(); 
-    applyContentOverrides();
-    alert(`Diseño revertido para: ${currentSelectorTarget}. Refresca la app para ver el texto original.`);
+    window.location.reload(); // Recarga para limpiar el DOM de textos huérfanos
 };
 
 window.factoryResetStyles = () => {
@@ -383,22 +361,6 @@ window.factoryResetStyles = () => {
         dynamicContentDB = {};
         localStorage.removeItem('dev_dynamic_styles'); 
         localStorage.removeItem('dev_dynamic_content');
-        
-        injectDynamicStyleSheet(); 
         window.location.reload(); 
     }
 };
-
-// Parser robusto de Color
-function rgbToHex(rgba) {
-    if (!rgba || rgba === 'rgba(0, 0, 0, 0)' || rgba === 'transparent') return '#00000000';
-    if (rgba.startsWith('#')) return rgba;
-    
-    const rgb = rgba.match(/\d+/g);
-    if (!rgb || rgb.length < 3) return '#000000';
-    
-    const r = parseInt(rgb[0]).toString(16).padStart(2, '0');
-    const g = parseInt(rgb[1]).toString(16).padStart(2, '0');
-    const b = parseInt(rgb[2]).toString(16).padStart(2, '0');
-    return `#${r}${g}${b}`;
-}
