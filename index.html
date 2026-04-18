@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taskify</title>
     <meta name="theme-color" content="#121212">
+    
     <link rel="stylesheet" href="global.css">
+    
+    <link rel="stylesheet" href="components/devmode/devmode.css">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -68,130 +71,119 @@
         </div>
     </div>
 
-    <script type="module" src="js/app.js"></script>
-</body>
-
-<link rel="stylesheet" href="components/devmode/devmode.css">
-
-<div id="devLoginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999999; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-    <div style="background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #58a6ff; width: 300px; box-shadow: 0 0 50px rgba(88, 166, 255, 0.2);">
-        <h2 style="color: #58a6ff; margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
-        <input type="text" id="devUser" placeholder="Usuario" style="width: 100%; margin-bottom: 15px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
-        <input type="password" id="devPass" placeholder="Contraseña" style="width: 100%; margin-bottom: 20px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
-        <div style="display: flex; gap: 10px;">
-            <button onclick="authenticateDev()" style="flex: 1; background: #58a6ff; color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">Ingresar</button>
-            <button onclick="closeDevLogin()" style="flex: 1; background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 10px; border-radius: 6px; cursor: pointer;">Cancelar</button>
-        </div>
-    </div>
-</div>
-
-<div id="devEditorPanel" class="dev-panel">
-    <div class="dev-panel-header">
-        <span>🛠️ UI Builder</span>
-        <button onclick="toggleInspectorMode()" id="btnInspectorToggle" style="background: transparent; border: 1px solid #58a6ff; color: #58a6ff; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 0.8em;">Inspeccionar: ON</button>
-        <button onclick="closeDevPanel()" style="background: transparent; border: none; color: #8b949e; cursor: pointer;">✖</button>
-    </div>
-    
-    <div class="dev-panel-body">
-        <div style="font-size: 0.85em; color: #8b949e;">Editando clase/ID:</div>
-        <div id="devTargetSelector" class="dev-target-badge">Ninguno</div>
-
-        <div class="dev-control-group">
-            <label>Fondo (Background)</label>
-            <div class="dev-color-wrapper">
-                <input type="color" id="devBgColor" class="dev-color-input">
-                <input type="text" id="devBgText" class="dev-input" style="flex: 1;" placeholder="#000000 o rgba()">
+    <div id="devLoginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999999; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+        <div style="background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #58a6ff; width: 300px; box-shadow: 0 0 50px rgba(88, 166, 255, 0.2);">
+            <h2 style="color: #58a6ff; margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
+            <input type="text" id="devUser" placeholder="Usuario" style="width: 100%; margin-bottom: 15px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
+            <input type="password" id="devPass" placeholder="Contraseña" style="width: 100%; margin-bottom: 20px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="authenticateDev()" style="flex: 1; background: #58a6ff; color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">Ingresar</button>
+                <button onclick="closeDevLogin()" style="flex: 1; background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 10px; border-radius: 6px; cursor: pointer;">Cancelar</button>
             </div>
         </div>
+    </div>
 
-        <div class="dev-control-group">
-            <label>Color de Texto</label>
-            <div class="dev-color-wrapper">
-                <input type="color" id="devTextColor" class="dev-color-input">
-                <input type="text" id="devTextText" class="dev-input" style="flex: 1;">
-            </div>
-        </div>
-
-        <div class="dev-control-group">
-            <label>Radio de Borde (Border Radius)</label>
-            <input type="text" id="devBorderRadius" class="dev-input" placeholder="Ej: 12px">
-        </div>
-
-        <div class="dev-control-group">
-            <label>Relleno (Padding)</label>
-            <input type="text" id="devPadding" class="dev-input" placeholder="Ej: 15px 20px">
+    <div id="devEditorPanel" class="dev-panel">
+        <div class="dev-panel-header">
+            <span>🛠️ UI Builder</span>
+            <button onclick="toggleInspectorMode()" id="btnInspectorToggle" style="background: transparent; border: 1px solid #58a6ff; color: #58a6ff; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 0.8em;">Inspeccionar: ON</button>
+            <button onclick="closeDevPanel()" style="background: transparent; border: none; color: #8b949e; cursor: pointer;">✖</button>
         </div>
         
-        <div class="dev-control-group">
-            <label>Tamaño de Fuente (Font Size)</label>
-            <input type="text" id="devFontSize" class="dev-input" placeholder="Ej: 1.2em o 16px">
+        <div class="dev-panel-body">
+            <div style="font-size: 0.85em; color: #8b949e;">Editando clase/ID:</div>
+            <div id="devTargetSelector" class="dev-target-badge">Ninguno</div>
+
+            <div class="dev-control-group">
+                <label>Fondo (Background)</label>
+                <div class="dev-color-wrapper">
+                    <input type="color" id="devBgColor" class="dev-color-input">
+                    <input type="text" id="devBgText" class="dev-input" style="flex: 1;" placeholder="#000000 o rgba()">
+                </div>
+            </div>
+
+            <div class="dev-control-group">
+                <label>Color de Texto</label>
+                <div class="dev-color-wrapper">
+                    <input type="color" id="devTextColor" class="dev-color-input">
+                    <input type="text" id="devTextText" class="dev-input" style="flex: 1;">
+                </div>
+            </div>
+
+            <div class="dev-control-group">
+                <label>Radio de Borde (Border Radius)</label>
+                <input type="text" id="devBorderRadius" class="dev-input" placeholder="Ej: 12px">
+            </div>
+
+            <div class="dev-control-group">
+                <label>Relleno (Padding)</label>
+                <input type="text" id="devPadding" class="dev-input" placeholder="Ej: 15px 20px">
+            </div>
+            
+            <div class="dev-control-group">
+                <label>Tamaño de Fuente (Font Size)</label>
+                <input type="text" id="devFontSize" class="dev-input" placeholder="Ej: 1.2em o 16px">
+            </div>
+
+            <button class="dev-btn" onclick="applyAndSaveDevStyles()">💾 Guardar Cambios</button>
+            <button class="dev-btn dev-btn-danger" onclick="resetTargetStyles()">🔄 Revertir Elemento</button>
+            <button class="dev-btn dev-btn-danger" style="margin-top: 5px; border-style: dashed;" onclick="factoryResetStyles()">⚠️ Borrar Todo el CSS Modificado</button>
         </div>
-
-        <button class="dev-btn" onclick="applyAndSaveDevStyles()">💾 Guardar Cambios</button>
-        <button class="dev-btn dev-btn-danger" onclick="resetTargetStyles()">🔄 Revertir Elemento</button>
-        <button class="dev-btn dev-btn-danger" style="margin-top: 5px; border-style: dashed;" onclick="factoryResetStyles()">⚠️ Borrar Todo el CSS Modificado</button>
     </div>
-</div>
 
 
-    
-</html>
+    <script type="module" src="js/app.js"></script>
 
-<script type="module">
+    <script type="module">
+        // Importamos la función de inicio desde el archivo devmode.js
+        import { initDevMode } from './components/devmode/devmode.js';
+        
+        // La ejecutamos para que encienda la detección del teclado
+        initDevMode();
+    </script>
+
+    <script type="module">
         import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@latest';
 
         console.log("🚀 Pretext activado: Optimizando cajas de texto en segundo plano.");
 
         const autoResizeTextarea = (textarea) => {
-            // Evitar procesar si la caja está oculta en otra pestaña
             if (textarea.clientWidth === 0) return;
-
-            // Tomamos el texto escrito, o un espacio en blanco si está vacío
             const text = textarea.value || textarea.placeholder || " ";
             const style = window.getComputedStyle(textarea);
 
-            // Extraemos la fuente y los márgenes internos que definiste en tu CSS
             const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
             const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
             const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-
-            // Ancho matemático disponible para las letras
             const availableWidth = textarea.clientWidth - paddingX;
 
-            // Altura de cada línea (Fallback matemático si el CSS dice 'normal')
             let lineHeight = parseFloat(style.lineHeight);
             if (isNaN(lineHeight)) lineHeight = parseFloat(style.fontSize) * 1.5;
 
             try {
-                // 1. LA MAGIA: Pretext prepara y mide las letras usando la GPU
                 const prepared = prepare(text, font);
-                
-                // 2. Calcula los saltos de línea sin congelar el navegador
                 const result = layout(prepared, availableWidth, lineHeight);
-
-                // 3. Aplicamos la altura matemática exacta al elemento HTML
-                const finalHeight = Math.max(result.height + paddingY, 80); // 80px es tu min-height del CSS
+                const finalHeight = Math.max(result.height + paddingY, 80); 
                 textarea.style.height = `${finalHeight}px`;
-                textarea.style.overflowY = 'hidden'; // Escondemos el scroll porque ya no se necesita
+                textarea.style.overflowY = 'hidden'; 
             } catch (error) {
-                // Fallback silencioso (si el CDN de Pretext falla, usa el método clásico del navegador)
                 textarea.style.height = 'auto';
                 textarea.style.height = (textarea.scrollHeight) + 'px';
             }
         };
 
-        // Escucha global: Cada vez que escribes algo, en cualquier parte de la app
         document.addEventListener('input', (e) => {
             if (e.target.tagName.toLowerCase() === 'textarea') {
                 autoResizeTextarea(e.target);
             }
         });
 
-        // Escucha global: Cuando cambias de pestaña, ajusta los textos que ya estaban escritos
         window.addEventListener('stateChanged', () => {
-            // Un pequeño retraso para asegurar que el HTML de la nueva pestaña ya cargó
             setTimeout(() => {
                 document.querySelectorAll('textarea').forEach(autoResizeTextarea);
             }, 100);
         });
     </script>
+
+</body>
+</html>
