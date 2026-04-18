@@ -29,9 +29,8 @@
 
 <div id="view-actividades">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="border: none; margin: 0; font-size: 1.5em;">Panel de Actividades</h2>
-        <button onclick="openCalendarModal()" style="background: rgba(187, 134, 252, 0.15); color: var(--primary); border: 1px solid var(--primary); display: flex; gap: 8px; align-items: center; font-size: 0.85em; padding: 6px 12px; border-radius: 6px;">📅 Ver Calendario</button>
+    <div style="margin-bottom: 20px;">
+        <h2 style="border: none; margin: 0; font-size: 1.5em; color: var(--primary);">Panel de Actividades</h2>
     </div>
 
     <div class="container">
@@ -50,18 +49,21 @@
     </div>
 
     <div class="container">
-        <h2 class="title-habits">Hábitos y Rutinas <div class="tooltip">?<span class="tooltiptext">Puedes elegir fechas pasadas. El sistema simulará el paso del tiempo y te dará la próxima fecha en el futuro basándose en tu intervalo.</span></div></h2>
+        <h2 class="title-habits">
+            Programar Hábito o Rutina 
+            <div class="tooltip">?<span class="tooltiptext">Puedes elegir fechas pasadas. El sistema simulará el paso del tiempo y te dará la próxima fecha en el futuro basándose en tu intervalo.</span></div>
+        </h2>
         
-        <div class="input-group" style="flex-direction: column; align-items: flex-start; background: #0f1015; padding: 15px; border-radius: 8px; border: 1px dashed #2d3446;">
+        <div style="display: flex; flex-direction: column; align-items: stretch; background: #0f1015; padding: 15px; border-radius: 8px; border: 1px dashed #2d3446; box-sizing: border-box; width: 100%;">
             
-            <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
-                <input type="text" id="recTaskInput" placeholder="Nombre de la rutina (Ej: Gimnasio, Leer)" style="flex-grow: 1; min-width: 200px;">
-                <input type="date" id="recTaskDate" title="Fecha de primer inicio">
-                <input type="time" id="recTaskTime" title="Hora exacta de la alarma">
+            <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap; box-sizing: border-box;">
+                <input type="text" id="recTaskInput" placeholder="Nombre de la rutina (Ej: Gimnasio, Leer)" style="flex-grow: 1; min-width: 200px; box-sizing: border-box;">
+                <input type="date" id="recTaskDate" title="Fecha de primer inicio" style="box-sizing: border-box;">
+                <input type="time" id="recTaskTime" title="Hora exacta de la alarma" style="box-sizing: border-box;">
             </div>
             
-            <div style="margin-top: 10px; width: 100%;">
-                <span style="font-size: 0.85em; color: #8ba4b5; display: block; margin-bottom: 5px;">Selecciona los días (opcional):</span>
+            <div style="margin-top: 15px; width: 100%; box-sizing: border-box;">
+                <span style="font-size: 0.85em; color: #8ba4b5; display: block; margin-bottom: 8px;">Selecciona los días (opcional):</span>
                 <div class="day-checkboxes" id="recTaskDays">
                     <label><input type="checkbox" value="1"> L</label>
                     <label><input type="checkbox" value="2"> M</label>
@@ -73,10 +75,10 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; align-items: center; width: 100%; margin-top: 15px; border-top: 1px solid #2d3446; padding-top: 15px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; align-items: center; width: 100%; margin-top: 15px; border-top: 1px solid #2d3446; padding-top: 15px; flex-wrap: wrap; box-sizing: border-box;">
                 <span style="font-size: 0.85em; color: #8ba4b5;">O usar intervalo clásico:</span>
-                <input type="number" id="recTaskInterval" min="1" value="1" style="width: 60px;">
-                <select id="recTaskFreq" style="width: 110px;">
+                <input type="number" id="recTaskInterval" min="1" value="1" style="width: 70px; box-sizing: border-box;">
+                <select id="recTaskFreq" style="width: 120px; box-sizing: border-box;">
                     <option value="minutos">Minutos</option>
                     <option value="horas" selected>Horas</option>
                     <option value="dias">Días</option>
@@ -86,7 +88,14 @@
             </div>
         </div>
 
-        <ul id="recurringList" class="pending-list-style" style="margin-top: 20px;"></ul>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+            <h3 style="margin: 0; color: #ccc; font-size: 1.1em;">Tus Hábitos Activos</h3>
+            <button onclick="openCalendarModal()" style="background: rgba(187, 134, 252, 0.15); color: var(--primary); border: 1px solid var(--primary); display: flex; gap: 8px; align-items: center; font-size: 0.85em; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
+                📅 Ver Calendario
+            </button>
+        </div>
+
+        <ul id="recurringList" class="pending-list-style"></ul>
     </div>
 
     <div class="container">
