@@ -73,5 +73,9 @@
     border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; text-align: center;
 }
 .dev-btn:hover { background: #2ea043; }
+
+/* FEEDBACK VISUAL DE GUARDADO */
+.dev-btn-success { background: #39ff14 !important; color: #000 !important; box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); }
+
 .dev-btn-danger { background: transparent; border: 1px solid #da3633; color: #da3633; margin-top: 0; }
 .dev-btn-danger:hover { background: #da3633; color: white; }
