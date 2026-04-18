@@ -7,13 +7,12 @@
     --note-accent: #58a6ff;
     --note-glow: rgba(88, 166, 255, 0.4);
     --code-bg: #010409;
-    --table-border: #30363d;
+    --table-border: rgba(255, 255, 255, 0.1);
 }
 
 .notes-wrapper {
     background: radial-gradient(circle at top, #1f242c 0%, var(--note-bg) 70%);
     min-height: 100vh; padding: 20px; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif;
-    /* FIX: perspective removido de aquí para no romper el position: fixed del Modal */
 }
 
 /* ==========================================================================
@@ -33,88 +32,81 @@ canvas#mindGraph { display: block; width: 100%; height: 100%; }
 .time-capsule {
     background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(88, 166, 255, 0.05));
     border-left: 4px solid #8a2be2; border-radius: 8px; padding: 15px 20px; margin-bottom: 25px;
-    backdrop-filter: blur(10px); 
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s; cursor: pointer;
+    backdrop-filter: blur(10px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s; cursor: pointer;
 }
-.time-capsule:hover { 
-    /* FIX 3D Localizado */
-    transform: perspective(1000px) translateZ(20px) rotateX(2deg); 
-    box-shadow: 0 15px 30px rgba(138, 43, 226, 0.2); 
-}
+.time-capsule:hover { transform: perspective(1000px) translateZ(20px) rotateX(2deg); box-shadow: 0 15px 30px rgba(138, 43, 226, 0.2); }
 
 /* ==========================================================================
-   4. EDITOR ZEN
+   4. EDITOR ZEN Y TOOLBAR DE MARKDOWN
    ========================================================================== */
 .zen-editor {
     background: var(--note-card); border-radius: 12px; padding: 20px; margin-bottom: 30px;
     border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
 }
-.zen-editor:focus-within { 
-    /* FIX 3D Localizado */
-    transform: perspective(1000px) translateZ(10px); 
-    border-color: var(--note-accent); 
-    box-shadow: 0 12px 40px var(--note-glow); 
-}
+.zen-editor:focus-within { transform: perspective(1000px) translateZ(10px); border-color: var(--note-accent); box-shadow: 0 12px 40px var(--note-glow); }
 
-.zen-input-title { width: 100%; background: transparent; border: none; color: white; font-size: 1.4em; font-weight: bold; outline: none; margin-bottom: 10px; padding: 5px 0; box-sizing: border-box; }
+.zen-input-title { width: 100%; background: transparent; border: none; color: white; font-size: 1.4em; font-weight: bold; outline: none; margin-bottom: 15px; padding: 5px 0; box-sizing: border-box; }
 .zen-input-body { width: 100%; background: transparent; border: none; color: #c9d1d9; font-size: 1.05em; outline: none; resize: vertical; min-height: 80px; line-height: 1.6; box-sizing: border-box; }
 
-/* ==========================================================================
-   5. TABLAS DINÁMICAS (Estilo Excel)
-   ========================================================================== */
-.note-table-container { width: 100%; overflow-x: auto; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--table-border); }
-.note-table { width: 100%; border-collapse: collapse; font-size: 0.9em; background: #0d1117; color: #c9d1d9; }
-.note-table th, .note-table td { border: 1px solid var(--table-border); padding: 0; min-width: 100px; }
-.note-table th { background: #161b22; font-weight: bold; padding: 8px; text-align: left; }
-.note-table input { width: 100%; background: transparent; border: none; color: inherit; padding: 8px; box-sizing: border-box; outline: none; font-family: inherit; }
-.note-table input:focus { background: rgba(88, 166, 255, 0.1); }
-.table-controls { display: flex; gap: 8px; margin-bottom: 10px; }
-.table-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; cursor: pointer; transition: 0.2s; }
-.table-btn:hover { background: #30363d; color: white; }
+/* Toolbar Moderna Minimalista */
+.md-toolbar { display: flex; gap: 8px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; }
+.md-tool-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #8b949e; padding: 6px 12px; border-radius: 6px; font-size: 0.85em; cursor: pointer; transition: 0.2s; font-weight: bold; display: flex; align-items: center; gap: 5px;}
+.md-tool-btn:hover { background: rgba(88, 166, 255, 0.1); color: var(--note-accent); border-color: var(--note-accent); }
 
 /* ==========================================================================
-   6. TARJETAS Y AUTO-MARKDOWN
+   5. TABLAS MINIMALISTAS
    ========================================================================== */
-.notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.note-card { background: var(--note-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; display: flex; flex-direction: column; max-height: 350px; overflow: hidden; }
-.note-card:hover { 
-    /* FIX 3D Localizado */
-    transform: perspective(1000px) translateY(-8px) rotateX(3deg) rotateY(-2deg) scale(1.02); 
-    box-shadow: -5px 15px 25px rgba(0,0,0,0.5), 0 0 15px rgba(88, 166, 255, 0.15); 
-    border-color: rgba(88, 166, 255, 0.4); 
-}
+.note-table-container { width: 100%; overflow-x: auto; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--table-border); background: rgba(1, 4, 9, 0.5); }
+.note-table { width: 100%; border-collapse: collapse; font-size: 0.9em; color: #c9d1d9; }
+.note-table th, .note-table td { border-bottom: 1px solid var(--table-border); padding: 0; min-width: 120px; }
+.note-table th { background: rgba(255,255,255,0.02); font-weight: 600; padding: 10px; text-align: left; color: #8b949e; }
+.note-table td:not(:last-child), .note-table th:not(:last-child) { border-right: 1px solid var(--table-border); }
+.note-table input { width: 100%; background: transparent; border: none; color: inherit; padding: 10px; box-sizing: border-box; outline: none; font-family: inherit; }
+.note-table input:focus { background: rgba(88, 166, 255, 0.05); }
 
+/* ==========================================================================
+   6. RENDERIZADO MARKDOWN
+   ========================================================================== */
 .md-content h3 { margin: 0 0 10px 0; color: white; font-size: 1.2em; font-weight: 600; }
 .md-content p { margin: 0 0 10px 0; color: #8b949e; line-height: 1.5; font-size: 0.95em; }
 .md-content strong { color: var(--note-accent); }
-.md-code-block { background: var(--code-bg); padding: 10px; border-radius: 6px; font-family: monospace; color: #a5d6ff; overflow-x: auto; font-size: 0.85em; border: 1px solid var(--table-border); margin-bottom: 10px; }
+.md-code-block { background: var(--code-bg); padding: 12px; border-radius: 8px; font-family: monospace; color: #a5d6ff; overflow-x: auto; font-size: 0.85em; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; }
 .md-code-inline { background: rgba(110, 118, 129, 0.4); padding: 2px 5px; border-radius: 4px; color: #ff7b72; font-family: monospace; }
 .tag-chip { display: inline-block; background: rgba(88, 166, 255, 0.1); color: var(--note-accent); padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold; margin-right: 5px; margin-top: auto; border: 1px solid rgba(88, 166, 255, 0.3); }
 
+/* Botones */
 .btn-primary { background: var(--note-accent); color: #000; font-weight: bold; padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
 .btn-primary:hover { background: white; box-shadow: 0 0 15px var(--note-glow); }
+.btn-secondary { background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 8px 20px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: bold; }
+.btn-secondary:hover { color: white; border-color: #8b949e; }
 
 /* ==========================================================================
-   7. FIX DEL MODAL (Centrado Perfecto Absoluto)
+   7. GESTOR DE VISTAS (Grid vs Lista)
    ========================================================================== */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 99999;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-}
-.modal-content {
-    background: var(--note-card); width: 95%; max-width: 900px; margin: auto;
-    border-radius: 12px; border: 1px solid rgba(88,166,255,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-    max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; position: relative;
-    box-sizing: border-box;
-}
-.modal-body-split {
-    display: flex; flex-direction: column; gap: 20px; padding: 20px; overflow-y: auto; flex-grow: 1;
-}
-@media(min-width: 768px) {
-    .modal-body-split { flex-direction: row; }
-    .modal-pane { flex: 1; width: 50%; }
-}
+.view-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.view-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 0.9em; }
+.view-toggle-btn.active { background: rgba(88, 166, 255, 0.1); color: var(--note-accent); border-color: var(--note-accent); }
+
+/* Formato Cuadrícula (Default) */
+.notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.note-card { background: var(--note-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; display: flex; flex-direction: column; max-height: 350px; overflow: hidden; }
+.note-card:hover { transform: perspective(1000px) translateY(-8px) rotateX(3deg) rotateY(-2deg) scale(1.02); box-shadow: -5px 15px 25px rgba(0,0,0,0.5), 0 0 15px rgba(88, 166, 255, 0.15); border-color: rgba(88, 166, 255, 0.4); }
+
+/* Formato Lista Detallada */
+.notes-grid.list-view { grid-template-columns: 1fr; gap: 15px; }
+.notes-grid.list-view .note-card { flex-direction: row; max-height: 150px; align-items: center; padding: 15px 20px; }
+.notes-grid.list-view .note-card:hover { transform: perspective(1000px) translateX(10px) scale(1.01); }
+.notes-grid.list-view .card-header { width: 250px; flex-shrink: 0; margin-bottom: 0; border-right: 1px solid #30363d; padding-right: 15px; margin-right: 15px; }
+.notes-grid.list-view .card-body { flex-grow: 1; max-height: 100%; mask-image: none; -webkit-mask-image: none; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.notes-grid.list-view .card-footer { width: 150px; flex-shrink: 0; text-align: right; margin-top: 0; border-left: 1px solid #30363d; padding-left: 15px; margin-left: 15px; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 5px; }
+
+/* ==========================================================================
+   8. FIX DEL MODAL (Centrado Absoluto)
+   ========================================================================== */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); }
+.modal-content { background: var(--note-card); width: 95%; max-width: 900px; margin: auto; border-radius: 12px; border: 1px solid rgba(88,166,255,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.7); max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-sizing: border-box; }
+.modal-body-split { display: flex; flex-direction: column; gap: 20px; padding: 20px; overflow-y: auto; flex-grow: 1; }
+@media(min-width: 768px) { .modal-body-split { flex-direction: row; } .modal-pane { flex: 1; width: 50%; } }
 .modal-pane { display: flex; flex-direction: column; gap: 10px; }
 .preview-box { background: #0d1117; border: 1px dashed #30363d; border-radius: 8px; padding: 15px; flex-grow: 1; overflow-y: auto; }
