@@ -7,32 +7,31 @@ let isDevModeActive = false;
 let isInspectorActive = false;
 let currentTargetElement = null;
 let currentSelectorTarget = null;
+let isOverridingText = false; // CANDADO ANTIBUCLES
 
-// Extracción segura de BBDD
+// Bases de datos locales seguras
 let dynamicStylesDB = {};
 let dynamicContentDB = {};
 try {
     dynamicStylesDB = JSON.parse(localStorage.getItem('dev_dynamic_styles')) || {};
     dynamicContentDB = JSON.parse(localStorage.getItem('dev_dynamic_content')) || {};
-} catch (e) {
+} catch (error) {
     localStorage.removeItem('dev_dynamic_styles');
     localStorage.removeItem('dev_dynamic_content');
 }
 
 export function initDevMode() {
-    console.log("🛠️ DevMode Inicializado. Presiona Alt + Shift + D para abrir.");
-    
     injectDynamicStyleSheet();
     applyContentOverrides();
     
-    // Vigilante de DOM (Re-inyecta textos si cambia de pestaña)
+    // Vigilante del DOM con Candado Antibucle
     const observer = new MutationObserver(() => applyContentOverrides());
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // FIX 1: Enlazar sincronización bidireccional y PREVIEW EN TIEMPO REAL
+    // Enlazador en tiempo real
     bindColorSyncEvents();
     
-    // Checkbox Animaciones
+    // Controlador de Checkbox de Animaciones
     const animCheck = document.getElementById('devAnimEnable');
     if(animCheck) {
         animCheck.addEventListener('change', (e) => {
@@ -40,6 +39,7 @@ export function initDevMode() {
         });
     }
 
+    // Atajo de teclado universal
     document.addEventListener('keydown', (e) => {
         if (e.altKey && e.shiftKey && (e.code === 'KeyD' || e.key.toLowerCase() === 'd')) {
             e.preventDefault();
@@ -54,34 +54,34 @@ export function initDevMode() {
     });
 }
 
+// ==========================================
+// FIX 1: LÓGICA DE TIEMPO REAL PARA COLORES
+// ==========================================
 function bindColorSyncEvents() {
-    // Sincroniza Color Picker <-> Input Texto y aplica el estilo al DOM en vivo
-    const sync = (colorInputId, textInputId, cssProp) => {
-        const colorInput = document.getElementById(colorInputId);
-        const textInput = document.getElementById(textInputId);
+    const sync = (colorId, textId, cssProp) => {
+        const colorInput = document.getElementById(colorId);
+        const textInput = document.getElementById(textId);
         if(!colorInput || !textInput) return;
 
         colorInput.addEventListener('input', (e) => {
             textInput.value = e.target.value;
-            if (currentTargetElement) {
-                currentTargetElement.style[cssProp] = e.target.value;
-            }
+            if(currentTargetElement) currentTargetElement.style.setProperty(cssProp, e.target.value, 'important');
         });
         
         textInput.addEventListener('input', (e) => {
-            if (currentTargetElement) {
-                currentTargetElement.style[cssProp] = e.target.value;
-            }
-            if(e.target.value.startsWith('#') && e.target.value.length === 7) {
+            if(currentTargetElement) currentTargetElement.style.setProperty(cssProp, e.target.value, 'important');
+            if(e.target.value.match(/^#[0-9A-Fa-f]{6}$/)) {
                 colorInput.value = e.target.value;
             }
         });
     };
-    sync('devBgColor', 'devBgText', 'backgroundColor');
+    // Sincronizamos usando las propiedades CSS reales
+    sync('devBgColor', 'devBgText', 'background-color');
     sync('devTextColor', 'devTextText', 'color');
-    sync('devBorderColor', 'devBorderText', 'borderColor');
+    sync('devBorderColor', 'devBorderText', 'border-color');
 }
 
+// AUTENTICACIÓN
 window.authenticateDev = () => {
     const user = document.getElementById('devUser').value;
     const pass = document.getElementById('devPass').value;
@@ -101,7 +101,8 @@ window.closeDevLogin = () => { document.getElementById('devLoginModal').style.di
 window.closeDevPanel = () => { 
     const panel = document.getElementById('devEditorPanel');
     if(panel) panel.style.display = 'none'; 
-    deactivateInspector(); isDevModeActive = false; 
+    deactivateInspector(); 
+    isDevModeActive = false; 
 };
 
 // ==========================================
@@ -148,79 +149,66 @@ function handleDevClick(e) {
 }
 
 // ==========================================
-// LECTURA DE ELEMENTOS AL PANEL
+// FIX 2: ALGORITMOS SEGUROS DE EXTRACCIÓN
 // ==========================================
-function getShorthand(computed, type) {
-    if (type === 'padding') {
-        if(computed.padding && computed.padding !== '') return computed.padding;
-        return `${computed.paddingTop} ${computed.paddingRight} ${computed.paddingBottom} ${computed.paddingLeft}`.replace(/ 0px/g, ' 0');
+function getSafeSelector(el) {
+    if (!el || !el.tagName) return '*';
+    
+    // Evitar IDs que empiezan con números (Crashean el CSS)
+    if (el.id && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(el.id)) {
+        return `#${el.id}`;
     }
-    if (type === 'radius') {
-        if(computed.borderRadius && computed.borderRadius !== '') return computed.borderRadius;
-        return `${computed.borderTopLeftRadius} ${computed.borderTopRightRadius} ${computed.borderBottomRightRadius} ${computed.borderBottomLeftRadius}`;
+    
+    // Usar clases válidas
+    const classes = Array.from(el.classList).filter(c => !c.startsWith('dev-') && c !== 'active' && /^[a-zA-Z_]/.test(c));
+    if (classes.length > 0) {
+        return el.tagName.toLowerCase() + '.' + classes.join('.');
     }
-    return '';
+    
+    return el.tagName.toLowerCase();
 }
 
 function rgbToStrictHex(rgba) {
-    // Si es transparente o vacío, forzar a negro para que el <input type="color"> no crashee
-    if (!rgba || rgba === 'rgba(0, 0, 0, 0)' || rgba === 'transparent') return '#000000';
-    if (rgba.startsWith('#')) return rgba.substring(0, 7); // Limitar a 6 caracteres (7 con el #)
-    
+    if (!rgba || rgba === 'rgba(0, 0, 0, 0)' || rgba === 'transparent') return '';
+    if (rgba.startsWith('#')) return rgba.substring(0, 7);
     const rgb = rgba.match(/\d+/g);
-    if (!rgb || rgb.length < 3) return '#000000';
-    
-    const r = parseInt(rgb[0]).toString(16).padStart(2, '0');
-    const g = parseInt(rgb[1]).toString(16).padStart(2, '0');
-    const b = parseInt(rgb[2]).toString(16).padStart(2, '0');
-    return `#${r}${g}${b}`;
+    if (!rgb || rgb.length < 3) return '';
+    return `#${parseInt(rgb[0]).toString(16).padStart(2, '0')}${parseInt(rgb[1]).toString(16).padStart(2, '0')}${parseInt(rgb[2]).toString(16).padStart(2, '0')}`;
 }
 
 function loadElementDataIntoPanel(element) {
-    // Generar Selector
-    if (element.id && element.id !== '') { 
-        currentSelectorTarget = `#${element.id}`; 
-    } else if (element.classList.length > 0) {
-        let cleanClasses = Array.from(element.classList).filter(c => !c.includes('dev-') && !c.includes('active'));
-        currentSelectorTarget = cleanClasses.length > 0 ? `.${cleanClasses[0]}` : element.tagName.toLowerCase();
-    } else { 
-        currentSelectorTarget = element.tagName.toLowerCase(); 
-    }
-    
+    // 1. Selector Seguro
+    currentSelectorTarget = getSafeSelector(element);
     document.getElementById('devTargetSelector').innerText = currentSelectorTarget;
+    
+    // 2. Extraer CSS
     const computed = window.getComputedStyle(element);
     
-    // Cargar Colores (Asegurando hex estricto para los inputs)
-    const bgHex = rgbToStrictHex(computed.backgroundColor); 
-    const textHex = rgbToStrictHex(computed.color);
-    const bcHex = rgbToStrictHex(computed.borderColor);
-    
-    document.getElementById('devBgColor').value = bgHex;
+    document.getElementById('devBgColor').value = rgbToStrictHex(computed.backgroundColor) || '#000000';
     document.getElementById('devBgText').value = computed.backgroundColor;
-    document.getElementById('devTextColor').value = textHex;
+    document.getElementById('devTextColor').value = rgbToStrictHex(computed.color) || '#ffffff';
     document.getElementById('devTextText').value = computed.color;
-    document.getElementById('devBorderColor').value = bcHex;
+    document.getElementById('devBorderColor').value = rgbToStrictHex(computed.borderColor) || '#000000';
     document.getElementById('devBorderText').value = computed.borderColor;
     
-    document.getElementById('devBorderBottom').value = computed.borderBottom;
-    document.getElementById('devBorderRadius').value = getShorthand(computed, 'radius');
-    document.getElementById('devPadding').value = getShorthand(computed, 'padding');
-    document.getElementById('devFontSize').value = computed.fontSize;
+    document.getElementById('devBorderBottom').value = computed.borderBottom || '';
+    document.getElementById('devBorderRadius').value = computed.borderRadius || '';
+    document.getElementById('devPadding').value = computed.padding || '';
+    document.getElementById('devFontSize').value = computed.fontSize || '';
 
-    // FIX 2: Lógica Segura para mostrar Caja de Texto (Lista Blanca de Tags)
-    const textEditableTags = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','BUTTON','LABEL','STRONG','EM','LI','TH','TD', 'DIV'];
+    // 3. Lógica Lista Blanca para Textos (Para que aparezca siempre en H1, H2, etc.)
     const tagName = element.tagName.toUpperCase();
+    const textEditableTags = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','BUTTON','LABEL','STRONG','EM','LI','TH','TD'];
     
-    // Mostramos si está en la lista blanca, pero no si es un Div con demasiados componentes complejos hijos
-    if(textEditableTags.includes(tagName) && element.children.length < 3) {
+    if(textEditableTags.includes(tagName)) {
         document.getElementById('devTextGroup').style.display = 'flex';
-        document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.innerText.trim();
+        document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.textContent.trim();
     } else {
         document.getElementById('devTextGroup').style.display = 'none';
         document.getElementById('devElementText').value = '';
     }
 
-    // FIX 3: Lógica para mostrar Animaciones (Revisa si él o su padre es un botón)
+    // 4. Lógica de Animaciones Ampliada
     const isClickable = ['BUTTON', 'A'].includes(tagName) || element.classList.contains('tab-btn') || element.classList.contains('md-btn') || computed.cursor === 'pointer' || element.closest('button') !== null;
     
     if (isClickable) {
@@ -239,13 +227,12 @@ function loadElementDataIntoPanel(element) {
 }
 
 // ==========================================
-// GUARDAR Y APLICAR AL DOM
+// GUARDAR Y APLICAR
 // ==========================================
 
 window.applyAndSaveDevStyles = () => {
     if (!currentSelectorTarget) return alert("Selecciona un elemento primero.");
     
-    // 1. Guardar Estilos (Las variables usan nombres CSS correctos)
     const newStyles = {
         'background-color': document.getElementById('devBgText').value,
         'color': document.getElementById('devTextText').value,
@@ -258,10 +245,11 @@ window.applyAndSaveDevStyles = () => {
 
     if(!dynamicStylesDB[currentSelectorTarget]) dynamicStylesDB[currentSelectorTarget] = {};
     for (let property in newStyles) {
-        if(newStyles[property].trim() !== '') dynamicStylesDB[currentSelectorTarget][property] = newStyles[property];
+        if(newStyles[property].trim() !== '' && newStyles[property] !== 'rgba(0, 0, 0, 0)' && newStyles[property] !== 'transparent') {
+            dynamicStylesDB[currentSelectorTarget][property] = newStyles[property];
+        }
     }
 
-    // 2. Guardar Animaciones
     if (document.getElementById('devAnimGroup').style.display === 'flex') {
         const activeSel = currentSelectorTarget + ':active';
         if (document.getElementById('devAnimEnable').checked) {
@@ -283,7 +271,7 @@ window.applyAndSaveDevStyles = () => {
     localStorage.setItem('dev_dynamic_styles', JSON.stringify(dynamicStylesDB));
     injectDynamicStyleSheet();
 
-    // 3. Guardar Textos
+    // Guardado de Texto
     if(document.getElementById('devTextGroup').style.display !== 'none') {
         const newText = document.getElementById('devElementText').value;
         if(newText.trim() !== '') {
@@ -295,15 +283,14 @@ window.applyAndSaveDevStyles = () => {
         applyContentOverrides();
     }
     
-    // Feedback
     const btn = document.querySelector('.dev-btn'); 
     const originalText = btn.innerText;
-    btn.innerText = '✅ ¡Guardado!'; 
+    btn.innerText = '✅ ¡Guardado Exitosamente!'; 
     setTimeout(() => btn.innerText = originalText, 1500);
 };
 
 // ==========================================
-// INYECTORES
+// INYECTORES Y CANDADOS
 // ==========================================
 
 function injectDynamicStyleSheet() {
@@ -325,23 +312,28 @@ function injectDynamicStyleSheet() {
     styleTag.innerHTML = cssString;
 }
 
+// FIX 3: Candado Antibucle usando textContent
 function applyContentOverrides() {
+    if(isOverridingText) return; // Si ya está escribiendo, ignorar la mutación
+    isOverridingText = true;
+    
     for(let selector in dynamicContentDB) {
         try {
             document.querySelectorAll(selector).forEach(el => {
-                // Solo reemplazar si es diferente para evitar ciclos infinitos del MutationObserver
-                if(el.innerHTML !== dynamicContentDB[selector]) {
-                    el.innerHTML = dynamicContentDB[selector];
+                if(el.textContent.trim() !== dynamicContentDB[selector].trim()) {
+                    el.textContent = dynamicContentDB[selector];
                 }
             });
         } catch(e) {}
     }
+    
+    // Liberar candado después de que el DOM asimile el cambio
+    setTimeout(() => { isOverridingText = false; }, 50);
 }
 
 // ==========================================
 // REINICIOS
 // ==========================================
-
 window.resetTargetStyles = () => {
     if(!currentSelectorTarget) return;
     delete dynamicStylesDB[currentSelectorTarget]; 
@@ -352,7 +344,7 @@ window.resetTargetStyles = () => {
     localStorage.setItem('dev_dynamic_content', JSON.stringify(dynamicContentDB));
     
     injectDynamicStyleSheet(); 
-    window.location.reload(); // Recarga para limpiar el DOM de textos huérfanos
+    window.location.reload(); 
 };
 
 window.factoryResetStyles = () => {
