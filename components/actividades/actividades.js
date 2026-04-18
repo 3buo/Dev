@@ -1,5 +1,6 @@
 import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 
+// --- GESTIÓN DE TAREAS SIMPLES ---
 window.addTask = () => { 
     const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
     if (input.value.trim() === '') return alert('Escribe la actividad.'); 
@@ -33,6 +34,7 @@ window.renderTasks = () => {
     }); 
 };
 
+// --- GESTIÓN DE HÁBITOS RECURRENTES ---
 window.addRecurringTask = () => { 
     const input = document.getElementById('recTaskInput');
     const dateInput = document.getElementById('recTaskDate').value;
@@ -66,14 +68,10 @@ window.addRecurringTask = () => {
 
     newTask.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
     
-    // Si la fecha elegida está en el pasado, "false" hace que el sistema calcule los ciclos 
-    // hasta encontrar la próxima fecha válida en el futuro.
-    if (baseDate <= new Date()) {
-        window.rescheduleRecurring(newTask, false); 
-    } else {
-        window.rescheduleRecurring(newTask, true); 
-    }
+    if (baseDate <= new Date()) window.rescheduleRecurring(newTask, false); 
+    else window.rescheduleRecurring(newTask, true); 
 
+    if(!state.recurringTasks) state.recurringTasks = [];
     state.recurringTasks.push(newTask); 
     
     input.value = ''; document.getElementById('recTaskDate').value = ''; document.getElementById('recTaskTime').value = ''; 
@@ -126,7 +124,6 @@ window.openEditHabitModal = (index) => {
     document.getElementById('editHabitIndex').value = index;
     document.getElementById('editHabitName').value = task.text;
     
-    // Extraer fecha y hora actual para el Modal
     const d = new Date(task.nextTrigger);
     document.getElementById('editHabitDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     document.getElementById('editHabitTime').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
@@ -155,17 +152,15 @@ window.saveEditHabit = () => {
 
     task.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
 
-    // Reprogramar si se eligió el pasado accidentalmente
     if (baseDate <= new Date()) window.rescheduleRecurring(task, false); 
     else window.rescheduleRecurring(task, true); 
 
-    saveDataToCloud();
-    window.closeEditHabitModal();
-    window.renderRecurringTasks();
+    saveDataToCloud(); window.closeEditHabitModal(); window.renderRecurringTasks();
 };
 
 window.renderRecurringTasks = () => { 
     const list = document.getElementById('recurringList'); if(!list) return; list.innerHTML = ''; 
+    if(!state.recurringTasks) state.recurringTasks = [];
     state.recurringTasks.forEach((rec, index) => { 
         const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; 
         checkbox.onchange = () => { 
@@ -200,9 +195,115 @@ window.renderRecurringTasks = () => {
     }); 
 };
 
+
+// --- SISTEMA DE CALENDARIO ---
+let calDate = new Date();
+
+window.openCalendarModal = () => {
+    calDate = new Date(); // Reset al mes actual
+    document.getElementById('calendarModal').style.display = 'flex';
+    window.renderCalendar();
+};
+
+window.closeCalendarModal = () => {
+    document.getElementById('calendarModal').style.display = 'none';
+};
+
+window.changeMonth = (dir) => {
+    calDate.setMonth(calDate.getMonth() + dir);
+    window.renderCalendar();
+};
+
+window.renderCalendar = () => {
+    const grid = document.getElementById('calendarGrid');
+    const title = document.getElementById('calendarMonthYear');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    title.innerText = `${monthNames[month]} ${year}`;
+    
+    // Encabezados de días
+    ['D', 'L', 'M', 'X', 'J', 'V', 'S'].forEach(d => {
+        let el = document.createElement('div');
+        el.innerText = d;
+        el.style.textAlign = 'center';
+        el.style.fontWeight = 'bold';
+        el.style.color = 'var(--secondary)';
+        el.style.fontSize = '0.8em';
+        el.style.marginBottom = '5px';
+        grid.appendChild(el);
+    });
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Espacios vacíos antes del día 1
+    for(let i=0; i<firstDay; i++) {
+        let el = document.createElement('div');
+        grid.appendChild(el);
+    }
+    
+    // Dibujar días
+    for(let i=1; i<=daysInMonth; i++) {
+        let el = document.createElement('div');
+        el.innerText = i;
+        el.className = 'cal-day';
+        
+        // Formato YYYY-MM-DD local
+        let currentDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        
+        let dayActivities = [];
+        
+        // Buscar Tareas Simples
+        if (state.tasks) {
+            state.tasks.forEach(t => {
+                if(!t.completed && t.date === currentDateStr) {
+                    dayActivities.push(`📌 ${t.text}`);
+                }
+            });
+        }
+        
+        // Buscar Próximos Hábitos (El primer gatillo visible de cada hábito)
+        if (state.recurringTasks) {
+            state.recurringTasks.forEach(r => {
+                if(r.nextTrigger && r.nextTrigger.startsWith(currentDateStr)) {
+                    let time = new Date(r.nextTrigger).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+                    dayActivities.push(`🔄 ${r.text} (${time})`);
+                }
+            });
+        }
+        
+        // Si hay actividades, encender animación y tooltip
+        if(dayActivities.length > 0) {
+            el.classList.add('has-activities');
+            el.innerHTML = `${i} <div class="cal-tooltip">${dayActivities.join('<br>')}</div>`;
+        }
+        
+        // Marcar el día de "HOY" visualmente
+        const hoy = new Date();
+        if (year === hoy.getFullYear() && month === hoy.getMonth() && i === hoy.getDate()) {
+            el.style.borderBottom = "3px solid var(--primary)";
+        }
+
+        grid.appendChild(el);
+    }
+};
+
 export function init() {
     window.renderTasks();
     window.renderRecurringTasks();
 }
 
-window.addEventListener('stateChanged', () => { if(document.getElementById('pendingList')) init(); });
+window.addEventListener('stateChanged', () => {
+    if(document.getElementById('pendingList')) {
+        init();
+        if(document.getElementById('calendarModal').style.display === 'flex') {
+            window.renderCalendar();
+        }
+    }
+});
