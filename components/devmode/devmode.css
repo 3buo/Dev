@@ -1,0 +1,125 @@
+/* ==========================================================================
+   DEV MODE - INTERFAZ DE CONSTRUCTOR VISUAL
+   ========================================================================== */
+
+/* Resaltado al pasar el ratón (Modo Inspector) */
+.dev-hover-target {
+    outline: 2px dashed #00d2ff !important;
+    outline-offset: 2px !important;
+    cursor: crosshair !important;
+}
+
+/* Resaltado al hacer clic (Elemento Seleccionado) */
+.dev-selected-target {
+    outline: 3px solid #ff4d4d !important;
+    outline-offset: 2px !important;
+}
+
+/* Panel flotante estilo Figma/Builder.io */
+.dev-panel {
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 320px;
+    background: rgba(13, 17, 23, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(88, 166, 255, 0.4);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    z-index: 999999;
+    color: #c9d1d9;
+    font-family: 'Inter', sans-serif;
+    display: none; /* Oculto por defecto */
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dev-panel-header {
+    background: #161b22;
+    padding: 15px;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    color: white;
+}
+
+.dev-panel-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.dev-target-badge {
+    background: rgba(88, 166, 255, 0.1);
+    color: #58a6ff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.85em;
+    word-break: break-all;
+}
+
+/* Controles de edición */
+.dev-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.dev-control-group label {
+    font-size: 0.8em;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dev-input {
+    background: #010409;
+    border: 1px solid #30363d;
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    font-family: monospace;
+    outline: none;
+    transition: 0.2s;
+}
+
+.dev-input:focus {
+    border-color: #58a6ff;
+}
+
+.dev-color-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.dev-color-input {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    background: transparent;
+}
+
+.dev-btn {
+    background: #238636;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.2s;
+}
+
+.dev-btn:hover { background: #2ea043; }
+.dev-btn-danger { background: transparent; border: 1px solid #da3633; color: #da3633; }
+.dev-btn-danger:hover { background: #da3633; color: white; }
