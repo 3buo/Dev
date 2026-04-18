@@ -2,20 +2,17 @@
    DEV MODE - INTERFAZ DE CONSTRUCTOR VISUAL
    ========================================================================== */
 
-/* Resaltado al pasar el ratón (Modo Inspector) */
 .dev-hover-target {
     outline: 2px dashed #00d2ff !important;
     outline-offset: 2px !important;
     cursor: crosshair !important;
 }
 
-/* Resaltado al hacer clic (Elemento Seleccionado) */
 .dev-selected-target {
     outline: 3px solid #ff4d4d !important;
     outline-offset: 2px !important;
 }
 
-/* Panel flotante principal */
 .dev-panel {
     position: fixed; right: 20px; top: 20px; width: 340px;
     background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(10px);
@@ -36,7 +33,6 @@
     max-height: 75vh; overflow-y: auto;
 }
 
-/* Scrollbar personalizada */
 .dev-panel-body::-webkit-scrollbar { width: 6px; }
 .dev-panel-body::-webkit-scrollbar-track { background: transparent; }
 .dev-panel-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
@@ -64,7 +60,6 @@
     cursor: pointer; background: transparent; padding: 0;
 }
 
-/* Cajas destacadas (Animaciones y Textos) */
 .dev-feature-box {
     background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1);
     padding: 12px; border-radius: 8px; margin-top: 5px;
@@ -78,6 +73,5 @@
     border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; text-align: center;
 }
 .dev-btn:hover { background: #2ea043; }
-
 .dev-btn-danger { background: transparent; border: 1px solid #da3633; color: #da3633; margin-top: 0; }
 .dev-btn-danger:hover { background: #da3633; color: white; }
