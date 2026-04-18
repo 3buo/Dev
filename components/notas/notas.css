@@ -1,246 +1,107 @@
-/* Importar una fuente única solo para este módulo */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-
-/* =========================================
-   ESTILO GLOBAL DEL FONDO PARA ESTA PESTAÑA
-   ========================================= */
-body[data-theme="notas"] {
-    background-color: #121212; /* Fondo principal oscuro */
-    /* Un degradado radial morado profundo en la parte superior para dar misterio/profundidad */
-    background-image: radial-gradient(circle at top center, #2c1b4d 15%, #121212 60%);
-    background-attachment: fixed; /* Evita que el gradiente se mueva al hacer scroll */
+/* ==========================================================================
+   1. VARIABLES Y EFECTOS PSICOLÓGICOS 3D (2026 UI Trends)
+   ========================================================================== */
+:root {
+    --note-bg: #0d1117;
+    --note-card: #161b22;
+    --note-accent: #58a6ff;
+    --note-glow: rgba(88, 166, 255, 0.4);
+    --code-bg: #010409;
+    --table-border: #30363d;
 }
 
-/* 1. PERSONALIZACIÓN DEL BOTÓN DE LA PESTAÑA SUPERIOR */
-#tab-notas.active {
-    background-color: #2c1b4d !important;
-    color: #bb86fc !important; /* Morado eléctrico/neón */
-    border-bottom: 3px solid #bb86fc !important;
-    font-family: 'Inter', sans-serif !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px;
+.notes-wrapper {
+    background: radial-gradient(circle at top, #1f242c 0%, var(--note-bg) 70%);
+    min-height: 100vh; padding: 20px; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif;
+    perspective: 1200px;
 }
 
-/* 2. ESTILO BASE DEL MÓDULO (Aislado) */
-#view-notas {
-    font-family: 'Inter', sans-serif;
-    color: #e0e0e0; /* Texto base claro */
+/* ==========================================================================
+   2. RED DE PENSAMIENTO (Canvas)
+   ========================================================================== */
+.graph-container {
+    width: 100%; height: 150px; background: #000; border-radius: 12px; margin-bottom: 25px;
+    position: relative; overflow: hidden; border: 1px solid rgba(88, 166, 255, 0.2);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.4);
 }
+canvas#mindGraph { display: block; width: 100%; height: 100%; }
+.graph-overlay { position: absolute; top: 15px; left: 20px; color: white; pointer-events: none; }
 
-/* 3. CONTENEDORES (Fondo y Bordes) */
-#view-notas .container {
-    background: linear-gradient(145deg, #1e1e24 0%, #18181c 100%);
-    border: 1px solid #3a3a45;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+/* ==========================================================================
+   3. CÁPSULA DEL TIEMPO
+   ========================================================================== */
+.time-capsule {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(88, 166, 255, 0.05));
+    border-left: 4px solid #8a2be2; border-radius: 8px; padding: 15px 20px; margin-bottom: 25px;
+    backdrop-filter: blur(10px); transform-style: preserve-3d;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;
 }
+.time-capsule:hover { transform: translateZ(20px) rotateX(2deg); box-shadow: 0 15px 30px rgba(138, 43, 226, 0.2); }
 
-/* 4. TÍTULOS DE SEGMENTOS */
-#view-notas h2 {
-    color: #bb86fc;
-    border-bottom: 1px dashed #3a3a45;
-    text-transform: uppercase;
-    font-size: 1.1em;
-    letter-spacing: 1px;
+/* ==========================================================================
+   4. EDITOR ZEN
+   ========================================================================== */
+.zen-editor {
+    background: var(--note-card); border-radius: 12px; padding: 20px; margin-bottom: 30px;
+    border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
 }
+.zen-editor:focus-within { transform: translateZ(10px); border-color: var(--note-accent); box-shadow: 0 12px 40px var(--note-glow); }
 
-/* 5. INPUTS, TEXTAREAS Y CAMPOS DE TEXTO */
-#view-notas input[type="text"], 
-#view-notas select,
-#view-notas textarea {
-    background: #000000;
-    border: 1px solid #555;
-    color: #fff;
-    border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
-}
+.zen-input-title { width: 100%; background: transparent; border: none; color: white; font-size: 1.4em; font-weight: bold; outline: none; margin-bottom: 10px; padding: 5px 0; box-sizing: border-box; }
+.zen-input-body { width: 100%; background: transparent; border: none; color: #c9d1d9; font-size: 1.05em; outline: none; resize: vertical; min-height: 80px; line-height: 1.6; box-sizing: border-box; }
 
-#view-notas input[type="text"]:focus, 
-#view-notas select:focus,
-#view-notas textarea:focus {
-    outline: none;
-    border-color: #bb86fc;
-    box-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
-}
+/* ==========================================================================
+   5. TABLAS DINÁMICAS (Estilo Excel)
+   ========================================================================== */
+.note-table-container { width: 100%; overflow-x: auto; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--table-border); }
+.note-table { width: 100%; border-collapse: collapse; font-size: 0.9em; background: #0d1117; color: #c9d1d9; }
+.note-table th, .note-table td { border: 1px solid var(--table-border); padding: 0; min-width: 100px; }
+.note-table th { background: #161b22; font-weight: bold; }
+.note-table input { width: 100%; background: transparent; border: none; color: inherit; padding: 8px; box-sizing: border-box; outline: none; font-family: inherit; }
+.note-table input:focus { background: rgba(88, 166, 255, 0.1); }
+.table-controls { display: flex; gap: 8px; margin-bottom: 10px; }
+.table-btn { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; cursor: pointer; transition: 0.2s; }
+.table-btn:hover { background: #30363d; color: white; }
 
-/* 6. BOTONES GLOBALES DEL MÓDULO */
-#view-notas button {
-    background-color: #bb86fc;
-    color: #000;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(187, 134, 252, 0.3);
-    transition: transform 0.1s ease, background 0.3s;
-    font-weight: bold;
-}
+/* ==========================================================================
+   6. TARJETAS Y AUTO-MARKDOWN
+   ========================================================================== */
+.notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.note-card { background: var(--note-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); transform-style: preserve-3d; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; display: flex; flex-direction: column; max-height: 350px; overflow: hidden; }
+.note-card:hover { transform: translateY(-8px) rotateX(3deg) rotateY(-2deg) scale(1.02); box-shadow: -5px 15px 25px rgba(0,0,0,0.5), 0 0 15px rgba(88, 166, 255, 0.15); border-color: rgba(88, 166, 255, 0.4); }
 
-#view-notas button:hover {
-    background-color: #9965f4;
-    transform: translateY(-2px);
-}
+.md-content h3 { margin: 0 0 10px 0; color: white; font-size: 1.2em; font-weight: 600; }
+.md-content p { margin: 0 0 10px 0; color: #8b949e; line-height: 1.5; font-size: 0.95em; }
+.md-content strong { color: var(--note-accent); }
+.md-code-block { background: var(--code-bg); padding: 10px; border-radius: 6px; font-family: monospace; color: #a5d6ff; overflow-x: auto; font-size: 0.85em; border: 1px solid var(--table-border); margin-bottom: 10px; }
+.md-code-inline { background: rgba(110, 118, 129, 0.4); padding: 2px 5px; border-radius: 4px; color: #ff7b72; font-family: monospace; }
+.tag-chip { display: inline-block; background: rgba(88, 166, 255, 0.1); color: var(--note-accent); padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold; margin-right: 5px; margin-top: auto; border: 1px solid rgba(88, 166, 255, 0.3); }
 
-/* 7. ESTILOS DE CATEGORÍAS (Las carpetas principales) */
-#view-notas .note-category-box {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    overflow: hidden;
-}
+/* Botones principales */
+.btn-primary { background: var(--note-accent); color: #000; font-weight: bold; padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
+.btn-primary:hover { background: white; box-shadow: 0 0 15px var(--note-glow); }
 
-#view-notas .category-header {
-    background: #2a2a2a;
-    padding: 10px 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #333;
+/* ==========================================================================
+   7. FIX DEL MODAL (Alineación perfecta)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999;
+    display: flex; align-items: center; justify-content: center; /* Centrado absoluto */
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
 }
-
-#view-notas .category-header h3 {
-    margin: 0;
-    color: #bb86fc;
-    font-size: 1.1em;
-    transition: color 0.2s;
+.modal-content {
+    background: var(--note-card); width: 90%; max-width: 800px;
+    border-radius: 12px; border: 1px solid rgba(88,166,255,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+    max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; position: relative;
+    box-sizing: border-box;
 }
-
-#view-notas .category-header h3:hover {
-    color: #d4b5ff;
+.modal-body-split {
+    display: flex; flex-direction: column; gap: 20px; padding: 20px; overflow-y: auto; flex-grow: 1;
 }
-
-#view-notas .cat-count {
-    background: #444;
-    color: white;
-    font-size: 0.75em;
-    padding: 2px 8px;
-    border-radius: 12px;
-    margin-left: 10px;
+@media(min-width: 768px) {
+    .modal-body-split { flex-direction: row; }
+    .modal-pane { flex: 1; width: 50%; }
 }
-
-#view-notas .btn-del-cat {
-    background: transparent;
-    padding: 5px;
-    font-size: 1.2em;
-    border: none;
-    box-shadow: none;
-}
-
-/* 8. ZONAS DRAG & DROP Y NOTAS INDIVIDUALES */
-#view-notas .notes-drag-list {
-    min-height: 60px; 
-    padding: 10px;
-    background: #151515;
-    transition: all 0.3s ease;
-}
-
-#view-notas .empty-cat-msg {
-    text-align: center;
-    color: #555;
-    font-style: italic;
-    padding: 15px;
-    border: 2px dashed #333;
-    border-radius: 6px;
-    pointer-events: none; 
-}
-
-#view-notas .draggable-note {
-    cursor: grab;
-    background: #22252e; /* Fondo de cada nota */
-    border-radius: 8px;
-    margin-bottom: 12px;
-    /* El borde izquierdo usa el color que hayas elegido en la app, 
-       pero este es el color de fallback si algo falla */
-    border-left: 4px solid #bb86fc; 
-    transition: box-shadow 0.3s;
-}
-
-#view-notas .draggable-note:active {
-    cursor: grabbing;
-}
-
-/* El cuadro fantasma que aparece mientras arrastras una nota */
-.sortable-ghost {
-    opacity: 0.3;
-    background-color: #bb86fc !important;
-    color: black !important;
-    border: 1px dashed white;
-}
-
-/* 9. MAGIA: CATEGORÍAS MINIMIZADAS (Cuando colapsas una carpeta) */
-#view-notas .notes-drag-list.collapsed {
-    min-height: 45px !important;
-    height: 45px;
-    padding: 0 !important;
-    border: 2px dashed #444;
-    background: #1a1a1a;
-    position: relative;
-    overflow: hidden;
-    margin: 10px;
-    border-radius: 6px;
-}
-
-#view-notas .notes-drag-list.collapsed::after {
-    content: '📂 Categoría minimizada (Suelta notas aquí)';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #666;
-    font-size: 0.85em;
-    pointer-events: none;
-}
-
-#view-notas .notes-drag-list.collapsed > * {
-    display: none !important;
-}
-
-#view-notas .notes-drag-list.collapsed > .sortable-ghost {
-    display: block !important;
-    opacity: 0.5;
-    height: 100% !important;
-    margin: 0 !important;
-}
-
-/* 10. SELECTORES DE COLOR (Nuevas notas y notas existentes) */
-#view-notas .color-picker-wrapper {
-    width: 42px;
-    height: 42px;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid #555;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-}
-
-#view-notas #noteColor {
-    width: 150%;
-    height: 150%;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    background: transparent;
-}
-
-/* Selector circular dentro de la nota ya creada */
-#view-notas .inline-color-picker {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    overflow: hidden;
-    cursor: pointer;
-    background: transparent;
-}
-
-#view-notas .inline-color-picker::-webkit-color-swatch-wrapper {
-    padding: 0;
-}
-#view-notas .inline-color-picker::-webkit-color-swatch {
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 50%;
-}
+.modal-pane { display: flex; flex-direction: column; gap: 10px; }
+.preview-box { background: #0d1117; border: 1px dashed #30363d; border-radius: 8px; padding: 15px; flex-grow: 1; overflow-y: auto; }
