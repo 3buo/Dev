@@ -1,149 +1,71 @@
-<style>
-    /* ==========================================================================
-       1. VARIABLES Y EFECTOS PSICOLÓGICOS 3D (2026 UI Trends)
-       - Se usa "Perspective" para engañar al cerebro y dar peso físico a los datos.
-       ========================================================================== */
-    :root {
-        --note-bg: #0d1117;
-        --note-card: #161b22;
-        --note-accent: #58a6ff;
-        --note-glow: rgba(88, 166, 255, 0.4);
-        --code-bg: #010409;
-    }
-
-    .notes-wrapper {
-        background: radial-gradient(circle at top, #1f242c 0%, var(--note-bg) 70%);
-        min-height: 100vh; padding: 20px; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif;
-        perspective: 1200px; /* Profundidad 3D para el contenedor padre */
-    }
-
-    /* ==========================================================================
-       2. RED NEURONAL (MIND GRAPH)
-       ========================================================================== */
-    .graph-container {
-        width: 100%; height: 150px; background: #000; border-radius: 12px; margin-bottom: 25px;
-        position: relative; overflow: hidden; border: 1px solid rgba(88, 166, 255, 0.2);
-        box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.4);
-    }
-    canvas#mindGraph { display: block; width: 100%; height: 100%; }
-    .graph-overlay {
-        position: absolute; top: 15px; left: 20px; color: white; pointer-events: none;
-    }
-
-    /* ==========================================================================
-       3. CÁPSULA DEL TIEMPO (Efecto Tangible)
-       ========================================================================== */
-    .time-capsule {
-        background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(88, 166, 255, 0.05));
-        border-left: 4px solid #8a2be2; border-radius: 8px; padding: 15px 20px; margin-bottom: 25px;
-        backdrop-filter: blur(10px); transform-style: preserve-3d;
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;
-    }
-    .time-capsule:hover {
-        transform: translateZ(20px) rotateX(2deg);
-        box-shadow: 0 15px 30px rgba(138, 43, 226, 0.2);
-    }
-
-    /* ==========================================================================
-       4. EDITOR ZEN (Cero Fricción)
-       ========================================================================== */
-    .zen-editor {
-        background: var(--note-card); border-radius: 12px; padding: 20px; margin-bottom: 30px;
-        border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .zen-editor:focus-within {
-        transform: translateZ(10px); border-color: var(--note-accent);
-        box-shadow: 0 12px 40px var(--note-glow);
-    }
-    .zen-input-title {
-        width: 100%; background: transparent; border: none; color: white; font-size: 1.4em;
-        font-weight: bold; outline: none; margin-bottom: 10px; padding: 5px 0;
-    }
-    .zen-input-body {
-        width: 100%; background: transparent; border: none; color: #c9d1d9; font-size: 1.05em;
-        outline: none; resize: none; min-height: 80px; line-height: 1.6;
-    }
-    
-    /* ==========================================================================
-       5. TARJETAS 3D Y AUTO-MARKDOWN
-       ========================================================================== */
-    .notes-grid {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
-    }
-    .note-card {
-        background: var(--note-card); border-radius: 12px; padding: 20px;
-        border: 1px solid rgba(255,255,255,0.05); position: relative;
-        transform-style: preserve-3d; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        cursor: pointer; display: flex; flex-direction: column; max-height: 300px; overflow: hidden;
-    }
-    .note-card:hover {
-        transform: translateY(-8px) rotateX(3deg) rotateY(-2deg) scale(1.02);
-        box-shadow: -5px 15px 25px rgba(0,0,0,0.5), 0 0 15px rgba(88, 166, 255, 0.15);
-        border-color: rgba(88, 166, 255, 0.4);
-    }
-    
-    /* Renderizado de Markdown Seguro */
-    .md-content h3 { margin: 0 0 10px 0; color: white; font-size: 1.2em; }
-    .md-content p { margin: 0 0 10px 0; color: #8b949e; line-height: 1.5; font-size: 0.95em; }
-    .md-content strong { color: var(--note-accent); }
-    .md-code-block {
-        background: var(--code-bg); padding: 10px; border-radius: 6px; font-family: monospace;
-        color: #a5d6ff; overflow-x: auto; font-size: 0.85em; border: 1px solid #30363d;
-        margin-bottom: 10px; position: relative;
-    }
-    .md-code-inline { background: rgba(110, 118, 129, 0.4); padding: 2px 5px; border-radius: 4px; color: #ff7b72; font-family: monospace; }
-    
-    /* Auto-Etiquetas Semánticas */
-    .tag-chip {
-        display: inline-block; background: rgba(88, 166, 255, 0.1); color: var(--note-accent);
-        padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold;
-        margin-right: 5px; margin-top: auto; border: 1px solid rgba(88, 166, 255, 0.3);
-    }
-
-    .btn-save {
-        background: var(--note-accent); color: #000; font-weight: bold; padding: 8px 20px;
-        border-radius: 6px; border: none; cursor: pointer; float: right; margin-top: 10px; transition: 0.2s;
-    }
-    .btn-save:hover { background: white; box-shadow: 0 0 15px var(--note-glow); }
-</style>
+<link rel="stylesheet" href="components/notas/notas.css">
 
 <div class="notes-wrapper" id="view-notas">
 
     <div class="graph-container">
         <div class="graph-overlay">
-            <h3 style="margin:0; font-size:1.1em; text-shadow: 0 2px 4px black;">🌌 Tu Segundo Cerebro</h3>
+            <h3 style="margin:0; font-size:1.1em; text-shadow: 0 2px 4px black;">🌌 Red de pensamiento</h3>
             <span style="font-size: 0.75em; color: #8b949e;" id="graphStats">0 conexiones neuronales</span>
         </div>
         <canvas id="mindGraph"></canvas>
     </div>
 
     <div id="timeCapsule" class="time-capsule" style="display: none;" onclick="openTimeCapsule()">
-        <div style="font-size: 0.8em; color: #b392f0; font-weight: bold; margin-bottom: 5px;">⏳ Recuerdo Desbloqueado</div>
+        <div style="font-size: 0.8em; color: #b392f0; font-weight: bold; margin-bottom: 5px;">⏳ Recuerdo desbloqueado</div>
         <div id="tcContent" style="color: white; font-style: italic; font-size: 0.95em;">"Cargando..."</div>
     </div>
 
     <div class="zen-editor">
         <input type="text" id="noteTitle" class="zen-input-title" placeholder="Título de la nota...">
-        <textarea id="noteContent" class="zen-input-body" placeholder="Escribe aquí... Usa # para títulos, **negrita**, o ``` para código. La IA local lo organizará."></textarea>
-        <div style="overflow: hidden;">
-            <button class="btn-save" onclick="saveNote()">Guardar Nota</button>
+        <textarea id="noteContent" class="zen-input-body" placeholder="Escribe aquí... Usa # para títulos, **negrita**, o ``` para código."></textarea>
+        
+        <div style="margin-bottom: 10px;">
+            <button onclick="addMainTable()" class="table-btn">+ Añadir tabla Excel</button>
+        </div>
+        <div id="mainTablesContainer"></div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+            <button class="btn-primary" onclick="saveNote()">Guardar nota</button>
         </div>
     </div>
 
     <div class="notes-grid" id="notesGrid">
         </div>
 
-    <div id="noteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
-        <div class="zen-editor" style="width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; position: relative;">
-            <button onclick="closeNoteModal()" style="position: absolute; right: 15px; top: 15px; background: transparent; border: none; color: #8b949e; font-size: 1.2em; cursor: pointer;">✖</button>
-            <input type="hidden" id="editNoteId">
-            <input type="text" id="editNoteTitle" class="zen-input-title" style="margin-right: 30px;">
-            <textarea id="editNoteContent" class="zen-input-body" style="min-height: 200px;"></textarea>
+    <div id="noteModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div style="padding: 20px 20px 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px;">
+                <input type="text" id="editNoteTitle" class="zen-input-title" style="margin: 0;" placeholder="Título">
+                <button onclick="closeNoteModal()" style="background: transparent; border: none; color: #8b949e; font-size: 1.5em; cursor: pointer; line-height: 1;">✖</button>
+            </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #30363d;">
-                <button onclick="deleteNote()" style="background: #da3633; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer;">🗑️ Eliminar</button>
-                <button onclick="updateNote()" class="btn-save" style="margin: 0;">Actualizar</button>
+            <input type="hidden" id="editNoteId">
+            
+            <div class="modal-body-split">
+                
+                <div class="modal-pane">
+                    <span style="font-size: 0.8em; color: var(--note-accent); font-weight: bold;">EDITOR MARKDOWN</span>
+                    <textarea id="editNoteContent" class="zen-input-body" style="flex-grow: 1; min-height: 150px; background: #010409; padding: 10px; border-radius: 6px; border: 1px solid #30363d;" oninput="updateLivePreview()"></textarea>
+                    
+                    <div style="margin-top: 10px;">
+                        <button onclick="addEditTable()" class="table-btn">+ Añadir tabla Excel</button>
+                    </div>
+                    <div id="editTablesContainer" style="margin-top: 10px; display: flex; flex-direction: column; gap: 15px;"></div>
+                </div>
+
+                <div class="modal-pane">
+                    <span style="font-size: 0.8em; color: #8b949e; font-weight: bold;">VISTA PREVIA EN VIVO</span>
+                    <div class="preview-box">
+                        <div id="livePreviewMarkdown" class="md-content"></div>
+                        <div id="livePreviewTables" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div style="padding: 15px 20px; background: #0d1117; border-top: 1px solid #30363d; display: flex; justify-content: space-between;">
+                <button onclick="deleteNote()" style="background: #da3633; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
+                <button onclick="updateNote()" class="btn-primary" style="margin: 0;">Guardar cambios</button>
             </div>
         </div>
     </div>
