@@ -7,9 +7,9 @@ let isDevModeActive = false;
 let isInspectorActive = false;
 let currentTargetElement = null;
 let currentSelectorTarget = null;
-let isOverridingText = false; // CANDADO ANTIBUCLES
+let isOverridingText = false; // Candado anti-colapso
 
-// Bases de datos locales seguras
+// Extracción segura de la base de datos
 let dynamicStylesDB = {};
 let dynamicContentDB = {};
 try {
@@ -24,14 +24,13 @@ export function initDevMode() {
     injectDynamicStyleSheet();
     applyContentOverrides();
     
-    // Vigilante del DOM con Candado Antibucle
+    // Vigilante del DOM para Textos
     const observer = new MutationObserver(() => applyContentOverrides());
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Enlazador en tiempo real
+    // Enlazar paletas de colores en tiempo real
     bindColorSyncEvents();
     
-    // Controlador de Checkbox de Animaciones
     const animCheck = document.getElementById('devAnimEnable');
     if(animCheck) {
         animCheck.addEventListener('change', (e) => {
@@ -39,7 +38,7 @@ export function initDevMode() {
         });
     }
 
-    // Atajo de teclado universal
+    // Atajo de teclado (Alt + Shift + D)
     document.addEventListener('keydown', (e) => {
         if (e.altKey && e.shiftKey && (e.code === 'KeyD' || e.key.toLowerCase() === 'd')) {
             e.preventDefault();
@@ -54,9 +53,7 @@ export function initDevMode() {
     });
 }
 
-// ==========================================
-// FIX 1: LÓGICA DE TIEMPO REAL PARA COLORES
-// ==========================================
+// Sincronización en vivo
 function bindColorSyncEvents() {
     const sync = (colorId, textId, cssProp) => {
         const colorInput = document.getElementById(colorId);
@@ -70,18 +67,15 @@ function bindColorSyncEvents() {
         
         textInput.addEventListener('input', (e) => {
             if(currentTargetElement) currentTargetElement.style.setProperty(cssProp, e.target.value, 'important');
-            if(e.target.value.match(/^#[0-9A-Fa-f]{6}$/)) {
-                colorInput.value = e.target.value;
-            }
+            if(e.target.value.match(/^#[0-9A-Fa-f]{6}$/)) colorInput.value = e.target.value;
         });
     };
-    // Sincronizamos usando las propiedades CSS reales
     sync('devBgColor', 'devBgText', 'background-color');
     sync('devTextColor', 'devTextText', 'color');
     sync('devBorderColor', 'devBorderText', 'border-color');
 }
 
-// AUTENTICACIÓN
+// Ventanas
 window.authenticateDev = () => {
     const user = document.getElementById('devUser').value;
     const pass = document.getElementById('devPass').value;
@@ -92,17 +86,13 @@ window.authenticateDev = () => {
         document.getElementById('devPass').value = '';
         const panel = document.getElementById('devEditorPanel');
         if(panel) { panel.style.display = 'flex'; activateInspector(); }
-    } else { 
-        alert("Acceso denegado."); 
-    }
+    } else { alert("Acceso denegado."); }
 };
-
 window.closeDevLogin = () => { document.getElementById('devLoginModal').style.display = 'none'; };
 window.closeDevPanel = () => { 
     const panel = document.getElementById('devEditorPanel');
     if(panel) panel.style.display = 'none'; 
-    deactivateInspector(); 
-    isDevModeActive = false; 
+    deactivateInspector(); isDevModeActive = false; 
 };
 
 // ==========================================
@@ -126,10 +116,7 @@ function deactivateInspector() {
     document.removeEventListener('mouseover', handleDevHover);
     document.removeEventListener('mouseout', handleDevMouseOut);
     document.removeEventListener('click', handleDevClick, { capture: true });
-    if (currentTargetElement) { 
-        currentTargetElement.classList.remove('dev-selected-target', 'dev-hover-target'); 
-        currentTargetElement = null; 
-    }
+    if (currentTargetElement) { currentTargetElement.classList.remove('dev-selected-target', 'dev-hover-target'); currentTargetElement = null; }
 }
 
 function handleDevHover(e) { if(isInspectorActive && !e.target.closest('#devEditorPanel')) e.target.classList.add('dev-hover-target'); }
@@ -149,22 +136,13 @@ function handleDevClick(e) {
 }
 
 // ==========================================
-// FIX 2: ALGORITMOS SEGUROS DE EXTRACCIÓN
+// EXTRACCIÓN AL PANEL (CORRECCIONES EXACTAS)
 // ==========================================
 function getSafeSelector(el) {
     if (!el || !el.tagName) return '*';
-    
-    // Evitar IDs que empiezan con números (Crashean el CSS)
-    if (el.id && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(el.id)) {
-        return `#${el.id}`;
-    }
-    
-    // Usar clases válidas
+    if (el.id && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(el.id)) return `#${el.id}`;
     const classes = Array.from(el.classList).filter(c => !c.startsWith('dev-') && c !== 'active' && /^[a-zA-Z_]/.test(c));
-    if (classes.length > 0) {
-        return el.tagName.toLowerCase() + '.' + classes.join('.');
-    }
-    
+    if (classes.length > 0) return el.tagName.toLowerCase() + '.' + classes.join('.');
     return el.tagName.toLowerCase();
 }
 
@@ -176,40 +154,62 @@ function rgbToStrictHex(rgba) {
     return `#${parseInt(rgb[0]).toString(16).padStart(2, '0')}${parseInt(rgb[1]).toString(16).padStart(2, '0')}${parseInt(rgb[2]).toString(16).padStart(2, '0')}`;
 }
 
+// Extrae las medidas incluso si Google Chrome las bloquea como shorthands
+function extractPaddingAndRadius(computed, type) {
+    if (type === 'padding') {
+        let p = computed.getPropertyValue('padding');
+        if (p && p !== '') return p;
+        const pt = computed.getPropertyValue('padding-top') || '0px';
+        const pr = computed.getPropertyValue('padding-right') || '0px';
+        const pb = computed.getPropertyValue('padding-bottom') || '0px';
+        const pl = computed.getPropertyValue('padding-left') || '0px';
+        return `${pt} ${pr} ${pb} ${pl}`.replace(/(0px\s?)+/g, '0').trim() || '0';
+    }
+    if (type === 'radius') {
+        let r = computed.getPropertyValue('border-radius');
+        if (r && r !== '') return r;
+        const rtl = computed.getPropertyValue('border-top-left-radius') || '0px';
+        const rtr = computed.getPropertyValue('border-top-right-radius') || '0px';
+        const rbr = computed.getPropertyValue('border-bottom-right-radius') || '0px';
+        const rbl = computed.getPropertyValue('border-bottom-left-radius') || '0px';
+        return `${rtl} ${rtr} ${rbr} ${rbl}`.replace(/(0px\s?)+/g, '0').trim() || '0';
+    }
+    return '';
+}
+
 function loadElementDataIntoPanel(element) {
-    // 1. Selector Seguro
     currentSelectorTarget = getSafeSelector(element);
     document.getElementById('devTargetSelector').innerText = currentSelectorTarget;
     
-    // 2. Extraer CSS
     const computed = window.getComputedStyle(element);
     
-    document.getElementById('devBgColor').value = rgbToStrictHex(computed.backgroundColor) || '#000000';
-    document.getElementById('devBgText').value = computed.backgroundColor;
-    document.getElementById('devTextColor').value = rgbToStrictHex(computed.color) || '#ffffff';
-    document.getElementById('devTextText').value = computed.color;
-    document.getElementById('devBorderColor').value = rgbToStrictHex(computed.borderColor) || '#000000';
-    document.getElementById('devBorderText').value = computed.borderColor;
+    // Cargar visualmente en el panel
+    document.getElementById('devBgColor').value = rgbToStrictHex(computed.getPropertyValue('background-color')) || '#000000';
+    document.getElementById('devBgText').value = computed.getPropertyValue('background-color');
+    document.getElementById('devTextColor').value = rgbToStrictHex(computed.getPropertyValue('color')) || '#ffffff';
+    document.getElementById('devTextText').value = computed.getPropertyValue('color');
+    document.getElementById('devBorderColor').value = rgbToStrictHex(computed.getPropertyValue('border-color')) || '#000000';
+    document.getElementById('devBorderText').value = computed.getPropertyValue('border-color');
     
-    document.getElementById('devBorderBottom').value = computed.borderBottom || '';
-    document.getElementById('devBorderRadius').value = computed.borderRadius || '';
-    document.getElementById('devPadding').value = computed.padding || '';
-    document.getElementById('devFontSize').value = computed.fontSize || '';
+    document.getElementById('devBorderBottom').value = computed.getPropertyValue('border-bottom') || '';
+    document.getElementById('devBorderRadius').value = extractPaddingAndRadius(computed, 'radius');
+    document.getElementById('devPadding').value = extractPaddingAndRadius(computed, 'padding');
+    document.getElementById('devFontSize').value = computed.getPropertyValue('font-size') || '';
 
-    // 3. Lógica Lista Blanca para Textos (Para que aparezca siempre en H1, H2, etc.)
+    // Lógica de Textos
     const tagName = element.tagName.toUpperCase();
-    const textEditableTags = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','BUTTON','LABEL','STRONG','EM','LI','TH','TD'];
+    const textEditableTags = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','BUTTON','LABEL','STRONG','EM','LI','TH','TD','DIV'];
     
-    if(textEditableTags.includes(tagName)) {
+    if(textEditableTags.includes(tagName) && element.children.length < 3) {
         document.getElementById('devTextGroup').style.display = 'flex';
-        document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.textContent.trim();
+        document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.innerText.trim();
     } else {
         document.getElementById('devTextGroup').style.display = 'none';
         document.getElementById('devElementText').value = '';
     }
 
-    // 4. Lógica de Animaciones Ampliada
-    const isClickable = ['BUTTON', 'A'].includes(tagName) || element.classList.contains('tab-btn') || element.classList.contains('md-btn') || computed.cursor === 'pointer' || element.closest('button') !== null;
+    // Lógica de Animaciones
+    const isClickable = ['BUTTON', 'A'].includes(tagName) || element.classList.contains('tab-btn') || element.classList.contains('md-btn') || computed.getPropertyValue('cursor') === 'pointer' || element.closest('button') !== null;
     
     if (isClickable) {
         document.getElementById('devAnimGroup').style.display = 'flex';
@@ -227,12 +227,12 @@ function loadElementDataIntoPanel(element) {
 }
 
 // ==========================================
-// GUARDAR Y APLICAR
+// GUARDAR Y FEEDBACK VISUAL
 // ==========================================
-
 window.applyAndSaveDevStyles = () => {
     if (!currentSelectorTarget) return alert("Selecciona un elemento primero.");
     
+    // Capturar todos los campos
     const newStyles = {
         'background-color': document.getElementById('devBgText').value,
         'color': document.getElementById('devTextText').value,
@@ -244,12 +244,17 @@ window.applyAndSaveDevStyles = () => {
     };
 
     if(!dynamicStylesDB[currentSelectorTarget]) dynamicStylesDB[currentSelectorTarget] = {};
+    
+    // Guardar solo los que tengan texto (Permite borrar si el usuario deja el input vacío)
     for (let property in newStyles) {
-        if(newStyles[property].trim() !== '' && newStyles[property] !== 'rgba(0, 0, 0, 0)' && newStyles[property] !== 'transparent') {
+        if(newStyles[property] && newStyles[property].trim() !== '') {
             dynamicStylesDB[currentSelectorTarget][property] = newStyles[property];
+        } else {
+            delete dynamicStylesDB[currentSelectorTarget][property];
         }
     }
 
+    // Guardar Animaciones
     if (document.getElementById('devAnimGroup').style.display === 'flex') {
         const activeSel = currentSelectorTarget + ':active';
         if (document.getElementById('devAnimEnable').checked) {
@@ -268,13 +273,14 @@ window.applyAndSaveDevStyles = () => {
         }
     }
 
+    // Impactar Memoria y DOM
     localStorage.setItem('dev_dynamic_styles', JSON.stringify(dynamicStylesDB));
     injectDynamicStyleSheet();
 
-    // Guardado de Texto
+    // Guardado de Textos
     if(document.getElementById('devTextGroup').style.display !== 'none') {
         const newText = document.getElementById('devElementText').value;
-        if(newText.trim() !== '') {
+        if(newText && newText.trim() !== '') {
             dynamicContentDB[currentSelectorTarget] = newText;
         } else {
             delete dynamicContentDB[currentSelectorTarget]; 
@@ -283,16 +289,23 @@ window.applyAndSaveDevStyles = () => {
         applyContentOverrides();
     }
     
-    const btn = document.querySelector('.dev-btn'); 
-    const originalText = btn.innerText;
-    btn.innerText = '✅ ¡Guardado Exitosamente!'; 
-    setTimeout(() => btn.innerText = originalText, 1500);
+    // FEEDBACK VISUAL ASEGURADO AL BOTÓN
+    const btnSave = document.getElementById('devBtnSave');
+    if (btnSave) {
+        const originalText = btnSave.innerText;
+        btnSave.innerText = '✅ ¡Guardado Correctamente!';
+        btnSave.classList.add('dev-btn-success');
+        
+        setTimeout(() => {
+            btnSave.innerText = originalText;
+            btnSave.classList.remove('dev-btn-success');
+        }, 2000);
+    }
 };
 
 // ==========================================
-// INYECTORES Y CANDADOS
+// INYECTORES
 // ==========================================
-
 function injectDynamicStyleSheet() {
     let styleTag = document.getElementById('dev-dynamic-stylesheet');
     if (!styleTag) { 
@@ -312,9 +325,8 @@ function injectDynamicStyleSheet() {
     styleTag.innerHTML = cssString;
 }
 
-// FIX 3: Candado Antibucle usando textContent
 function applyContentOverrides() {
-    if(isOverridingText) return; // Si ya está escribiendo, ignorar la mutación
+    if(isOverridingText) return; 
     isOverridingText = true;
     
     for(let selector in dynamicContentDB) {
@@ -326,8 +338,6 @@ function applyContentOverrides() {
             });
         } catch(e) {}
     }
-    
-    // Liberar candado después de que el DOM asimile el cambio
     setTimeout(() => { isOverridingText = false; }, 50);
 }
 
