@@ -34,13 +34,11 @@ function parseMarkdown(text) {
 }
 
 // --- SISTEMA DE TABLAS TIPO EXCEL ---
-let tempMainTables = []; // Tablas al crear nota nueva
-let tempEditTables = []; // Tablas al editar nota existente
+let tempMainTables = []; 
+let tempEditTables = []; 
 
-// Crear matriz de 2x2 vacía
 function createEmptyTable() { return [ ["Columna 1", "Columna 2"], ["", ""] ]; }
 
-// Renderizador genérico de tablas editables
 function buildEditableTableHTML(tablesArray, containerId, prefix) {
     const container = document.getElementById(containerId);
     if(!container) return;
@@ -49,7 +47,6 @@ function buildEditableTableHTML(tablesArray, containerId, prefix) {
     tablesArray.forEach((matrix, tIndex) => {
         const wrapper = document.createElement('div');
         
-        // Controles de la tabla
         const controls = document.createElement('div');
         controls.className = 'table-controls';
         controls.innerHTML = `
@@ -60,7 +57,6 @@ function buildEditableTableHTML(tablesArray, containerId, prefix) {
             <button class="table-btn" onclick="deleteTable('${prefix}', ${tIndex})" style="background:#da3633; color:white; margin-left:auto;">🗑️ Tabla</button>
         `;
         
-        // La tabla HTML
         const tableContainer = document.createElement('div');
         tableContainer.className = 'note-table-container';
         const table = document.createElement('table');
@@ -73,7 +69,6 @@ function buildEditableTableHTML(tablesArray, containerId, prefix) {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = cellValue;
-                // Al escribir, actualiza la matriz y refresca el Live Preview si estamos editando
                 input.oninput = (e) => {
                     tablesArray[tIndex][rIndex][cIndex] = e.target.value;
                     if(prefix === 'edit') window.updateLivePreview();
@@ -90,7 +85,6 @@ function buildEditableTableHTML(tablesArray, containerId, prefix) {
     });
 }
 
-// Renderizador de tablas de solo lectura (Para la cuadrícula y Live Preview)
 function buildReadOnlyTablesHTML(tablesArray) {
     if(!tablesArray || tablesArray.length === 0) return '';
     let html = '';
@@ -100,7 +94,7 @@ function buildReadOnlyTablesHTML(tablesArray) {
             html += `<tr>`;
             row.forEach(cell => {
                 if(rIndex === 0) html += `<th>${cell}</th>`;
-                else html += `<td><div style="padding: 6px; font-size:0.9em;">${cell}</div></td>`;
+                else html += `<td><div style="padding: 8px; font-size:0.9em;">${cell}</div></td>`;
             });
             html += `</tr>`;
         });
@@ -109,7 +103,6 @@ function buildReadOnlyTablesHTML(tablesArray) {
     return html;
 }
 
-// Métodos Globales para manipular Tablas
 window.addMainTable = () => { tempMainTables.push(createEmptyTable()); buildEditableTableHTML(tempMainTables, 'mainTablesContainer', 'main'); };
 window.addEditTable = () => { tempEditTables.push(createEmptyTable()); buildEditableTableHTML(tempEditTables, 'editTablesContainer', 'edit'); window.updateLivePreview(); };
 
@@ -155,7 +148,6 @@ window.saveNote = () => {
     if (!title && !content && tempMainTables.length === 0) return alert('La nota está vacía.');
     if (!state.notes) state.notes = [];
     
-    // Guardamos una copia profunda de las tablas para que no se borren por referencia
     const tablesToSave = JSON.parse(JSON.stringify(tempMainTables));
 
     const newNote = {
@@ -169,7 +161,6 @@ window.saveNote = () => {
 
     state.notes.unshift(newNote);
     
-    // Limpiar UI
     document.getElementById('noteTitle').value = '';
     document.getElementById('noteContent').value = '';
     tempMainTables = [];
@@ -205,7 +196,6 @@ window.renderNotes = () => {
         body.style.maskImage = 'linear-gradient(to bottom, black 50%, transparent 100%)';
         body.style.webkitMaskImage = '-webkit-linear-gradient(top, black 50%, transparent 100%)';
         
-        // Renderizar Markdown + Tablas de solo lectura en la tarjeta
         let htmlContent = parseMarkdown(note.content);
         if(note.tables && note.tables.length > 0) {
             htmlContent += buildReadOnlyTablesHTML(note.tables);
@@ -239,11 +229,10 @@ window.openNoteModal = (index) => {
     document.getElementById('editNoteTitle').value = note.title;
     document.getElementById('editNoteContent').value = note.content || '';
     
-    // Cargar tablas (clon profundo)
     tempEditTables = note.tables ? JSON.parse(JSON.stringify(note.tables)) : [];
     buildEditableTableHTML(tempEditTables, 'editTablesContainer', 'edit');
     
-    window.updateLivePreview(); // Renderizar vista previa inicial
+    window.updateLivePreview();
     document.getElementById('noteModal').style.display = 'flex';
 };
 
@@ -260,7 +249,7 @@ window.updateNote = () => {
     const title = document.getElementById('editNoteTitle').value.trim();
     const content = document.getElementById('editNoteContent').value.trim();
     
-    state.notes[currentEditIndex].title = title || 'Sin Título';
+    state.notes[currentEditIndex].title = title || 'Sin título';
     state.notes[currentEditIndex].content = content;
     state.notes[currentEditIndex].tables = JSON.parse(JSON.stringify(tempEditTables));
     state.notes[currentEditIndex].tags = analyzeSemantics(title + " " + content);
@@ -270,7 +259,7 @@ window.updateNote = () => {
 
 window.deleteNote = () => {
     if (currentEditIndex === null) return;
-    if(confirm('¿Eliminar esta nota de la red para siempre?')) {
+    if(confirm('¿Eliminar esta nota para siempre?')) {
         state.notes.splice(currentEditIndex, 1);
         recordActivity(); saveDataToCloud(); window.renderNotes(); updateMindGraph(); closeNoteModal();
     }
