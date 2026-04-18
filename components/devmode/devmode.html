@@ -14,7 +14,7 @@
     <div class="dev-panel-header">
         <span>🛠️ UI Builder</span>
         <button onclick="toggleInspectorMode()" id="btnInspectorToggle" style="background: transparent; border: 1px solid #58a6ff; color: #58a6ff; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 0.8em;">Inspeccionar: ON</button>
-        <button onclick="closeDevPanel()" style="background: transparent; border: none; color: #8b949e; cursor: pointer;">✖</button>
+        <button onclick="closeDevPanel()" style="background: transparent; border: none; color: #8b949e; cursor: pointer; font-size: 1.2em;">✖</button>
     </div>
     
     <div class="dev-panel-body">
@@ -23,8 +23,7 @@
 
         <div class="dev-control-group dev-feature-box dev-feature-box-highlight" id="devTextGroup" style="display: none;">
             <label style="color: var(--note-accent);">📝 Texto del Elemento</label>
-            <input type="text" id="devElementText" class="dev-input" placeholder="Sobreescribir texto...">
-            <span style="font-size: 0.7em; color: #8b949e;">Soporta texto y Emojis. Dejar en blanco para usar el original.</span>
+            <input type="text" id="devElementText" class="dev-input" placeholder="Sobreescribir texto original...">
         </div>
 
         <div class="dev-control-group">
@@ -47,7 +46,7 @@
             <label>Color de Borde (Global)</label>
             <div class="dev-color-wrapper">
                 <input type="color" id="devBorderColor" class="dev-color-input">
-                <input type="text" id="devBorderText" class="dev-input" style="flex: 1;" placeholder="Ej: #ffffff">
+                <input type="text" id="devBorderText" class="dev-input" style="flex: 1;" placeholder="Ej: #ffffff o transparent">
             </div>
         </div>
         
@@ -71,9 +70,9 @@
             <input type="text" id="devFontSize" class="dev-input" placeholder="Ej: 1.2em o 16px">
         </div>
 
-        <div class="dev-control-group dev-feature-box">
+        <div id="devAnimGroup" class="dev-control-group dev-feature-box" style="display: none;">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: white;">
-                <input type="checkbox" id="devAnimEnable" onchange="window.toggleAnimSelect()">
+                <input type="checkbox" id="devAnimEnable">
                 ✨ Animación al hacer Clic
             </label>
             <select id="devAnimType" class="dev-input" style="display: none; margin-top: 10px; width: 100%; cursor: pointer;">
