@@ -1,5 +1,3 @@
-<link rel="stylesheet" href="components/devmode/devmode.css">
-
 <div id="devLoginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999999; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
     <div style="background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #58a6ff; width: 300px; box-shadow: 0 0 50px rgba(88, 166, 255, 0.2);">
         <h2 style="color: #58a6ff; margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
@@ -23,6 +21,12 @@
         <div style="font-size: 0.85em; color: #8b949e;">Editando clase/ID:</div>
         <div id="devTargetSelector" class="dev-target-badge">Ninguno</div>
 
+        <div class="dev-control-group dev-feature-box dev-feature-box-highlight" id="devTextGroup" style="display: none;">
+            <label style="color: var(--note-accent);">📝 Texto del Elemento</label>
+            <input type="text" id="devElementText" class="dev-input" placeholder="Sobreescribir texto...">
+            <span style="font-size: 0.7em; color: #8b949e;">Soporta texto y Emojis. Dejar en blanco para usar el original.</span>
+        </div>
+
         <div class="dev-control-group">
             <label>Fondo (Background)</label>
             <div class="dev-color-wrapper">
@@ -40,6 +44,19 @@
         </div>
 
         <div class="dev-control-group">
+            <label>Color de Borde (Global)</label>
+            <div class="dev-color-wrapper">
+                <input type="color" id="devBorderColor" class="dev-color-input">
+                <input type="text" id="devBorderText" class="dev-input" style="flex: 1;" placeholder="Ej: #ffffff">
+            </div>
+        </div>
+        
+        <div class="dev-control-group">
+            <label>Línea Inferior (Debajo del Background)</label>
+            <input type="text" id="devBorderBottom" class="dev-input" placeholder="Ej: 3px solid #b392f0">
+        </div>
+
+        <div class="dev-control-group">
             <label>Radio de Borde (Border Radius)</label>
             <input type="text" id="devBorderRadius" class="dev-input" placeholder="Ej: 12px">
         </div>
@@ -54,8 +71,20 @@
             <input type="text" id="devFontSize" class="dev-input" placeholder="Ej: 1.2em o 16px">
         </div>
 
+        <div class="dev-control-group dev-feature-box">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: white;">
+                <input type="checkbox" id="devAnimEnable" onchange="window.toggleAnimSelect()">
+                ✨ Animación al hacer Clic
+            </label>
+            <select id="devAnimType" class="dev-input" style="display: none; margin-top: 10px; width: 100%; cursor: pointer;">
+                <option value="scale-down">Hundimiento Suave (Scale Down)</option>
+                <option value="scale-up">Salto 3D (Scale Up)</option>
+                <option value="pulse-glow">Resplandor Neón (Glow Pulse)</option>
+            </select>
+        </div>
+
         <button class="dev-btn" onclick="applyAndSaveDevStyles()">💾 Guardar Cambios</button>
         <button class="dev-btn dev-btn-danger" onclick="resetTargetStyles()">🔄 Revertir Elemento</button>
-        <button class="dev-btn dev-btn-danger" style="margin-top: 5px; border-style: dashed;" onclick="factoryResetStyles()">⚠️ Borrar Todo el CSS Modificado</button>
+        <button class="dev-btn dev-btn-danger" style="margin-top: 5px; border-style: dashed;" onclick="factoryResetStyles()">⚠️ Borrar TODO (CSS y Textos)</button>
     </div>
 </div>
