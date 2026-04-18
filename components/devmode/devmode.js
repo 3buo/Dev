@@ -8,11 +8,21 @@ let isInspectorActive = false;
 let currentTargetElement = null;
 let currentSelectorTarget = null;
 
-// Bases de datos locales
-let dynamicStylesDB = JSON.parse(localStorage.getItem('dev_dynamic_styles')) || {};
-let dynamicContentDB = JSON.parse(localStorage.getItem('dev_dynamic_content')) || {};
+// Extracción segura de la base de datos (Evita que la app colapse si hay datos corruptos)
+let dynamicStylesDB = {};
+let dynamicContentDB = {};
+try {
+    dynamicStylesDB = JSON.parse(localStorage.getItem('dev_dynamic_styles')) || {};
+    dynamicContentDB = JSON.parse(localStorage.getItem('dev_dynamic_content')) || {};
+} catch (error) {
+    console.warn("DevMode: Memoria local corrupta. Reiniciando a fábrica.");
+    localStorage.removeItem('dev_dynamic_styles');
+    localStorage.removeItem('dev_dynamic_content');
+}
 
 export function initDevMode() {
+    console.log("🛠️ DevMode Inicializado. Presiona Alt + Shift + D para abrir.");
+    
     injectDynamicStyleSheet();
     applyContentOverrides();
     
@@ -20,21 +30,34 @@ export function initDevMode() {
     const observer = new MutationObserver(() => applyContentOverrides());
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Enlazar eventos de color (Solo una vez para evitar bugs de memoria)
+    // Enlazar eventos de color
     bindColorSyncEvents();
     
-    // Mostrar/Ocultar select de animaciones
-    document.getElementById('devAnimEnable').addEventListener('change', (e) => {
-        document.getElementById('devAnimType').style.display = e.target.checked ? 'block' : 'none';
-    });
+    // Mostrar/Ocultar select de animaciones (Validación extra)
+    const animCheck = document.getElementById('devAnimEnable');
+    if(animCheck) {
+        animCheck.addEventListener('change', (e) => {
+            document.getElementById('devAnimType').style.display = e.target.checked ? 'block' : 'none';
+        });
+    }
 
-    // Atajo Maestro
+    // Atajo Maestro Blindado (Soporta e.code y e.key por si el teclado cambia de idioma)
     document.addEventListener('keydown', (e) => {
-        if (e.altKey && e.shiftKey && e.code === 'KeyD') {
+        if (e.altKey && e.shiftKey && (e.code === 'KeyD' || e.key.toLowerCase() === 'd')) {
             e.preventDefault();
+            
+            const modal = document.getElementById('devLoginModal');
+            if (!modal) {
+                return console.error("⚠️ CRÍTICO: No se encontró el HTML del modal 'devLoginModal'. ¿Olvidaste pegarlo en el index.html?");
+            }
+
             if(!isDevModeActive) {
-                document.getElementById('devLoginModal').style.display = 'flex';
-                document.getElementById('devUser').focus();
+                modal.style.display = 'flex';
+                // Pequeño retraso para asegurar que el input sea enfocable
+                setTimeout(() => {
+                    const userInput = document.getElementById('devUser');
+                    if(userInput) userInput.focus();
+                }, 50);
             } else {
                 window.closeDevPanel();
             }
@@ -46,7 +69,8 @@ function bindColorSyncEvents() {
     const sync = (colorInputId, textInputId) => {
         const colorInput = document.getElementById(colorInputId);
         const textInput = document.getElementById(textInputId);
-        
+        if(!colorInput || !textInput) return;
+
         colorInput.addEventListener('input', (e) => {
             textInput.value = e.target.value;
         });
@@ -81,12 +105,16 @@ window.closeDevLogin = () => {
 };
 
 function openDevPanel() { 
-    document.getElementById('devEditorPanel').style.display = 'flex'; 
-    activateInspector(); 
+    const panel = document.getElementById('devEditorPanel');
+    if(panel) {
+        panel.style.display = 'flex'; 
+        activateInspector(); 
+    }
 }
 
 window.closeDevPanel = () => { 
-    document.getElementById('devEditorPanel').style.display = 'none'; 
+    const panel = document.getElementById('devEditorPanel');
+    if(panel) panel.style.display = 'none'; 
     deactivateInspector(); 
     isDevModeActive = false; 
 };
@@ -101,9 +129,11 @@ window.toggleInspectorMode = () => {
 function activateInspector() {
     isInspectorActive = true;
     const btn = document.getElementById('btnInspectorToggle');
-    btn.innerText = 'Inspeccionar: ON'; 
-    btn.style.color = '#39ff14'; 
-    btn.style.borderColor = '#39ff14';
+    if(btn) {
+        btn.innerText = 'Inspeccionar: ON'; 
+        btn.style.color = '#39ff14'; 
+        btn.style.borderColor = '#39ff14';
+    }
     
     document.addEventListener('mouseover', handleDevHover);
     document.addEventListener('mouseout', handleDevMouseOut);
@@ -113,9 +143,11 @@ function activateInspector() {
 function deactivateInspector() {
     isInspectorActive = false;
     const btn = document.getElementById('btnInspectorToggle');
-    btn.innerText = 'Inspeccionar: OFF'; 
-    btn.style.color = '#8b949e'; 
-    btn.style.borderColor = '#30363d';
+    if(btn) {
+        btn.innerText = 'Inspeccionar: OFF'; 
+        btn.style.color = '#8b949e'; 
+        btn.style.borderColor = '#30363d';
+    }
     
     document.removeEventListener('mouseover', handleDevHover);
     document.removeEventListener('mouseout', handleDevMouseOut);
@@ -149,7 +181,7 @@ function handleDevClick(e) {
     currentTargetElement.classList.remove('dev-hover-target');
     
     loadElementDataIntoPanel(currentTargetElement);
-    deactivateInspector(); // Desactivar para dejar editar al usuario
+    deactivateInspector();
 }
 
 // ==========================================
@@ -200,7 +232,7 @@ function loadElementDataIntoPanel(element) {
     document.getElementById('devPadding').value = getShorthand(computed, 'padding');
     document.getElementById('devFontSize').value = computed.fontSize;
 
-    // 3. Lógica para Textos (Solo texto u hojas finales del DOM)
+    // 3. Lógica para Textos
     if(element.children.length === 0 || (element.children.length === 1 && element.children[0].tagName === 'I')) {
         document.getElementById('devTextGroup').style.display = 'flex';
         document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.innerHTML.trim();
