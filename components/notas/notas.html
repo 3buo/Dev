@@ -17,15 +17,33 @@
 
     <div class="zen-editor">
         <input type="text" id="noteTitle" class="zen-input-title" placeholder="Título de la nota...">
-        <textarea id="noteContent" class="zen-input-body" placeholder="Escribe aquí... Usa # para títulos, **negrita**, o ``` para código."></textarea>
         
-        <div style="margin-bottom: 10px;">
-            <button onclick="addMainTable()" class="table-btn">+ Añadir tabla Excel</button>
+        <div class="md-toolbar">
+            <button class="md-tool-btn" onclick="insertMD('**', '**', 'noteContent')">B</button>
+            <button class="md-tool-btn" onclick="insertMD('_', '_', 'noteContent')">I</button>
+            <button class="md-tool-btn" onclick="insertMD('### ', '', 'noteContent')">H3</button>
+            <button class="md-tool-btn" onclick="insertMD('- ', '', 'noteContent')">• Lista</button>
+            <button class="md-tool-btn" onclick="insertMD('\n```\n', '\n```\n', 'noteContent')">&lt;/&gt; Código</button>
+            <button class="md-tool-btn" onclick="addMainTable()">+ Tabla</button>
         </div>
+
+        <textarea id="noteContent" class="zen-input-body" placeholder="Escribe tus ideas aquí..."></textarea>
+        
         <div id="mainTablesContainer"></div>
 
-        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+        <div id="zenPreviewArea" class="preview-box" style="display: none; margin-top: 15px; min-height: 80px;"></div>
+
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+            <button id="btnTogglePreview" class="btn-secondary" onclick="toggleZenPreview()">👁️ Previsualizar nota</button>
             <button class="btn-primary" onclick="saveNote()">Guardar nota</button>
+        </div>
+    </div>
+
+    <div class="view-controls">
+        <h3 style="color: white; margin: 0; font-size: 1.2em;">Tus notas</h3>
+        <div style="display: flex; gap: 5px;">
+            <button id="btnViewGrid" class="view-toggle-btn active" onclick="changeViewFormat('grid')">🔲 Cuadrícula</button>
+            <button id="btnViewList" class="view-toggle-btn" onclick="changeViewFormat('list')">📄 Lista detallada</button>
         </div>
     </div>
 
@@ -42,25 +60,30 @@
             <input type="hidden" id="editNoteId">
             
             <div class="modal-body-split">
-                
                 <div class="modal-pane">
-                    <span style="font-size: 0.8em; color: var(--note-accent); font-weight: bold;">EDITOR MARKDOWN</span>
-                    <textarea id="editNoteContent" class="zen-input-body" style="flex-grow: 1; min-height: 150px; background: #010409; padding: 10px; border-radius: 6px; border: 1px solid #30363d;" oninput="updateLivePreview()"></textarea>
-                    
-                    <div style="margin-top: 10px;">
-                        <button onclick="addEditTable()" class="table-btn">+ Añadir tabla Excel</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span style="font-size: 0.8em; color: var(--note-accent); font-weight: bold;">EDITOR MARKDOWN</span>
                     </div>
+                    
+                    <div class="md-toolbar" style="margin-bottom: 10px; padding-bottom: 5px;">
+                        <button class="md-tool-btn" onclick="insertMD('**', '**', 'editNoteContent')">B</button>
+                        <button class="md-tool-btn" onclick="insertMD('_', '_', 'editNoteContent')">I</button>
+                        <button class="md-tool-btn" onclick="insertMD('### ', '', 'editNoteContent')">H3</button>
+                        <button class="md-tool-btn" onclick="insertMD('- ', '', 'editNoteContent')">• Lista</button>
+                        <button class="md-tool-btn" onclick="addEditTable()">+ Tabla</button>
+                    </div>
+
+                    <textarea id="editNoteContent" class="zen-input-body" style="flex-grow: 1; min-height: 150px; background: #010409; padding: 10px; border-radius: 6px; border: 1px solid #30363d;" oninput="updateLivePreview()"></textarea>
                     <div id="editTablesContainer" style="margin-top: 10px; display: flex; flex-direction: column; gap: 15px;"></div>
                 </div>
 
                 <div class="modal-pane">
-                    <span style="font-size: 0.8em; color: #8b949e; font-weight: bold;">VISTA PREVIA EN VIVO</span>
+                    <span style="font-size: 0.8em; color: #8b949e; font-weight: bold; margin-bottom: 5px; display: block;">VISTA PREVIA EN VIVO</span>
                     <div class="preview-box">
                         <div id="livePreviewMarkdown" class="md-content"></div>
                         <div id="livePreviewTables" style="margin-top: 15px;"></div>
                     </div>
                 </div>
-
             </div>
             
             <div style="padding: 15px 20px; background: #0d1117; border-top: 1px solid #30363d; display: flex; justify-content: space-between;">
