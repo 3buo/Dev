@@ -101,40 +101,9 @@ function renderCmdResults(list) { cmdResults.innerHTML = ''; list.forEach((item,
 cmdInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const active = cmdResults.querySelector('.active-cmd'); if(active) active.click(); } });
 
 
-// --- MOTOR GLOBAL DE ALARMAS (EL CEREBRO) ---
-let audioCtx = null;
-let alarmAudioInterval = null;
-
-document.addEventListener('click', () => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}, { once: true });
-
-function playBeep() {
-    if (!audioCtx) return;
-    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = "sine"; osc.frequency.value = 800;
-    gain.gain.setValueAtTime(1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-}
-
-const startAlarmSound = () => { if(!alarmAudioInterval) { playBeep(); alarmAudioInterval = setInterval(playBeep, 2000); } };
-const stopAlarmSound = () => { if(alarmAudioInterval) { clearInterval(alarmAudioInterval); alarmAudioInterval = null; } };
-
-window.triggerModal = (type, text, onComplete, onSnooze) => {
-    startAlarmSound();
-    document.getElementById('alarmTypeDesc').innerText = type; 
-    document.getElementById('alarmText').innerText = text;
-    const modal = document.getElementById('alarmModal'); 
-    modal.style.display = 'flex';
-    
-    const btnC = document.getElementById('btnComplete'), btnS = document.getElementById('btnSnooze');
-    const newBtnC = btnC.cloneNode(true), newBtnS = btnS.cloneNode(true);
-    btnC.parentNode.replaceChild(newBtnC, btnC); btnS.parentNode.replaceChild(newBtnS, btnS);
-    
-    newBtnC.onclick = () => { stopAlarmSound(); modal.style.display = 'none'; if(onComplete) onComplete(); };
-    newBtnS.onclick = () => { stopAlarmSound(); modal.style.display = 'none'; if(onSnooze) onSnooze(); };
-};
+// ==========================================================================
+// --- MOTOR GLOBAL DE ALARMAS (CONECTADO AL NUEVO MÓDULO ALARM.JS) ---
+// ==========================================================================
 
 setInterval(() => {
     if(!state.currentUid) return;
@@ -143,15 +112,23 @@ setInterval(() => {
     // 1. Revisar Recordatorios (De la pestaña Recordatorios)
     state.reminders?.forEach((rem) => {
         if (!rem.completed && !rem.notified && now >= new Date(rem.datetime)) {
+            // Marcamos como notificado para que el bucle no lo dispare 100 veces por segundo
             rem.notified = true;
-            window.triggerModal("Recordatorio", rem.text, 
-                () => { rem.completed = true; saveDataToCloud(); window.dispatchEvent(new Event('stateChanged')); }, 
-                () => { 
-                    const snoozeTime = new Date(now.getTime() + (rem.snoozeMins * 60000));
-                    rem.datetime = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                    rem.notified = false; saveDataToCloud(); window.dispatchEvent(new Event('stateChanged'));
-                }
-            );
+            saveDataToCloud(); 
+
+            // Llamamos a la API global del nuevo módulo
+            if(window.triggerSystemAlarm) {
+                window.triggerSystemAlarm(
+                    "Recordatorio", 
+                    rem.text, 
+                    () => { 
+                        // Esto ocurre cuando el usuario presiona "¡Entendido!"
+                        rem.completed = true; 
+                        saveDataToCloud(); 
+                        window.dispatchEvent(new Event('stateChanged')); 
+                    }
+                );
+            }
         }
     });
 
@@ -159,18 +136,22 @@ setInterval(() => {
     state.recurringTasks?.forEach((rec) => {
         if (!rec.notified && now >= new Date(rec.nextTrigger)) {
             rec.notified = true;
-            window.triggerModal("Hábito / Rutina", rec.text, 
-                () => { 
-                    if(window.rescheduleRecurring) window.rescheduleRecurring(rec);
-                    recordActivity(); saveDataToCloud(); window.dispatchEvent(new Event('stateChanged'));
-                }, 
-                () => { 
-                    rec.notified = false;
-                    const snoozeTime = new Date(now.getTime() + (10 * 60000)); // 10 minutos de snooze
-                    rec.nextTrigger = new Date(snoozeTime.getTime() - (snoozeTime.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                    saveDataToCloud(); window.dispatchEvent(new Event('stateChanged'));
-                }
-            );
+            saveDataToCloud();
+
+            // Llamamos a la API global del nuevo módulo
+            if(window.triggerSystemAlarm) {
+                window.triggerSystemAlarm(
+                    "Hábito / Rutina", 
+                    rec.text, 
+                    () => { 
+                        // Esto ocurre cuando el usuario presiona "¡Entendido!"
+                        if(window.rescheduleRecurring) window.rescheduleRecurring(rec);
+                        recordActivity(); 
+                        saveDataToCloud(); 
+                        window.dispatchEvent(new Event('stateChanged'));
+                    }
+                );
+            }
         }
     });
 }, 5000);
