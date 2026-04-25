@@ -112,19 +112,29 @@ setInterval(() => {
     // 1. Revisar Recordatorios (De la pestaña Recordatorios)
     state.reminders?.forEach((rem) => {
         if (!rem.completed && !rem.notified && now >= new Date(rem.datetime)) {
-            // Marcamos como notificado para que el bucle no lo dispare 100 veces por segundo
+            // Marcamos como notificado
             rem.notified = true;
             saveDataToCloud(); 
 
-            // Llamamos a la API global del nuevo módulo
             if(window.triggerSystemAlarm) {
                 window.triggerSystemAlarm(
                     "Recordatorio", 
                     rem.text, 
                     () => { 
-                        // Esto ocurre cuando el usuario presiona "¡Entendido!"
-                        rem.completed = true; 
+                        // Búsqueda segura en tiempo real para evitar pérdida de memoria
+                        const actualRem = state.reminders.find(r => r.text === rem.text && r.datetime === rem.datetime);
+                        if (actualRem) {
+                            actualRem.completed = true; 
+                        } else {
+                            rem.completed = true; // Fallback
+                        }
+                        
+                        // Añade puntos a tus estadísticas
+                        recordActivity(); 
                         saveDataToCloud(); 
+                        
+                        // Forzamos al HTML de recordatorios a repintarse instantáneamente
+                        if(window.renderReminders) window.renderReminders();
                         window.dispatchEvent(new Event('stateChanged')); 
                     }
                 );
@@ -138,16 +148,15 @@ setInterval(() => {
             rec.notified = true;
             saveDataToCloud();
 
-            // Llamamos a la API global del nuevo módulo
             if(window.triggerSystemAlarm) {
                 window.triggerSystemAlarm(
                     "Hábito / Rutina", 
                     rec.text, 
                     () => { 
-                        // Esto ocurre cuando el usuario presiona "¡Entendido!"
                         if(window.rescheduleRecurring) window.rescheduleRecurring(rec);
                         recordActivity(); 
                         saveDataToCloud(); 
+                        if(window.renderRecurringTasks) window.renderRecurringTasks();
                         window.dispatchEvent(new Event('stateChanged'));
                     }
                 );
