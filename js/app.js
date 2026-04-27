@@ -1,5 +1,4 @@
-import { auth } from './firebase-config.js';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { supabase } from './supabase-config.js'; // CAMBIO: Usamos Supabase
 import { state, initCloudData, clearLocalData, unsubSnapshot, saveDataToCloud, recordActivity } from './store.js';
 
 const loadedModules = new Set();
@@ -54,34 +53,49 @@ window.addEventListener('stateChanged', () => {
     } 
 });
 
-// --- AUTH ---
-onAuthStateChanged(auth, async (user) => { 
+// --- AUTH (Migrado a Supabase) ---
+supabase.auth.onAuthStateChange(async (event, session) => { 
+    const user = session?.user;
     if (user) { 
         document.getElementById('authScreen').style.display = 'none'; 
         document.getElementById('mainApp').style.display = 'block'; 
-        await initCloudData(user.uid); 
-        window.switchTab('actividades'); 
+        // Supabase usa 'id' en lugar de 'uid'
+        await initCloudData(user.id); 
+        if(!currentTab) window.switchTab('actividades'); 
     } else { 
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('mainApp').style.display = 'none'; 
-        if (unsubSnapshot) unsubSnapshot(); 
+        if (unsubSnapshot) supabase.removeChannel(unsubSnapshot); 
         clearLocalData(); 
         document.body.removeAttribute('data-theme');
     } 
 });
 
-window.appLogin = () => { 
+window.appLogin = async () => { 
     const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value; 
     if(!e || !p) return alert("Campos vacíos"); 
-    signInWithEmailAndPassword(auth, e, p).catch(err => alert("Error: " + err.message)); 
+    const { error } = await supabase.auth.signInWithPassword({ email: e, password: p });
+    if(error) alert("Error: " + error.message); 
 };
-window.appRegister = () => { 
+
+window.appRegister = async () => { 
     const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value; 
     if(p.length < 6) return alert("Min 6 chars"); 
-    createUserWithEmailAndPassword(auth, e, p).then(() => alert("Cuenta creada.")).catch(err => alert(err.message)); 
+    const { error } = await supabase.auth.signUp({ email: e, password: p });
+    if(error) alert(error.message); else alert("Cuenta creada con éxito.");
 };
-window.appResetPassword = () => { const e = prompt("Correo:"); if(e) sendPasswordResetEmail(auth, e).then(() => alert("Enviado!")).catch(err=>alert(err.message)); };
-window.appLogout = () => { if(confirm("¿Cerrar sesión?")) signOut(auth); };
+
+window.appResetPassword = async () => { 
+    const e = prompt("Correo:"); 
+    if(e) {
+        const { error } = await supabase.auth.resetPasswordForEmail(e);
+        if(error) alert(error.message); else alert("¡Enviado!");
+    }
+};
+
+window.appLogout = async () => { 
+    if(confirm("¿Cerrar sesión?")) await supabase.auth.signOut(); 
+};
 
 // --- PALETA DE COMANDOS ---
 const cmdOverlay = document.getElementById('cmdOverlay'), cmdInput = document.getElementById('cmdInput'), cmdResults = document.getElementById('cmdResults'); 
@@ -102,7 +116,7 @@ cmdInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const acti
 
 
 // ==========================================================================
-// --- MOTOR GLOBAL DE ALARMAS (CONECTADO AL NUEVO MÓDULO ALARM.JS) ---
+// --- MOTOR GLOBAL DE ALARMAS ---
 // ==========================================================================
 
 setInterval(() => {
@@ -112,7 +126,6 @@ setInterval(() => {
     // 1. Revisar Recordatorios (De la pestaña Recordatorios)
     state.reminders?.forEach((rem) => {
         if (!rem.completed && !rem.notified && now >= new Date(rem.datetime)) {
-            // Marcamos como notificado
             rem.notified = true;
             saveDataToCloud(); 
 
@@ -121,19 +134,10 @@ setInterval(() => {
                     "Recordatorio", 
                     rem.text, 
                     () => { 
-                        // Búsqueda segura en tiempo real para evitar pérdida de memoria
                         const actualRem = state.reminders.find(r => r.text === rem.text && r.datetime === rem.datetime);
-                        if (actualRem) {
-                            actualRem.completed = true; 
-                        } else {
-                            rem.completed = true; // Fallback
-                        }
-                        
-                        // Añade puntos a tus estadísticas
+                        if (actualRem) actualRem.completed = true; else rem.completed = true; 
                         recordActivity(); 
                         saveDataToCloud(); 
-                        
-                        // Forzamos al HTML de recordatorios a repintarse instantáneamente
                         if(window.renderReminders) window.renderReminders();
                         window.dispatchEvent(new Event('stateChanged')); 
                     }
