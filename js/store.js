@@ -1,40 +1,41 @@
-import { db } from './firebase-config.js';
-import { doc, onSnapshot, setDoc, updateDoc, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { supabase } from './supabase-config.js'; // CAMBIO: Usamos Supabase
 
-// 1. CAPA DE SEGURIDAD: Persistencia Offline (Si se va el internet, usa la caché del móvil)
-try {
-    enableIndexedDbPersistence(db).catch((err) => {
-        if (err.code === 'failed-precondition') console.warn('Múltiples pestañas abiertas, persistencia en 1 sola.');
-        else if (err.code === 'unimplemented') console.warn('Navegador sin soporte para persistencia.');
-    });
-} catch (e) {
-    console.warn("No se pudo iniciar la persistencia offline", e);
-}
-
-// 2. AÑADIDO EL CANDADO isReady
+// Mantenemos el candado isReady y la memoria de emergencia intactos
 export const state = {
-    isReady: false, // FLAG CRÍTICO: Previene que se sobrescriba la base de datos vacía
+    isReady: false, 
     currentUid: null, masterPin: "1234", tasks: [], reminders: [], balances: { facebank: 0, binance: 0, bs: 0 },
     expenses: [], notes: [], recurringTasks: [], checklists: [], tabOrder: [], activityLog: {}
 };
 
 export let unsubSnapshot = null;
 
-// Cuando los datos cambian, le avisamos a toda la app
 export const notifyStateChange = () => window.dispatchEvent(new Event('stateChanged'));
 
 export async function initCloudData(uid) {
     state.currentUid = uid;
-    state.isReady = false; // Bloqueamos guardados por defecto
-    
-    const docRef = doc(db, "userData", uid);
+    state.isReady = false; 
     
     try {
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
-            // Solo si el usuario es genuinamente nuevo, inicializamos en blanco
-            await setDoc(docRef, { tasks: [], reminders: [], balances: {facebank:0,binance:0,bs:0}, expenses: [], notes: [], recurringTasks: [], checklists: [], tabOrder: [], activityLog: {}, masterPin: "1234" });
+        // 1. Descargar los datos desde PostgreSQL (Supabase)
+        const { data, error } = await supabase.from('user_data').select('data').eq('id', uid).single();
+
+        if (error && error.code === 'PGRST116') {
+            // Error PGRST116 significa "La fila no existe" -> Es un usuario nuevo
+            const defaultData = { tasks: [], reminders: [], balances: {facebank:0,binance:0,bs:0}, expenses: [], notes: [], recurringTasks: [], checklists: [], tabOrder: [], activityLog: {}, masterPin: "1234" };
+            await supabase.from('user_data').insert({ id: uid, data: defaultData });
+            Object.assign(state, defaultData);
+        } else if (data && data.data) {
+            // Usuario existente, asignamos sus datos
+            Object.assign(state, data.data);
+        } else if (error) {
+            throw error; // Saltar al Catch de emergencia
         }
+
+        // DESBLOQUEAMOS LOS GUARDADOS
+        state.isReady = true;
+        notifyStateChange();
+        localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
+
     } catch (error) {
         console.error("Error leyendo datos de la nube. Intentando recuperar backup local...", error);
         const backup = localStorage.getItem('taskify_emergency_backup');
@@ -45,27 +46,29 @@ export async function initCloudData(uid) {
         }
     }
 
-    unsubSnapshot = onSnapshot(docRef, (doc) => {
-        if (doc.exists()) {
-            Object.assign(state, doc.data());
-            state.isReady = true; // DESBLOQUEAMOS LOS GUARDADOS: La data real ya llegó
-            notifyStateChange(); 
-            
-            const syncEl = document.getElementById('syncStatus');
-            if(syncEl) { 
-                syncEl.innerText = "☁️ Sincronizado"; 
-                syncEl.className = "cloud-status cloud-syncing"; 
-                setTimeout(() => syncEl.className = "cloud-status", 2000); 
+    // 2. Suscribirse a cambios en tiempo real (Equivalente al onSnapshot de Firebase)
+    if (unsubSnapshot) supabase.removeChannel(unsubSnapshot);
+    unsubSnapshot = supabase.channel('custom-user-channel')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_data', filter: `id=eq.${uid}` }, (payload) => {
+            if(payload.new && payload.new.data) {
+                Object.assign(state, payload.new.data);
+                state.isReady = true; 
+                notifyStateChange(); 
+                
+                const syncEl = document.getElementById('syncStatus');
+                if(syncEl) { 
+                    syncEl.innerText = "☁️ Sincronizado"; 
+                    syncEl.className = "cloud-status cloud-syncing"; 
+                    setTimeout(() => syncEl.className = "cloud-status", 2000); 
+                }
+                localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
             }
-
-            // 3. CAPA DE SEGURIDAD: Guardar un snapshot local invisible
-            localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
-        }
-    });
+        })
+        .subscribe();
 }
 
 export async function saveDataToCloud() {
-    // EL CANDADO EN ACCIÓN: Rechaza cualquier guardado si la data no ha bajado primero
+    // EL CANDADO EN ACCIÓN
     if(!state.currentUid || !state.isReady) {
         console.warn("Guardado bloqueado: Previniendo que se borre la nube (Internet lento).");
         return;
@@ -74,16 +77,15 @@ export async function saveDataToCloud() {
     const syncEl = document.getElementById('syncStatus');
     if(syncEl) syncEl.innerText = "Subiendo...";
     
-    // Extraemos currentUid e isReady para no subirlos a Firebase como datos
     const { currentUid, isReady, ...dataToSave } = state;
     
     try {
-        await updateDoc(doc(db, "userData", currentUid), dataToSave);
+        // Enviar la actualización a la columna 'data' (JSONB) en PostgreSQL
+        const { error } = await supabase.from('user_data').update({ data: dataToSave }).eq('id', currentUid);
+        if (error) throw error;
     } catch (error) {
-        console.error("Error crítico al subir a la nube:", error);
+        console.error("Error crítico al subir a Supabase:", error);
         if(syncEl) syncEl.innerText = "⚠️ Guardado localmente";
-        
-        // Si hay error (ej. se van los datos en la calle), guardamos forzosamente en local
         localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
     }
 }
