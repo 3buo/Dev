@@ -3,7 +3,7 @@ import { setData } from './state.js';
 
 // Configuración Supabase
 const supabaseUrl = 'https://snruccregkwcsnptojvw.supabase.co';
-const supabaseKey = 'TU_PUBLISHABLE_KEY';
+const supabaseKey = 'sb_publishable_c-NOpMRqd0E2P-QW3IEfOw_MHRuq9FO';
 
 // Usar variable global del CDN
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
