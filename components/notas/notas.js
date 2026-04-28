@@ -256,21 +256,36 @@ window.renderNotes = () => {
 
 // --- MODAL Y PREVIEW ---
 let currentEditNoteId = null;
-window.openNoteModal = (noteId) => {
+export const openNoteModal = (noteId) => {
     const note = (state.notas || []).find(n => n.id === noteId);
     if (!note) return;
     currentEditNoteId = noteId;
-    document.getElementById('editNoteTitle').value = note.title; 
-    document.getElementById('editNoteContent').value = note.content || '';
-    tempEditTables = note.tables ? JSON.parse(JSON.stringify(note.tables)) : [];
-    buildEditableTableHTML(tempEditTables, 'editTablesContainer', 'edit');
-    window.updateLivePreview(); 
-    document.getElementById('noteModal').style.display = 'flex';
+    const modal = document.getElementById('noteModal');
+    if (modal) {
+        document.getElementById('editNoteTitle').value = note.title; 
+        document.getElementById('editNoteContent').value = note.content || '';
+        tempEditTables = note.tables ? JSON.parse(JSON.stringify(note.tables)) : [];
+        buildEditableTableHTML(tempEditTables, 'editTablesContainer', 'edit');
+        window.updateLivePreview(); 
+        modal.style.display = 'flex';
+    }
 };
-window.closeNoteModal = () => { document.getElementById('noteModal').style.display = 'none'; currentEditNoteId = null; };
+
+export const closeNoteModal = () => { 
+    const modal = document.getElementById('noteModal');
+    if (modal) modal.style.display = 'none'; 
+    currentEditNoteId = null; 
+};
+
+window.openNoteModal = openNoteModal; // Mantenemos compatibilidad global
+window.closeNoteModal = closeNoteModal;
+
 window.updateLivePreview = () => {
-    document.getElementById('livePreviewMarkdown').innerHTML = parseMarkdown(document.getElementById('editNoteContent').value);
-    document.getElementById('livePreviewTables').innerHTML = buildReadOnlyTablesHTML(tempEditTables);
+    const content = document.getElementById('editNoteContent');
+    const preview = document.getElementById('livePreviewMarkdown');
+    const tables = document.getElementById('livePreviewTables');
+    if (content && preview) preview.innerHTML = parseMarkdown(content.value);
+    if (tables) tables.innerHTML = buildReadOnlyTablesHTML(tempEditTables);
 };
 
 window.updateNote = async () => {

@@ -16,7 +16,7 @@ function getAlarmSettings() {
     try {
         const saved = localStorage.getItem('taskify_alarm_prefs');
         return saved ? JSON.parse(saved) : { sound: 'digital', volume: 0.5 };
-    } catch(e) {
+        } catch (_) {
         return { sound: 'digital', volume: 0.5 };
     }
 }
@@ -52,7 +52,7 @@ window.previewAndSaveAlarmSettings = () => {
     // 3. Probar el nuevo sonido con el volumen exacto
     currentAudio = new Audio(SOUNDS[sound]);
     currentAudio.volume = volume;
-    currentAudio.play().catch(e => console.warn("Autoplay bloqueado por el navegador en la preview."));
+    currentAudio.play().catch(() => console.warn("Autoplay bloqueado por el navegador en la preview."));
 };
 
 // API GLOBAL PARA DISPARAR ALARMAS
@@ -78,7 +78,7 @@ window.triggerSystemAlarm = (title, description, onCompleteCallback) => {
     currentAudio.volume = settings.volume;
     currentAudio.loop = true; // Repetir hasta que el usuario decida
     
-    currentAudio.play().catch(e => console.warn("El navegador bloqueó el autoplay visual de la alarma."));
+    currentAudio.play().catch(() => console.warn("El navegador bloqueó el autoplay visual de la alarma."));
 };
 
 window.completeSystemAlarm = () => {

@@ -146,13 +146,15 @@ window.toggleVoiceRecognition = () => {
     if(!recognition) initVoiceEngine(); if(!recognition) return;
     if (isListening) { recognition.stop(); stopVoiceUI(); } 
     else {
-        try {
+                try {
             recognition.start(); isListening = true;
             const btn = document.getElementById('btnVoiceRecord'); 
             if(btn) btn.classList.add('listening');
-            document.getElementById('voiceIcon').innerText = '🔴'; 
-            document.getElementById('voiceText').innerText = 'Escuchando...';
-        } catch(e) { console.error("Error voz:", e); }
+            const icon = document.getElementById('voiceIcon');
+            const text = document.getElementById('voiceText');
+            if(icon) icon.innerText = '🔴'; 
+            if(text) text.innerText = 'Escuchando...';
+        } catch(_) { console.error("Error voz"); }
     }
 };
 
@@ -161,8 +163,10 @@ function stopVoiceUI() {
     const btn = document.getElementById('btnVoiceRecord');
     if(btn) { 
         btn.classList.remove('listening'); 
-        document.getElementById('voiceIcon').innerText = '🎙️'; 
-        document.getElementById('voiceText').innerText = 'Tocar para hablar'; 
+        const icon = document.getElementById('voiceIcon');
+        const text = document.getElementById('voiceText');
+        if(icon) icon.innerText = '🎙️'; 
+        if(text) text.innerText = 'Tocar para hablar'; 
     }
 }
 
@@ -320,7 +324,7 @@ window.fetchExchangeRates = async () => {
         const bcvEl = document.getElementById('rateBcv');
         if(bcvEl) bcvEl.innerText = `Bs. ${parseFloat(window.rateBcvVal).toFixed(2)}`;
         window.renderBalances();
-    } catch(e) { console.warn("Error tasas"); }
+        } catch(_) { console.warn("Error tasas"); }
 };
 
 // --- INICIALIZACIÓN ---
