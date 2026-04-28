@@ -7,15 +7,16 @@ let isDevModeActive = false;
 let isInspectorActive = false;
 let currentTargetElement = null;
 let currentSelectorTarget = null;
-let isOverridingText = false; // Candado anti-colapso
+let isOverridingText = false; // Candado anti-colapso para MutationObserver
 
-// Extracción segura de la base de datos
+// Extracción segura de la base de datos local
 let dynamicStylesDB = {};
 let dynamicContentDB = {};
 try {
     dynamicStylesDB = JSON.parse(localStorage.getItem('dev_dynamic_styles')) || {};
     dynamicContentDB = JSON.parse(localStorage.getItem('dev_dynamic_content')) || {};
 } catch (error) {
+    console.error("Error al cargar devmode de localStorage, reseteando.", error);
     localStorage.removeItem('dev_dynamic_styles');
     localStorage.removeItem('dev_dynamic_content');
 }
@@ -31,13 +32,8 @@ export function initDevMode() {
     // Enlazar paletas de colores en tiempo real
     bindColorSyncEvents();
     
-    const animCheck = document.getElementById('devAnimEnable');
-    if(animCheck) {
-        animCheck.addEventListener('change', (e) => {
-            const animTypeSelect = document.getElementById('devAnimType');
-            if(animTypeSelect) animTypeSelect.style.display = e.target.checked ? 'block' : 'none';
-        });
-    }
+    // Configurar listeners para todos los botones e inputs del panel de devmode
+    setupDevModeEventListeners();
 
     // Atajo de teclado (Alt + Shift + D)
     document.addEventListener('keydown', (e) => {
@@ -48,13 +44,13 @@ export function initDevMode() {
                 if(modal) modal.style.display = 'flex';
                 setTimeout(() => { document.getElementById('devUser')?.focus(); }, 50);
             } else {
-                window.closeDevPanel();
+                closeDevPanel(); // Usar la función interna
             }
         }
     });
 }
 
-// Sincronización en vivo de inputs de color
+// Sincronización en vivo de inputs de color y texto
 function bindColorSyncEvents() {
     const sync = (colorId, textId, cssProp) => {
         const colorInput = document.getElementById(colorId);
@@ -68,8 +64,7 @@ function bindColorSyncEvents() {
         
         textInput.addEventListener('input', (e) => {
             if(currentTargetElement) currentTargetElement.style.setProperty(cssProp, e.target.value, 'important');
-            // Actualiza el input de color si el texto es un hex válido
-            if(e.target.value.match(/^#[0-9A-Fa-f]{6}$/i)) {
+            if(e.target.value.match(/^#[0-9A-Fa-f]{6}$/i)) { // Caso insensible a mayúsculas/minúsculas para hex
                 colorInput.value = e.target.value;
             }
         });
@@ -80,7 +75,7 @@ function bindColorSyncEvents() {
 }
 
 // --- VENTANAS Y MODOS ---
-window.authenticateDev = () => {
+function authenticateDev() { // Cambiado a función interna
     const user = document.getElementById('devUser')?.value;
     const pass = document.getElementById('devPass')?.value;
     if (user === DEV_CREDS.user && pass === DEV_CREDS.pass) {
@@ -91,17 +86,19 @@ window.authenticateDev = () => {
         const panel = document.getElementById('devEditorPanel');
         if(panel) { panel.style.display = 'flex'; activateInspector(); }
     } else { alert("Acceso denegado."); }
-};
-window.closeDevLogin = () => { document.getElementById('devLoginModal').style.display = 'none'; };
-window.closeDevPanel = () => { 
+}
+function closeDevLogin() { document.getElementById('devLoginModal').style.display = 'none'; } // Cambiado a función interna
+function closeDevPanel() { // Cambiado a función interna
     const panel = document.getElementById('devEditorPanel');
     if(panel) panel.style.display = 'none'; 
     deactivateInspector(); 
     isDevModeActive = false; 
-};
+}
 
 // --- MODO INSPECTOR ---
-window.toggleInspectorMode = () => { isInspectorActive ? deactivateInspector() : activateInspector(); };
+function toggleInspectorMode() { // Cambiado a función interna
+    isInspectorActive ? deactivateInspector() : activateInspector(); 
+}
 
 function activateInspector() {
     isInspectorActive = true;
@@ -110,7 +107,6 @@ function activateInspector() {
     
     document.addEventListener('mouseover', handleDevHover);
     document.addEventListener('mouseout', handleDevMouseOut);
-    // Usamos capture:true para interceptar el evento antes que otros listeners
     document.addEventListener('click', handleDevClick, { capture: true }); 
 }
 
@@ -123,7 +119,6 @@ function deactivateInspector() {
     document.removeEventListener('mouseout', handleDevMouseOut);
     document.removeEventListener('click', handleDevClick, { capture: true });
     
-    // Limpiar el resaltado del elemento anterior
     if (currentTargetElement) { 
         currentTargetElement.classList.remove('dev-selected-target', 'dev-hover-target'); 
         currentTargetElement = null; 
@@ -131,7 +126,6 @@ function deactivateInspector() {
 }
 
 function handleDevHover(e) { 
-    // Evitar afectar el panel de edición
     if(isInspectorActive && !e.target.closest('#devEditorPanel')) {
         e.target.classList.add('dev-hover-target');
     }
@@ -141,14 +135,12 @@ function handleDevMouseOut(e) {
 }
 
 function handleDevClick(e) {
-    // Ignorar si no estamos en modo inspector, si el click es dentro del panel, o si es un evento del propio inspector
     if(!isInspectorActive || e.target.closest('#devEditorPanel') || e.target.closest('.dev-panel *') || e.target.tagName.toUpperCase() === 'BODY') {
         return;
     }
     e.preventDefault(); 
     e.stopPropagation();
 
-    // Remover resaltado del elemento anterior
     if (currentTargetElement) currentTargetElement.classList.remove('dev-selected-target');
     
     currentTargetElement = e.target;
@@ -156,18 +148,15 @@ function handleDevClick(e) {
     currentTargetElement.classList.remove('dev-hover-target');
     
     loadElementDataIntoPanel(currentTargetElement);
-    deactivateInspector(); // Salir del modo inspector tras seleccionar
+    deactivateInspector(); 
 }
 
-// --- EXTRACCIÓN AL PANEL (CORRECCIONES EXACTAS) ---
+// --- EXTRACCIÓN AL PANEL ---
 function getSafeSelector(el) {
     if (!el || !el.tagName) return '*';
-    // Priorizar ID si es válido
     if (el.id && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(el.id)) return `#${el.id}`;
-    // Intentar con clases si son significativas
     const classes = Array.from(el.classList).filter(c => !c.startsWith('dev-') && c !== 'active' && /^[a-zA-Z_]/.test(c));
     if (classes.length > 0) return el.tagName.toLowerCase() + '.' + classes.join('.');
-    // Si no, usar el nombre de la etiqueta
     return el.tagName.toLowerCase();
 }
 
@@ -176,15 +165,13 @@ function rgbToStrictHex(rgba) {
     if (rgba.startsWith('#')) return rgba.substring(0, 7);
     const rgb = rgba.match(/\d+/g);
     if (!rgb || rgb.length < 3) return '';
-    // Convertir RGB a Hex
     return `#${parseInt(rgb[0]).toString(16).padStart(2, '0')}${parseInt(rgb[1]).toString(16).padStart(2, '0')}${parseInt(rgb[2]).toString(16).padStart(2, '0')}`;
 }
 
-// Extrae medidas (padding, radius) de forma segura
 function extractPaddingAndRadius(computed, type) {
     if (type === 'padding') {
         let p = computed.getPropertyValue('padding');
-        if (p && p !== '') return p; // Si es un valor shorthand
+        if (p && p !== '') return p;
         const pt = computed.getPropertyValue('padding-top') || '0px';
         const pr = computed.getPropertyValue('padding-right') || '0px';
         const pb = computed.getPropertyValue('padding-bottom') || '0px';
@@ -193,7 +180,7 @@ function extractPaddingAndRadius(computed, type) {
     }
     if (type === 'radius') {
         let r = computed.getPropertyValue('border-radius');
-        if (r && r !== '') return r; // Si es un valor shorthand
+        if (r && r !== '') return r;
         const rtl = computed.getPropertyValue('border-top-left-radius') || '0px';
         const rtr = computed.getPropertyValue('border-top-right-radius') || '0px';
         const rbr = computed.getPropertyValue('border-bottom-right-radius') || '0px';
@@ -209,7 +196,6 @@ function loadElementDataIntoPanel(element) {
     
     const computed = window.getComputedStyle(element);
     
-    // Cargar visualmente en el panel
     document.getElementById('devBgColor').value = rgbToStrictHex(computed.getPropertyValue('background-color')) || '#000000';
     document.getElementById('devBgText').value = computed.getPropertyValue('background-color');
     document.getElementById('devTextColor').value = rgbToStrictHex(computed.getPropertyValue('color')) || '#ffffff';
@@ -222,11 +208,9 @@ function loadElementDataIntoPanel(element) {
     document.getElementById('devPadding').value = extractPaddingAndRadius(computed, 'padding');
     document.getElementById('devFontSize').value = computed.getPropertyValue('font-size') || '';
 
-    // Lógica de Textos (Sobrescritura de texto)
     const tagName = element.tagName.toUpperCase();
     const textEditableTags = ['H1','H2','H3','H4','H5','H6','P','SPAN','A','BUTTON','LABEL','STRONG','EM','LI','TH','TD','DIV'];
     
-    // Si el elemento puede tener texto editable y no es demasiado complejo
     if(textEditableTags.includes(tagName) && element.children.length < 3 && !element.closest('input') && !element.closest('textarea')) {
         document.getElementById('devTextGroup').style.display = 'flex';
         document.getElementById('devElementText').value = dynamicContentDB[currentSelectorTarget] || element.innerText.trim();
@@ -235,22 +219,20 @@ function loadElementDataIntoPanel(element) {
         document.getElementById('devElementText').value = '';
     }
 
-    // Lógica de Animaciones al hacer clic
-    const isClickable = ['BUTTON', 'A', 'DIV', 'SPAN', 'LABEL', 'LI', 'TD', 'TH'].includes(tagName) || element.style.cursor === 'pointer' || element.closest('button') || element.closest('a') || element.closest('.tab-btn') || element.closest('.md-btn');
+    const isClickable = ['BUTTON', 'A', 'DIV', 'SPAN', 'LABEL', 'LI', 'TD', 'TH'].includes(tagName) || computed.getPropertyValue('cursor') === 'pointer' || element.closest('button') || element.closest('a') || element.closest('.tab-btn') || element.closest('.md-btn');
     
     if (isClickable) {
         document.getElementById('devAnimGroup').style.display = 'flex';
         const animTypeSelect = document.getElementById('devAnimType');
         
-        // Verificar si ya hay una animación definida para este selector
         const activeSel = currentSelectorTarget + ':active';
         if(dynamicStylesDB[activeSel] && dynamicStylesDB[activeSel]['transform']) {
             document.getElementById('devAnimEnable').checked = true;
-            animTypeSelect.style.display = 'block';
-            animTypeSelect.value = dynamicStylesDB[activeSel]['transform'].includes('scale(0.92)') ? 'scale-down' : (dynamicStylesDB[activeSel]['transform'].includes('scale(1.05)') ? 'scale-up' : 'pulse-glow');
+            if(animTypeSelect) animTypeSelect.style.display = 'block';
+            if(animTypeSelect) animTypeSelect.value = dynamicStylesDB[activeSel]['transform'].includes('scale(0.92)') ? 'scale-down' : (dynamicStylesDB[activeSel]['transform'].includes('scale(1.05)') ? 'scale-up' : 'pulse-glow');
         } else {
             document.getElementById('devAnimEnable').checked = false;
-            animTypeSelect.style.display = 'none';
+            if(animTypeSelect) animTypeSelect.style.display = 'none';
         }
     } else {
         document.getElementById('devAnimGroup').style.display = 'none';
@@ -258,10 +240,9 @@ function loadElementDataIntoPanel(element) {
 }
 
 // --- GUARDAR Y FEEDBACK VISUAL ---
-window.applyAndSaveDevStyles = () => {
+function applyAndSaveDevStyles() { 
     if (!currentSelectorTarget) return alert("Selecciona un elemento primero.");
     
-    // Capturar todos los campos del panel
     const newStyles = {
         'background-color': document.getElementById('devBgText')?.value,
         'color': document.getElementById('devTextText')?.value,
@@ -272,65 +253,57 @@ window.applyAndSaveDevStyles = () => {
         'font-size': document.getElementById('devFontSize')?.value
     };
 
-    // Crear o acceder a los estilos dinámicos para el selector actual
     if(!dynamicStylesDB[currentSelectorTarget]) dynamicStylesDB[currentSelectorTarget] = {};
     
-    // Guardar solo los que tengan valor
     for (let property in newStyles) {
         const value = newStyles[property];
         if(value && value.trim() !== '') {
             dynamicStylesDB[currentSelectorTarget][property] = value;
         } else {
-            // Si el campo está vacío, eliminar la propiedad para resetearla
             delete dynamicStylesDB[currentSelectorTarget][property];
         }
     }
 
-    // Guardar Animaciones (Solo si el grupo está visible)
     const animGroup = document.getElementById('devAnimGroup');
     if (animGroup && animGroup.style.display !== 'none') {
         const animEnable = document.getElementById('devAnimEnable');
-        const activeSel = currentSelectorTarget + ':active'; // Selector para estado :active
+        const activeSel = currentSelectorTarget + ':active';
         
-        if (animEnable.checked) {
-            const animType = document.getElementById('devAnimType').value;
-            dynamicStylesDB[currentSelectorTarget]['transition'] = 'all 0.2s ease'; // Transición suave
+        if (animEnable && animEnable.checked) {
+            const animType = document.getElementById('devAnimType')?.value;
+            dynamicStylesDB[currentSelectorTarget]['transition'] = 'all 0.2s ease !important'; 
             
-            dynamicStylesDB[activeSel] = {}; // Reiniciar estilos de :active
+            dynamicStylesDB[activeSel] = {};
             if(animType === 'scale-down') { dynamicStylesDB[activeSel]['transform'] = 'scale(0.92)'; } 
             else if(animType === 'scale-up') { dynamicStylesDB[activeSel]['transform'] = 'scale(1.05)'; } 
             else if(animType === 'pulse-glow') {
-                dynamicStylesDB[activeSel]['box-shadow'] = '0 0 15px var(--note-accent)'; // Usar color de tema
+                dynamicStylesDB[activeSel]['box-shadow'] = '0 0 15px var(--note-accent)';
                 dynamicStylesDB[activeSel]['transform'] = 'scale(0.98)';
             }
         } else {
-            // Si se desmarca, eliminar animaciones de :active
             delete dynamicStylesDB[activeSel]; 
         }
     }
 
-    // Aplicar estilos al DOM y guardar en localStorage
     localStorage.setItem('dev_dynamic_styles', JSON.stringify(dynamicStylesDB));
     injectDynamicStyleSheet();
 
-    // Guardado de Textos (Sobrescritura)
     const textGroup = document.getElementById('devTextGroup');
     if(textGroup && textGroup.style.display !== 'none') {
-        const newText = document.getElementById('devElementText').value;
+        const newText = document.getElementById('devElementText')?.value;
         if(newText && newText.trim() !== '') {
             dynamicContentDB[currentSelectorTarget] = newText;
         } else {
-            delete dynamicContentDB[currentSelectorTarget]; // Borrar si está vacío
+            delete dynamicContentDB[currentSelectorTarget]; 
         }
-        localStorage.setItem('dev_dynamic_content', JSON.JSON.stringify(dynamicContentDB));
-        applyContentOverrides(); // Aplicar cambios de texto
+        localStorage.setItem('dev_dynamic_content', JSON.stringify(dynamicContentDB));
+        applyContentOverrides();
     }
     
-    // FEEDBACK VISUAL AL BOTÓN GUARDAR
     const btnSave = document.getElementById('devBtnSave');
     if (btnSave) {
         const originalText = btnSave.innerText;
-        btnSave.innerText = '✅ ¡Guardado!';
+        btnSave.innerText = '✅ ¡Guardado Correctamente!';
         btnSave.classList.add('dev-btn-success');
         
         setTimeout(() => {
@@ -338,11 +311,9 @@ window.applyAndSaveDevStyles = () => {
             btnSave.classList.remove('dev-btn-success');
         }, 2000);
     }
-};
+}
 
-// ==========================================
-// INYECTORES DE ESTILOS Y CONTENIDO
-// ==========================================
+// --- INYECTORES ---
 function injectDynamicStyleSheet() {
     let styleTag = document.getElementById('dev-dynamic-stylesheet');
     if (!styleTag) { 
@@ -368,9 +339,7 @@ function applyContentOverrides() {
     
     for(let selector in dynamicContentDB) {
         try {
-            // Seleccionar todos los elementos que coinciden
             document.querySelectorAll(selector).forEach(el => {
-                // Solo sobrescribir si el contenido es diferente
                 if(el.textContent.trim() !== dynamicContentDB[selector].trim()) {
                     el.textContent = dynamicContentDB[selector];
                 }
@@ -379,30 +348,26 @@ function applyContentOverrides() {
             console.error("Error al aplicar override de texto:", e);
         }
     }
-    // Liberar el candado después de un corto tiempo
     setTimeout(() => { isOverridingText = false; }, 50);
 }
 
-// ==========================================
-// REINICIOS Y LIMPIEZA
-// ==========================================
-window.resetTargetStyles = () => {
+// --- REINICIOS ---
+function resetTargetStyles() { 
     if (!currentTargetElement) return;
     const selector = getSafeSelector(currentTargetElement);
     
-    // Eliminar estilos y contenido asociados
     delete dynamicStylesDB[selector]; 
-    delete dynamicStylesDB[selector + ':active']; // Limpiar también el estado :active
+    delete dynamicStylesDB[selector + ':active'];
     delete dynamicContentDB[selector];
     
     localStorage.setItem('dev_dynamic_styles', JSON.stringify(dynamicStylesDB));
     localStorage.setItem('dev_dynamic_content', JSON.stringify(dynamicContentDB));
     
     injectDynamicStyleSheet(); 
-    window.location.reload(); // Recargar para aplicar cambios
-};
+    window.location.reload(); 
+}
 
-window.factoryResetStyles = () => {
+function factoryResetStyles() { 
     if(confirm("⚠️ ¿Borrar TODOS los estilos y textos personalizados de forma permanente?")) {
         dynamicStylesDB = {}; 
         dynamicContentDB = {};
@@ -410,58 +375,58 @@ window.factoryResetStyles = () => {
         localStorage.removeItem('dev_dynamic_content');
         window.location.reload(); 
     }
-};
+}
 
-// --- LISTENERS DE EVENTOS ---
-function setupDevModeEvents() {
-    const btnInspector = document.getElementById('btnInspectorToggle');
-    if(btnInspector) btnInspector.addEventListener('click', window.toggleInspectorMode);
+// --- CONFIGURACIÓN DE LISTENERS ---
+function setupDevModeEventListeners() {
+    // Exponer funciones internas a `window` para que el HTML pueda acceder a ellas
+    window.authenticateDev = authenticateDev;
+    window.closeDevLogin = closeDevLogin;
+    window.closeDevPanel = closeDevPanel;
+    window.toggleInspectorMode = toggleInspectorMode;
+    window.applyAndSaveDevStyles = applyAndSaveDevStyles;
+    window.resetTargetStyles = resetTargetStyles;
+    window.factoryResetStyles = factoryResetStyles;
 
-    const btnSave = document.getElementById('devBtnSave');
-    if(btnSave) btnSave.addEventListener('click', window.applyAndSaveDevStyles);
+    // Botones del modal de login
+    document.getElementById('btnLoginBtn')?.addEventListener('click', authenticateDev);
+    // document.getElementById('btnCancelLogin')?.addEventListener('click', closeDevLogin); // Si existe un botón de cancelar en el login modal
 
-    const btnReset = document.getElementById('devBtnReset');
-    if(btnReset) btnReset.addEventListener('click', window.resetTargetStyles);
+    // Botones del panel de devmode
+    document.getElementById('btnInspectorToggle')?.addEventListener('click', toggleInspectorMode);
+    document.getElementById('closeDevPanelBtn')?.addEventListener('click', closeDevPanel); 
+
+    document.getElementById('devBtnSave')?.addEventListener('click', applyAndSaveDevStyles);
+    document.getElementById('devBtnReset')?.addEventListener('click', resetTargetStyles);
+    document.getElementById('devBtnFactoryReset')?.addEventListener('click', factoryResetStyles);
     
-    const btnFactoryReset = document.getElementById('devBtnFactoryReset');
-    if(btnFactoryReset) btnFactoryReset.addEventListener('click', window.factoryResetStyles);
+    // Inputs de color y texto (ya cubiertos por bindColorSyncEvents)
     
-    // Inputs de color y texto
-    document.getElementById('devBgColor')?.addEventListener('input', e => { document.getElementById('devBgText').value = e.target.value; if(currentTargetElement) currentTargetElement.style.setProperty('background-color', e.target.value, 'important'); });
-    document.getElementById('devBgText')?.addEventListener('input', e => { if(currentTargetElement) currentTargetElement.style.setProperty('background-color', e.target.value, 'important'); });
-    
-    document.getElementById('devTextColor')?.addEventListener('input', e => { document.getElementById('devTextText').value = e.target.value; if(currentTargetElement) currentTargetElement.style.setProperty('color', e.target.value, 'important'); });
-    document.getElementById('devTextText')?.addEventListener('input', e => { if(currentTargetElement) currentTargetElement.style.setProperty('color', e.target.value, 'important'); });
-    
-    document.getElementById('devBorderColor')?.addEventListener('input', e => { document.getElementById('devBorderText').value = e.target.value; if(currentTargetElement) currentTargetElement.style.setProperty('border-color', e.target.value, 'important'); });
-    document.getElementById('devBorderText')?.addEventListener('input', e => { if(currentTargetElement) currentTargetElement.style.setProperty('border-color', e.target.value, 'important'); });
-    
-    document.getElementById('devBorderBottom')?.addEventListener('input', e => { if(currentTargetElement) currentTargetElement.style.setProperty('border-bottom', e.target.value, 'important'); });
-    document.getElementById('devBorderRadius')?.addEventListener('input', e => { if(currentTargetElement) currentTargetElement.style.setProperty('border-radius', e.target.value, 'important'); });
-    document.getElementById('devPadding')?.addEventListener('input', e => { if(currentTargetElement) currentTargetElement.style.setProperty('padding', e.target.value, 'important'); });
-    document.getElementById('devFontSize')?.addEventListener('input', e => { if(currentTargetElement) currentTargetElement.style.setProperty('font-size', e.target.value, 'important'); });
-    
-    // Animaciones
+    // Inputs no cubiertos por bindColorSyncEvents
+    document.getElementById('devBorderBottom')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('border-bottom', e.target.value, 'important'); });
+    document.getElementById('devBorderRadius')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('border-radius', e.target.value, 'important'); });
+    document.getElementById('devPadding')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('padding', e.target.value, 'important'); });
+    document.getElementById('devFontSize')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('font-size', e.target.value, 'important'); });
+
+    document.getElementById('devElementText')?.addEventListener('input', (e) => {
+        if (currentSelectorTarget) {
+            dynamicContentDB[currentSelectorTarget] = e.target.value;
+            applyContentOverrides();
+        }
+    });
+
     const animCheck = document.getElementById('devAnimEnable');
-    const animType = document.getElementById('devAnimType');
-    if(animCheck && animType) {
-        animCheck.addEventListener('change', e => animType.style.display = e.target.checked ? 'block' : 'none');
-        animType.addEventListener('change', () => {
+    const animTypeSelect = document.getElementById('devAnimType');
+    if (animCheck && animTypeSelect) {
+        animCheck.addEventListener('change', (e) => {
+            animTypeSelect.style.display = e.target.checked ? 'block' : 'none';
+        });
+        animTypeSelect.addEventListener('change', () => { // Listener para cambiar el tipo de animación
             if(currentTargetElement && animCheck.checked) {
-                const activeSel = getSafeSelector(currentTargetElement) + ':active';
-                const animTypeVal = animType.value;
-                dynamicStylesDB[currentTargetElement.id || getSafeSelector(currentTargetElement)] = dynamicStylesDB[currentTargetElement.id || getSafeSelector(currentTargetElement)] || {};
-                dynamicStylesDB[currentTargetElement.id || getSafeSelector(currentTargetElement)]['transition'] = 'all 0.2s ease';
-
-                dynamicStylesDB[activeSel] = {};
-                if(animTypeVal === 'scale-down') dynamicStylesDB[activeSel]['transform'] = 'scale(0.92)';
-                else if(animTypeVal === 'scale-up') dynamicStylesDB[activeSel]['transform'] = 'scale(1.05)';
-                else if(animTypeVal === 'pulse-glow') dynamicStylesDB[activeSel]['box-shadow'] = '0 0 15px var(--note-accent)';
-                injectDynamicStyleSheet(); // Aplicar inmediatamente
+                applyAndSaveDevStyles(); // Re-aplicar estilos para actualizar la animación
             }
         });
     }
 }
 
-// Inicialización al cargar el DOM
-document.addEventListener('DOMContentLoaded', setupDevModeEvents);
+document.addEventListener('DOMContentLoaded', setupDevModeEventListeners);

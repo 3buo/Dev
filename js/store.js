@@ -112,6 +112,21 @@ export async function saveDataToCloud(table, dataObject) {
 }
 
 /**
+ * Elimina datos en una tabla específica por su ID.
+ */
+export async function deleteDataFromCloud(table, id) {
+    if(!state.currentUid || !state.isReady) return;
+    
+    const { error } = await supabase.from(table).delete().eq('id', id).eq('user_id', state.currentUid);
+    
+    if (error) {
+        console.error("Error eliminando en", table, error);
+    } else {
+        initCloudData(state.currentUid); 
+    }
+}
+
+/**
  * Registra actividad en el log local
  */
 export function recordActivity() {
@@ -139,3 +154,6 @@ export function clearLocalData() {
     });
     notifyStateChange();
 }
+
+// Exponer el estado a la consola para depuración
+window.appState = state;
