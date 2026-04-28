@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- POLÍTICA DE SEGURIDAD (CSP) - MUY PERMISIVA PARA COMPATIBILIDAD CON LIBRERÍAS EXTERNAS -->
-    <!-- SI EL ERROR PERSISTE, EL PROBLEMA ES UNA CABECERA CSP EN TU SERVIDOR WEB (VER PASO 2) -->
+    <!-- POLÍTICA DE SEGURIDAD DE CONTENIDO (CSP) FINAL Y ROBUSTA -->
+    <!-- Permite la carga de recursos locales y externos de confianza, incluyendo APIs y CDN -->
+    <!-- Se recomienda que esta política sea también configurada como una cabecera HTTP en tu servidor para mayor seguridad -->
     <meta http-equiv="Content-Security-Policy" 
-          content="default-src 'self' data: https:; 
-                   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://cdnjs.cloudflare.com; 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://esm.sh https://cdnjs.cloudflare.com; 
                    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
-                   connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com;
+                   connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://ve.dolarapi.com https://pydolarvenezuela-api.vercel.app https://api.pydolarvenezuela.com https://api.allorigins.win;
+                   img-src 'self' data: https:;
                    font-src 'self' https://fonts.gstatic.com;">
     <title>Taskify</title>
     <meta name="theme-color" content="#121212">
@@ -32,7 +34,7 @@
 </head>
 <body>
 
-    <div id="cmdOverlay" onclick="closeCmd(event)">
+    <div id="cmdOverlay">
         <div class="cmd-box">
             <input type="text" id="cmdInput" class="cmd-input" placeholder="Escribe un comando..." autocomplete="off">
             <ul id="cmdResults" class="cmd-results"></ul>

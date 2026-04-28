@@ -36,25 +36,22 @@ export async function initCloudData(userId) {
     state.isReady = false; 
     
     try {
-        // Tablas que intentaremos cargar
         const tables = ['actividades', 'checklists', 'recordatorios', 'finanzas', 'notas'];
         
-        // Ejecución tolerante: map devuelve resultados aunque alguna tabla falle
         const results = await Promise.all(tables.map(table => 
             supabase.from(table).select('*').eq('user_id', userId)
                 .then(res => ({ table, data: res.data, error: res.error }))
         ));
 
-        // Asignamos datos de cada tabla exitosa
         results.forEach(res => {
             if (res.error) {
                 console.error(`Error cargando tabla ${res.table}:`, res.error);
             } else {
-                state[res.table] = res.data || [];
+                // Asegura que el array exista antes de asignar
+                state[res.table] = res.data || []; 
             }
         });
 
-        // Intentamos cargar el PIN (tabla configuración)
         const { data: cfg, error: cfgError } = await supabase.from('configuracion').select('masterpin').eq('user_id', userId).maybeSingle();
         if (cfgError) console.error("Error cargando PIN:", cfgError);
         if (cfg && cfg.masterpin) {
@@ -63,8 +60,6 @@ export async function initCloudData(userId) {
         
         state.isReady = true;
         notifyStateChange();
-        
-        // Guardado de emergencia local
         localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
 
     } catch (error) {
@@ -92,21 +87,21 @@ export async function initCloudData(userId) {
 export async function saveDataToCloud(table, dataObject) {
     if(!state.currentUid || !state.isReady) return;
 
-    // Si guardamos configuración, usamos el nombre de columna correcto
     if (table === 'configuracion') {
+        // Guarda el PIN
         const { error } = await supabase.from('configuracion').upsert({ user_id: state.currentUid, masterpin: state.masterPin });
         if (error) console.error("Error guardando PIN:", error);
         return;
     }
 
-    // Para tablas normales
+    // Para tablas normales (tareas, hábitos, etc.)
     const record = { ...dataObject, user_id: state.currentUid };
     const { error } = await supabase.from(table).upsert([record]);
     
     if (error) {
         console.error("Error guardando en", table, error);
     } else {
-        // Refrescamos los datos para mantener el estado local consistente
+        // Refrescamos todos los datos para consistencia
         initCloudData(state.currentUid); 
     }
 }
@@ -122,6 +117,7 @@ export async function deleteDataFromCloud(table, id) {
     if (error) {
         console.error("Error eliminando en", table, error);
     } else {
+        // Refrescamos todos los datos después de eliminar
         initCloudData(state.currentUid); 
     }
 }

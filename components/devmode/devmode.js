@@ -271,7 +271,7 @@ function applyAndSaveDevStyles() {
         
         if (animEnable && animEnable.checked) {
             const animType = document.getElementById('devAnimType')?.value;
-            dynamicStylesDB[currentSelectorTarget]['transition'] = 'all 0.2s ease !important'; 
+            dynamicStylesDB[currentSelectorTarget]['transition'] = 'all 0.2s ease'; 
             
             dynamicStylesDB[activeSel] = {};
             if(animType === 'scale-down') { dynamicStylesDB[activeSel]['transform'] = 'scale(0.92)'; } 
@@ -303,7 +303,7 @@ function applyAndSaveDevStyles() {
     const btnSave = document.getElementById('devBtnSave');
     if (btnSave) {
         const originalText = btnSave.innerText;
-        btnSave.innerText = '✅ ¡Guardado Correctamente!';
+        btnSave.innerText = '✅ ¡Guardado!';
         btnSave.classList.add('dev-btn-success');
         
         setTimeout(() => {
@@ -311,7 +311,7 @@ function applyAndSaveDevStyles() {
             btnSave.classList.remove('dev-btn-success');
         }, 2000);
     }
-}
+};
 
 // --- INYECTORES ---
 function injectDynamicStyleSheet() {
@@ -351,7 +351,7 @@ function applyContentOverrides() {
     setTimeout(() => { isOverridingText = false; }, 50);
 }
 
-// --- REINICIOS ---
+// --- REINICIOS Y EVENTOS ---
 function resetTargetStyles() { 
     if (!currentTargetElement) return;
     const selector = getSafeSelector(currentTargetElement);
@@ -377,9 +377,8 @@ function factoryResetStyles() {
     }
 }
 
-// --- CONFIGURACIÓN DE LISTENERS ---
 function setupDevModeEventListeners() {
-    // Exponer funciones internas a `window` para que el HTML pueda acceder a ellas
+    // Exponer funciones para que el HTML pueda llamarlas
     window.authenticateDev = authenticateDev;
     window.closeDevLogin = closeDevLogin;
     window.closeDevPanel = closeDevPanel;
@@ -388,11 +387,11 @@ function setupDevModeEventListeners() {
     window.resetTargetStyles = resetTargetStyles;
     window.factoryResetStyles = factoryResetStyles;
 
-    // Botones del modal de login
+    // Login Modal
     document.getElementById('btnLoginBtn')?.addEventListener('click', authenticateDev);
-    // document.getElementById('btnCancelLogin')?.addEventListener('click', closeDevLogin); // Si existe un botón de cancelar en el login modal
+    document.getElementById('devCancelLoginBtn')?.addEventListener('click', closeDevLogin); 
 
-    // Botones del panel de devmode
+    // Panel Editor
     document.getElementById('btnInspectorToggle')?.addEventListener('click', toggleInspectorMode);
     document.getElementById('closeDevPanelBtn')?.addEventListener('click', closeDevPanel); 
 
@@ -400,14 +399,7 @@ function setupDevModeEventListeners() {
     document.getElementById('devBtnReset')?.addEventListener('click', resetTargetStyles);
     document.getElementById('devBtnFactoryReset')?.addEventListener('click', factoryResetStyles);
     
-    // Inputs de color y texto (ya cubiertos por bindColorSyncEvents)
-    
-    // Inputs no cubiertos por bindColorSyncEvents
-    document.getElementById('devBorderBottom')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('border-bottom', e.target.value, 'important'); });
-    document.getElementById('devBorderRadius')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('border-radius', e.target.value, 'important'); });
-    document.getElementById('devPadding')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('padding', e.target.value, 'important'); });
-    document.getElementById('devFontSize')?.addEventListener('input', (e) => { if(currentTargetElement) currentTargetElement.style.setProperty('font-size', e.target.value, 'important'); });
-
+    // Inputs de texto y color
     document.getElementById('devElementText')?.addEventListener('input', (e) => {
         if (currentSelectorTarget) {
             dynamicContentDB[currentSelectorTarget] = e.target.value;
@@ -415,6 +407,7 @@ function setupDevModeEventListeners() {
         }
     });
 
+    // Animaciones
     const animCheck = document.getElementById('devAnimEnable');
     const animTypeSelect = document.getElementById('devAnimType');
     if (animCheck && animTypeSelect) {
@@ -423,10 +416,11 @@ function setupDevModeEventListeners() {
         });
         animTypeSelect.addEventListener('change', () => { // Listener para cambiar el tipo de animación
             if(currentTargetElement && animCheck.checked) {
-                applyAndSaveDevStyles(); // Re-aplicar estilos para actualizar la animación
+                applyAndSaveDevStyles(); // Re-aplicar estilos para guardar la selección
             }
         });
     }
 }
 
+// Inicialización al cargar el DOM
 document.addEventListener('DOMContentLoaded', setupDevModeEventListeners);
