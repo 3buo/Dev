@@ -1,7 +1,10 @@
 // app.js
 import { createClient } from '@supabase/supabase-js';
-import { state } from './state.js'; // Manejo de estado de la app (si ya lo tienes)
+import { state } from './state.js';
 import { initCloudData, fetchData, addData, updateData, deleteData } from './supabase-actions.js';
+import { renderHeader } from './components/header.js';
+import { renderSidebar } from './components/sidebar.js';
+import { renderDashboard } from './components/dashboard.js';
 
 // ------------------------------
 // Configuración de Supabase
@@ -22,12 +25,12 @@ async function initApp() {
     // Inicializar datos desde Supabase
     await initCloudData();
     
-    // Renderizar la interfaz principal
+    // Renderizar componentes principales
     renderUI();
 
     // Configurar listeners de eventos
     setupEventListeners();
-    
+
     console.log('App iniciada correctamente.');
   } catch (error) {
     console.error('Error al iniciar la app:', error.message);
@@ -36,27 +39,30 @@ async function initApp() {
 }
 
 // ------------------------------
-// Renderizado de UI
+// Renderizado de UI con componentes
 // ------------------------------
 function renderUI() {
   const appContainer = document.getElementById('app');
   if (!appContainer) return;
 
-  appContainer.innerHTML = `
-    <header>
-      <h1>Mi App Funcional</h1>
-    </header>
-    <main>
-      <section id="dashboard"></section>
-      <section id="form-section">
-        <input type="text" id="data-input" placeholder="Escribe algo..." />
-        <button id="add-btn">Agregar</button>
-      </section>
-      <section id="data-list"></section>
-    </main>
-  `;
+  // Limpiar container
+  appContainer.innerHTML = '';
 
-  // Renderizar los datos existentes
+  // Render de componentes
+  renderHeader();
+  renderSidebar();
+  renderDashboard();
+
+  // Crear formulario de ingreso de datos
+  const formSection = document.createElement('section');
+  formSection.id = 'form-section';
+  formSection.innerHTML = `
+    <input type="text" id="data-input" placeholder="Escribe algo..." />
+    <button id="add-btn">Agregar</button>
+  `;
+  appContainer.appendChild(formSection);
+
+  // Lista de datos (dashboard-list) se maneja dentro de dashboard.js
   refreshDataList();
 }
 
