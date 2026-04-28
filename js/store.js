@@ -29,32 +29,36 @@ export let unsubSnapshot = null;
 export const notifyStateChange = () => window.dispatchEvent(new Event('stateChanged'));
 
 /**
- * Inicializa los datos desde Supabase al iniciar sesión
+ * Inicializa los datos desde Supabase de forma tolerante a fallos
  */
 export async function initCloudData(userId) {
     state.currentUid = userId;
     state.isReady = false; 
     
     try {
-        // Cargamos tablas + la configuración del usuario usando 'masterpin' en minúsculas
-        const [act, check, rem, fin, not, cfg] = await Promise.all([
-            supabase.from('actividades').select('*').eq('user_id', userId),
-            supabase.from('checklists').select('*').eq('user_id', userId),
-            supabase.from('recordatorios').select('*').eq('user_id', userId),
-            supabase.from('finanzas').select('*').eq('user_id', userId),
-            supabase.from('notas').select('*').eq('user_id', userId),
-            supabase.from('configuracion').select('masterpin').eq('user_id', userId).maybeSingle() 
-        ]);
-
-        state.actividades = act.data || [];
-        state.checklists = check.data || [];
-        state.reminders = rem.data || [];
-        state.finanzas = fin.data || [];
-        state.notas = not.data || [];
+        // Tablas que intentaremos cargar
+        const tables = ['actividades', 'checklists', 'recordatorios', 'finanzas', 'notas'];
         
-        // Asignamos el PIN correctamente desde la columna 'masterpin'
-        if (cfg.data && cfg.data.masterpin) {
-            state.masterPin = cfg.data.masterpin;
+        // Ejecución tolerante: map devuelve resultados aunque alguna tabla falle
+        const results = await Promise.all(tables.map(table => 
+            supabase.from(table).select('*').eq('user_id', userId)
+                .then(res => ({ table, data: res.data, error: res.error }))
+        ));
+
+        // Asignamos datos de cada tabla exitosa
+        results.forEach(res => {
+            if (res.error) {
+                console.error(`Error cargando tabla ${res.table}:`, res.error);
+            } else {
+                state[res.table] = res.data || [];
+            }
+        });
+
+        // Intentamos cargar el PIN (tabla configuración)
+        const { data: cfg, error: cfgError } = await supabase.from('configuracion').select('masterpin').eq('user_id', userId).maybeSingle();
+        if (cfgError) console.error("Error cargando PIN:", cfgError);
+        if (cfg && cfg.masterpin) {
+            state.masterPin = cfg.masterpin;
         }
         
         state.isReady = true;
@@ -64,7 +68,7 @@ export async function initCloudData(userId) {
         localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
 
     } catch (error) {
-        console.error("Error al sincronizar con la nube:", error);
+        console.error("Error crítico al sincronizar con la nube:", error);
         const backup = localStorage.getItem('taskify_emergency_backup');
         if (backup) {
             Object.assign(state, JSON.parse(backup));
@@ -102,6 +106,7 @@ export async function saveDataToCloud(table, dataObject) {
     if (error) {
         console.error("Error guardando en", table, error);
     } else {
+        // Refrescamos los datos para mantener el estado local consistente
         initCloudData(state.currentUid); 
     }
 }
