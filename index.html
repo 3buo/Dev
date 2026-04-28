@@ -8,7 +8,9 @@
     
     <link rel="stylesheet" href="global.css">
     <link rel="stylesheet" href="components/devmode/devmode.css">
-    <link rel="stylesheet" href="components/alarm/alarm.css"> <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="components/alarm/alarm.css"> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
@@ -24,12 +26,20 @@
 
     <div id="authScreen">
         <div class="auth-container">
-            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">Modular</span></h1>
-            <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia segura</p>
+            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">Secure</span></h1>
+            <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia encriptada</p>
+            
+            <div id="authMessage" style="display: none; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.85em; text-align: center; transition: 0.3s;"></div>
+
             <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required>
-            <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required>
-            <button class="auth-btn" onclick="appLogin()">Iniciar Sesión</button>
-            <button class="auth-btn auth-btn-sec" onclick="appRegister()">Crear Cuenta Nueva</button>
+            
+            <div style="position: relative; width: 100%; margin-bottom: 20px;">
+                <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña (mín. 6 caracteres)" style="margin-bottom: 0; padding-right: 40px; width: 100%; box-sizing: border-box;" required>
+                <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #aaa; cursor: pointer; font-size: 1.2em;">👁️</button>
+            </div>
+
+            <button id="btnLoginBtn" class="auth-btn" onclick="appLogin()">Iniciar Sesión</button>
+            <button id="btnRegBtn" class="auth-btn auth-btn-sec" onclick="appRegister()">Crear Cuenta Nueva</button>
             <div class="auth-links" onclick="appResetPassword()">¿Olvidaste tu contraseña?</div>
         </div>
     </div>
@@ -56,8 +66,7 @@
 
         <div id="tab-content-container"></div>
         
-        </div>
-
+    </div>
 
     <button class="alarm-floating-btn" onclick="window.toggleAlarmConfig()" title="Configurar sonido de alertas">🔊</button>
 
@@ -195,7 +204,6 @@
 
     <script type="module">
         import { initAlarmSystem } from './components/alarm/alarm.js';
-        // Aseguramos que se inicie cuando el estado de la app cambie/cargue
         window.addEventListener('stateChanged', () => {
             initAlarmSystem();
         });
@@ -244,5 +252,30 @@
         });
     </script>
 
+    <script>
+        // 1. Bloquear Clic Derecho
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // 2. Bloquear atajos de teclado (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.key === "F12" || e.keyCode === 123) return false;
+            if (e.ctrlKey && e.shiftKey && e.key === "I") return false;
+            if (e.ctrlKey && e.shiftKey && e.key === "J") return false;
+            if (e.ctrlKey && e.shiftKey && e.key === "C") return false;
+            if (e.ctrlKey && e.key === "U") return false;
+        };
+
+        // 3. Trampa Debugger (Congela la página si logran abrir la consola)
+        setInterval(() => {
+            const start = new Date().getTime();
+            debugger; // Si la consola está abierta, el navegador se detendrá aquí.
+            const end = new Date().getTime();
+            
+            // Si tardó más de 100ms en pasar el debugger, significa que las DevTools están abiertas
+            if (end - start > 100) {
+                document.body.innerHTML = `<div style="display:flex; height:100vh; width:100vw; background:black; color:red; align-items:center; justify-content:center; font-family:monospace; font-size:2em; text-align:center;">⚠️ ACCESO DENEGADO<br>Violación de seguridad detectada.</div>`;
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
