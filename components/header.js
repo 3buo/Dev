@@ -1,5 +1,3 @@
-// header.js
-
 export function renderHeader(containerId = 'app') {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -11,6 +9,5 @@ export function renderHeader(containerId = 'app') {
       <h1>Mi App Funcional</h1>
     </div>
   `;
-
   container.prepend(header);
 }
