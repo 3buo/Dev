@@ -6,7 +6,7 @@ import { renderSidebar } from './components/sidebar.js';
 import { renderDashboard } from './components/dashboard.js';
 
 const supabaseUrl = 'https://snruccregkwcsnptojvw.supabase.co';
-const supabaseKey = 'TU_SUPABASE_KEY';
+const supabaseKey = 'sb_publishable_c-NOpMRqd0E2P-QW3IEfOw_MHRuq9FO';
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 document.addEventListener('DOMContentLoaded', async () => {
