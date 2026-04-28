@@ -4,9 +4,18 @@ import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 window.addTask = () => { 
     const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
     if (input.value.trim() === '') return alert('Escribe la actividad.'); 
-    state.tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); 
+    
+    const newTask = { text: input.value, date: dateInput.value, priority: pri.value, completed: false };
+    
+    if(!state.tasks) state.tasks = [];
+    state.tasks.push(newTask); 
+    
     input.value = ''; dateInput.value = ''; 
-    recordActivity(); saveDataToCloud(); window.renderTasks(); 
+    recordActivity(); 
+    
+    // Guardar en Supabase usando la nueva función genérica
+    saveDataToCloud('actividades', newTask); 
+    window.renderTasks(); 
 };
 
 window.renderTasks = () => { 
@@ -14,21 +23,27 @@ window.renderTasks = () => {
     if (!pendingList || !completedList) return;
     pendingList.innerHTML = ''; completedList.innerHTML = ''; 
     
-    state.tasks.forEach((task, index) => { 
+    // VERIFICACIÓN DE SEGURIDAD AÑADIDA: (state.tasks || [])
+    (state.tasks || []).forEach((task, index) => { 
         const li = document.createElement('li'); 
         const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; 
         checkbox.onchange = () => { 
             state.tasks[index].completed = !state.tasks[index].completed; 
             if(state.tasks[index].completed) { state.tasks[index].completedAt = new Date().toLocaleString('es-VE'); recordActivity(); } 
             else { state.tasks[index].completedAt = null; }
-            saveDataToCloud(); window.renderTasks(); 
+            
+            saveDataToCloud('actividades', state.tasks[index]); 
+            window.renderTasks(); 
         }; 
+        
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
         let completedInfo = (task.completed && task.completedAt) ? `<br><span style="font-size: 0.8em; color: var(--secondary);">✅ Completada: ${task.completedAt}</span>` : '';
         contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>${completedInfo}`; 
+        
         const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; 
         const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
-        deleteBtn.onclick = () => { state.tasks.splice(index, 1); saveDataToCloud(); window.renderTasks(); }; 
+        deleteBtn.onclick = () => { state.tasks.splice(index, 1); saveDataToCloud('actividades', task); window.renderTasks(); }; 
+        
         li.append(checkbox, contentDiv, badge, deleteBtn); 
         task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li);
     }); 
@@ -63,10 +78,9 @@ window.addRecurringTask = () => {
         interval: parseInt(interval) || 1, 
         freq: freq, 
         days: selectedDays.length > 0 ? selectedDays : null,
-        notified: false 
+        notified: false,
+        nextTrigger: (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16)
     };
-
-    newTask.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
     
     if (baseDate <= new Date()) window.rescheduleRecurring(newTask, false); 
     else window.rescheduleRecurring(newTask, true); 
@@ -77,7 +91,9 @@ window.addRecurringTask = () => {
     input.value = ''; document.getElementById('recTaskDate').value = ''; document.getElementById('recTaskTime').value = ''; 
     document.querySelectorAll('#recTaskDays input').forEach(cb => cb.checked = false);
     
-    recordActivity(); saveDataToCloud(); window.renderRecurringTasks();
+    recordActivity(); 
+    saveDataToCloud('actividades', newTask); 
+    window.renderRecurringTasks();
 };
 
 window.rescheduleRecurring = (task, isInitialSetup = false) => { 
@@ -107,27 +123,23 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
                 else if(freq === 'dias') date.setDate(date.getDate() + interval); 
                 else if(freq === 'meses') date.setMonth(date.getMonth() + interval); 
                 else date.setHours(date.getHours() + 1); 
-                
                 loopLimiter++;
                 if(loopLimiter > 1000) break; 
             } while (date <= now); 
         }
     }
-    
     task.nextTrigger = (new Date(date.getTime() - (date.getTimezoneOffset() * 60000))).toISOString().slice(0, 16); 
     task.notified = false; 
 };
 
-// --- EDICIÓN DE HÁBITOS ---
+// --- EDICIÓN Y RENDERIZADO ---
 window.openEditHabitModal = (index) => {
     const task = state.recurringTasks[index];
     document.getElementById('editHabitIndex').value = index;
     document.getElementById('editHabitName').value = task.text;
-    
     const d = new Date(task.nextTrigger);
     document.getElementById('editHabitDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     document.getElementById('editHabitTime').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    
     document.getElementById('editHabitModal').style.display = 'flex';
 };
 
@@ -135,163 +147,30 @@ window.closeEditHabitModal = () => { document.getElementById('editHabitModal').s
 
 window.saveEditHabit = () => {
     const index = document.getElementById('editHabitIndex').value;
-    const text = document.getElementById('editHabitName').value;
-    const dateInput = document.getElementById('editHabitDate').value;
-    const timeInput = document.getElementById('editHabitTime').value;
-
-    if (!text || !timeInput || !dateInput) return alert("Completa todos los campos");
-
     const task = state.recurringTasks[index];
-    task.text = text;
-
-    let baseDate = new Date();
-    const [year, month, day] = dateInput.split('-');
-    baseDate.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
-    const [hours, mins] = timeInput.split(':');
-    baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
-
+    task.text = document.getElementById('editHabitName').value;
+    const [year, month, day] = document.getElementById('editHabitDate').value.split('-');
+    const [hours, mins] = document.getElementById('editHabitTime').value.split(':');
+    let baseDate = new Date(year, month - 1, day, hours, mins);
     task.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
-
-    if (baseDate <= new Date()) window.rescheduleRecurring(task, false); 
-    else window.rescheduleRecurring(task, true); 
-
-    saveDataToCloud(); window.closeEditHabitModal(); window.renderRecurringTasks();
+    
+    window.rescheduleRecurring(task, false); 
+    saveDataToCloud('actividades', task); 
+    window.closeEditHabitModal(); 
+    window.renderRecurringTasks();
 };
 
 window.renderRecurringTasks = () => { 
     const list = document.getElementById('recurringList'); if(!list) return; list.innerHTML = ''; 
-    if(!state.recurringTasks) state.recurringTasks = [];
-    state.recurringTasks.forEach((rec, index) => { 
-        const li = document.createElement('li'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = false; 
-        checkbox.onchange = () => { 
-            window.rescheduleRecurring(state.recurringTasks[index]); 
-            recordActivity(); saveDataToCloud(); window.renderRecurringTasks(); 
-        }; 
-        
-        let dateString = "Fecha inválida";
-        if(rec.nextTrigger) {
-            const nextD = new Date(rec.nextTrigger);
-            if(!isNaN(nextD)) dateString = nextD.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
-        }
-        
-        const dayMap = {1:'L', 2:'M', 3:'X', 4:'J', 5:'V', 6:'S', 0:'D'};
-        let patternStr = rec.days ? `Días: ${rec.days.map(d => dayMap[d]).join(', ')}` : `Cada ${rec.interval} ${rec.freq}`;
-
-        const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
-        contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; 
-        const badge = document.createElement('span'); badge.className = 'badge rec-badge'; badge.innerText = patternStr; 
-        
-        const btnBox = document.createElement('div');
-        btnBox.style.display = 'flex'; btnBox.style.marginLeft = 'auto'; btnBox.style.gap = '5px';
-        
-        const editBtn = document.createElement('button'); editBtn.innerText = '✏️'; editBtn.style.background = 'var(--secondary)'; editBtn.style.padding = '5px 10px'; editBtn.style.color = 'black';
-        editBtn.onclick = () => window.openEditHabitModal(index);
-        
-        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; 
-        deleteBtn.onclick = () => { state.recurringTasks.splice(index, 1); saveDataToCloud(); window.renderRecurringTasks(); }; 
-        
-        btnBox.append(editBtn, deleteBtn);
-        li.append(checkbox, contentDiv, badge, btnBox); list.appendChild(li); 
+    (state.recurringTasks || []).forEach((rec, index) => { 
+        const li = document.createElement('li'); 
+        const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; 
+        checkbox.onchange = () => { window.rescheduleRecurring(state.recurringTasks[index]); recordActivity(); saveDataToCloud('actividades', rec); window.renderRecurringTasks(); }; 
+        const dateString = new Date(rec.nextTrigger).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
+        const patternStr = rec.days ? `Días: ${rec.days.join(',')}` : `Cada ${rec.interval} ${rec.freq}`;
+        li.innerHTML = `<strong>${rec.text}</strong><br><span>⏰ ${dateString}</span><span class="badge">${patternStr}</span>`;
+        list.appendChild(li); 
     }); 
-};
-
-
-// --- SISTEMA DE CALENDARIO ---
-let calDate = new Date();
-
-window.openCalendarModal = () => {
-    calDate = new Date(); // Reset al mes actual
-    document.getElementById('calendarModal').style.display = 'flex';
-    window.renderCalendar();
-};
-
-window.closeCalendarModal = () => {
-    document.getElementById('calendarModal').style.display = 'none';
-};
-
-window.changeMonth = (dir) => {
-    calDate.setMonth(calDate.getMonth() + dir);
-    window.renderCalendar();
-};
-
-window.renderCalendar = () => {
-    const grid = document.getElementById('calendarGrid');
-    const title = document.getElementById('calendarMonthYear');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-    
-    const year = calDate.getFullYear();
-    const month = calDate.getMonth();
-    
-    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    title.innerText = `${monthNames[month]} ${year}`;
-    
-    // Encabezados de días
-    ['D', 'L', 'M', 'X', 'J', 'V', 'S'].forEach(d => {
-        let el = document.createElement('div');
-        el.innerText = d;
-        el.style.textAlign = 'center';
-        el.style.fontWeight = 'bold';
-        el.style.color = 'var(--secondary)';
-        el.style.fontSize = '0.8em';
-        el.style.marginBottom = '5px';
-        grid.appendChild(el);
-    });
-    
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    
-    // Espacios vacíos antes del día 1
-    for(let i=0; i<firstDay; i++) {
-        let el = document.createElement('div');
-        grid.appendChild(el);
-    }
-    
-    // Dibujar días
-    for(let i=1; i<=daysInMonth; i++) {
-        let el = document.createElement('div');
-        el.innerText = i;
-        el.className = 'cal-day';
-        
-        // Formato YYYY-MM-DD local
-        let currentDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        
-        let dayActivities = [];
-        
-        // Buscar Tareas Simples
-        if (state.tasks) {
-            state.tasks.forEach(t => {
-                if(!t.completed && t.date === currentDateStr) {
-                    dayActivities.push(`📌 ${t.text}`);
-                }
-            });
-        }
-        
-        // Buscar Próximos Hábitos (El primer gatillo visible de cada hábito)
-        if (state.recurringTasks) {
-            state.recurringTasks.forEach(r => {
-                if(r.nextTrigger && r.nextTrigger.startsWith(currentDateStr)) {
-                    let time = new Date(r.nextTrigger).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
-                    dayActivities.push(`🔄 ${r.text} (${time})`);
-                }
-            });
-        }
-        
-        // Si hay actividades, encender animación y tooltip
-        if(dayActivities.length > 0) {
-            el.classList.add('has-activities');
-            el.innerHTML = `${i} <div class="cal-tooltip">${dayActivities.join('<br>')}</div>`;
-        }
-        
-        // Marcar el día de "HOY" visualmente
-        const hoy = new Date();
-        if (year === hoy.getFullYear() && month === hoy.getMonth() && i === hoy.getDate()) {
-            el.style.borderBottom = "3px solid var(--primary)";
-        }
-
-        grid.appendChild(el);
-    }
 };
 
 export function init() {
@@ -302,8 +181,5 @@ export function init() {
 window.addEventListener('stateChanged', () => {
     if(document.getElementById('pendingList')) {
         init();
-        if(document.getElementById('calendarModal').style.display === 'flex') {
-            window.renderCalendar();
-        }
     }
 });

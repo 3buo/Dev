@@ -77,15 +77,21 @@ if (tabContainer) {
     });
 }
 
-// --- AUTH (Migrado a Supabase) ---
+// --- AUTH (Migrado a Supabase - BLINDADO) ---
 supabase.auth.onAuthStateChange(async (event, session) => { 
     const user = session?.user;
-    if (user) { 
+    
+    if (user && user.id) { 
+        console.log("Sesión activa para usuario:", user.id);
         document.getElementById('authScreen').style.display = 'none'; 
+        
+        // Carga bloqueante: esperamos a los datos antes de mostrar la App
         await initCloudData(user.id); 
+        
         document.getElementById('mainApp').style.display = 'block'; 
         if(!currentTab) window.switchTab('actividades'); 
     } else { 
+        console.log("Sesión cerrada o usuario no encontrado.");
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('mainApp').style.display = 'none'; 
         if (unsubSnapshot) supabase.removeChannel(unsubSnapshot); 
