@@ -74,6 +74,10 @@ window.switchTab = async (tabName) => {
 // --- GESTIÓN DE SESIÓN (SUPABASE) ---
 supabase.auth.onAuthStateChange(async (event, session) => { 
     const user = session?.user;
+    // En app.js, dentro de onAuthStateChange, antes de initCloudData
+    console.log("Intentando inicializar con user ID:", user.id);
+    await initCloudData(user.id);
+
     
     if (user && user.id) { 
         document.getElementById('authScreen').style.display = 'none'; 
