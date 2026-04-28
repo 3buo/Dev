@@ -55,7 +55,7 @@ window.previewAndSaveAlarmSettings = () => {
     currentAudio.play().catch(e => console.warn("Autoplay bloqueado por el navegador en la preview."));
 };
 
-// API GLOBAL PARA DISPARAR ALARMAS (Esta es la que debes usar en app.js)
+// API GLOBAL PARA DISPARAR ALARMAS
 window.triggerSystemAlarm = (title, description, onCompleteCallback) => {
     
     // Detener sonidos previos si se superponen
@@ -92,7 +92,7 @@ window.snoozeSystemAlarm = () => {
     const savedDesc = document.getElementById('sysAlarmDesc').innerText;
     const savedCallback = activeCallback;
     
-    // Re-disparar en 5 minutos
+    // CORREGIDO: Re-disparar en 5 minutos usando función de flecha segura
     setTimeout(() => {
         window.triggerSystemAlarm(`(Pospuesto) ${savedTitle}`, savedDesc, savedCallback);
     }, 300000); 
