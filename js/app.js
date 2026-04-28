@@ -177,3 +177,48 @@ setInterval(() => {
 
 // Exponer estado para debug
 window.appState = state;
+
+// --- CONEXIÓN DE ELEMENTOS DE UI (Auth y otros) ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Botones de Autenticación
+  document.getElementById('btnLoginBtn')?.addEventListener('click', window.appLogin);
+  document.getElementById('btnRegBtn')?.addEventListener('click', window.appRegister);
+  document.getElementById('appLogoutBtn')?.addEventListener('click', window.appLogout);
+
+  // Enlace de Recuperación de Contraseña
+  document.getElementById('appResetPasswordLink')?.addEventListener('click', async () => {
+    const email = document.getElementById('authEmail')?.value;
+    if (!email) {
+      alert('Por favor, ingresa tu correo electrónico primero.');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://project-sq8he.vercel.app/',
+    });
+    if (error) {
+      alert('Error: ' + error.message);
+    } else {
+      alert('Se ha enviado un enlace de recuperación a tu correo.');
+    }
+  });
+
+  // Visibilidad de Contraseña
+  document.getElementById('togglePasswordVisibilityBtn')?.addEventListener('click', () => {
+    const passInput = document.getElementById('authPassword');
+    if (passInput) {
+      const isPassword = passInput.type === 'password';
+      passInput.type = isPassword ? 'text' : 'password';
+      document.getElementById('togglePasswordVisibilityBtn').innerText = isPassword ? '🙈' : '👁️';
+    }
+  });
+
+  // Switch de pestañas iniciales si existen
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabName = btn.id.replace('tab-', '');
+      if (tabName !== 'appLogoutBtn' && btn.id !== 'appLogoutBtn') {
+        window.switchTab(tabName);
+      }
+    });
+  });
+});
