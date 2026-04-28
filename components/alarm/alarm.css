@@ -1,1 +1,95 @@
-sadasd
+/* ==========================================================================
+   MÓDULO DE ALARMA Y NOTIFICACIONES
+   ========================================================================== */
+
+/* Botón Flotante de Configuración (Esquina inferior izquierda) */
+.alarm-floating-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #161b22;
+    color: white;
+    border: 1px solid #30363d;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 1.2em;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    z-index: 9990;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.alarm-floating-btn:hover { background: #1f242c; transform: scale(1.1); border-color: #b392f0; }
+
+/* Panel de Configuración */
+.alarm-config-panel {
+    position: fixed;
+    bottom: 75px;
+    left: 20px;
+    background: rgba(13, 17, 23, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px;
+    width: 260px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    z-index: 9990;
+    color: white;
+    font-family: 'Inter', system-ui, sans-serif;
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.alarm-config-panel h3 { margin: 0; font-size: 1.1em; color: #b392f0; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+.alarm-config-panel label { font-size: 0.85em; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.alarm-select, .alarm-slider {
+    width: 100%;
+    background: #010409;
+    border: 1px solid #30363d;
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    outline: none;
+    box-sizing: border-box;
+}
+.alarm-select:focus { border-color: #b392f0; }
+
+/* Modal de la Alarma (Pantalla Completa) */
+.alarm-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    z-index: 99999; display: flex; align-items: center; justify-content: center;
+}
+
+.alarm-content {
+    background: #161b22;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid #b392f0;
+    box-shadow: 0 0 50px rgba(179, 146, 240, 0.2);
+    width: 90%;
+    max-width: 400px;
+    animation: alarmPulse 2s infinite;
+}
+
+@keyframes alarmPulse {
+    0% { box-shadow: 0 0 30px rgba(179, 146, 240, 0.2); }
+    50% { box-shadow: 0 0 60px rgba(179, 146, 240, 0.6); }
+    100% { box-shadow: 0 0 30px rgba(179, 146, 240, 0.2); }
+}
+
+.alarm-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; }
+.alarm-btn {
+    padding: 12px 25px; border-radius: 8px; font-weight: bold; font-size: 1em;
+    cursor: pointer; transition: 0.2s; flex: 1;
+}
+.alarm-btn-outline { background: transparent; border: 1px solid #b392f0; color: white; }
+.alarm-btn-outline:hover { background: rgba(179, 146, 240, 0.1); }
+.alarm-btn-solid { background: #b392f0; border: none; color: black; }
+.alarm-btn-solid:hover { background: #c8b0f4; transform: translateY(-2px); }
