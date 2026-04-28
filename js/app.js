@@ -22,7 +22,7 @@ const logError = (tabName, context, error) => {
     }
 };
 
-// --- SISTEMA DE PESTAÑAS (Con saneamiento y manejo de errores) ---
+// --- SISTEMA DE PESTAÑAS (Con saneamiento preventivo) ---
 window.switchTab = async (tabName) => {
     currentTab = tabName;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -34,7 +34,6 @@ window.switchTab = async (tabName) => {
     container.innerHTML = '<div style="text-align:center; padding: 40px; color: #aaa;">Cargando interfaz...</div>';
 
     try {
-        // 1. Cargar CSS
         if (!loadedCSS.has(tabName)) {
             const link = document.createElement('link');
             link.rel = 'stylesheet'; link.href = `components/${tabName}/${tabName}.css`;
@@ -42,14 +41,19 @@ window.switchTab = async (tabName) => {
             loadedCSS.add(tabName);
         }
 
-        // 2. Cargar HTML
         const htmlRes = await fetch(`components/${tabName}/${tabName}.html`);
-        if (!htmlRes.ok) throw new Error(`No se pudo encontrar el archivo HTML en components/${tabName}/${tabName}.html`);
+        if (!htmlRes.ok) throw new Error(`Archivo no encontrado: components/${tabName}/${tabName}.html`);
         
         const rawHtml = await htmlRes.text();
-        container.innerHTML = DOMPurify.sanitize(rawHtml);
 
-        // 3. Cargar Módulo JS
+        // AJUSTE PREVENTIVO DOMPURIFY
+        if (typeof DOMPurify !== 'undefined') {
+            container.innerHTML = DOMPurify.sanitize(rawHtml);
+        } else {
+            console.warn("DOMPurify no cargado, renderizando sin sanear.");
+            container.innerHTML = rawHtml;
+        }
+
         if (!loadedModules.has(tabName)) {
             const module = await import(`../components/${tabName}/${tabName}.js`);
             if (module.init) module.init();
