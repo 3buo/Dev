@@ -3,6 +3,7 @@ import { supabase } from './supabase-config.js';
 export const state = {
     isReady: false, 
     currentUid: null,
+    masterPin: "1234", // PIN por defecto
     actividades: [], 
     reminders: [], 
     finanzas: [], 
@@ -15,39 +16,36 @@ export const state = {
 
 export let unsubSnapshot = null;
 
-/**
- * Notifica a la interfaz que el estado ha cambiado
- */
 export const notifyStateChange = () => window.dispatchEvent(new Event('stateChanged'));
 
-/**
- * Inicializa los datos desde Supabase al iniciar sesión
- */
 export async function initCloudData(userId) {
     state.currentUid = userId;
     state.isReady = false; 
     
     try {
-        // Cargamos todas las tablas en paralelo para máxima velocidad
-        const [act, check, rem, fin, not] = await Promise.all([
+        // Cargamos tablas + la configuración del usuario (incluyendo el PIN)
+        const [act, check, rem, fin, not, cfg] = await Promise.all([
             supabase.from('actividades').select('*').eq('user_id', userId),
             supabase.from('checklists').select('*').eq('user_id', userId),
             supabase.from('recordatorios').select('*').eq('user_id', userId),
             supabase.from('finanzas').select('*').eq('user_id', userId),
-            supabase.from('notas').select('*').eq('user_id', userId)
+            supabase.from('notas').select('*').eq('user_id', userId),
+            supabase.from('configuracion').select('masterPin').eq('user_id', userId).single()
         ]);
 
-        // Asignamos los datos obtenidos
         state.actividades = act.data || [];
         state.checklists = check.data || [];
         state.reminders = rem.data || [];
         state.finanzas = fin.data || [];
         state.notas = not.data || [];
         
+        // Si el usuario ya configuró un PIN, lo cargamos
+        if (cfg.data && cfg.data.masterPin) {
+            state.masterPin = cfg.data.masterPin;
+        }
+        
         state.isReady = true;
         notifyStateChange();
-        
-        // Guardado de emergencia local
         localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
 
     } catch (error) {
@@ -60,52 +58,32 @@ export async function initCloudData(userId) {
         }
     }
 
-    // Configuración de Realtime (Actualización automática si otro dispositivo cambia algo)
     if (unsubSnapshot) supabase.removeChannel(unsubSnapshot);
     unsubSnapshot = supabase.channel('db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', filter: `user_id=eq.${userId}` }, (payload) => {
-            console.log("Cambio detectado, refrescando datos...");
+        .on('postgres_changes', { event: '*', schema: 'public', filter: `user_id=eq.${userId}` }, () => {
             initCloudData(userId);
         })
         .subscribe();
 }
 
-/**
- * Guarda datos en una tabla específica.
- * @param {string} table - Nombre de la tabla en Supabase
- * @param {object} dataObject - Datos a guardar
- */
 export async function saveDataToCloud(table, dataObject) {
     if(!state.currentUid || !state.isReady) return;
-
-    // Aseguramos que siempre lleve el user_id para cumplir con RLS
     const record = { ...dataObject, user_id: state.currentUid };
-
     const { error } = await supabase.from(table).upsert([record]);
-    
-    if (error) {
-        console.error("Error guardando en", table, error);
-    } else {
-        // Refrescamos los datos para mantener el estado local consistente
-        initCloudData(state.currentUid); 
-    }
+    if (error) console.error("Error guardando en", table, error);
+    else initCloudData(state.currentUid); 
 }
 
-/**
- * Registra actividad en el log local
- */
 export function recordActivity() {
     const today = new Date().toISOString().split('T')[0];
     state.activityLog[today] = (state.activityLog[today] || 0) + 1;
 }
 
-/**
- * Resetea el estado local al cerrar sesión
- */
 export function clearLocalData() {
     Object.assign(state, { 
         isReady: false, 
         currentUid: null,
+        masterPin: "1234",
         actividades: [], 
         reminders: [], 
         finanzas: [], 

@@ -1,15 +1,16 @@
-import { supabase } from './supabase-config.js'; // CAMBIO: Usamos Supabase
+import { supabase } from './supabase-config.js';
 import { state, initCloudData, clearLocalData, unsubSnapshot, saveDataToCloud, recordActivity } from './store.js';
 
 const loadedModules = new Set();
 const loadedCSS = new Set(); 
 let currentTab = null;
 
-// --- SISTEMA DE PESTAÑAS ---
+// --- SISTEMA DE PESTAÑAS (Con saneamiento DOMPurify) ---
 window.switchTab = async (tabName) => {
     currentTab = tabName;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
+    const btn = document.getElementById(`tab-${tabName}`);
+    if(btn) btn.classList.add('active');
     document.body.setAttribute('data-theme', tabName);
     
     const container = document.getElementById('tab-content-container');
@@ -23,7 +24,9 @@ window.switchTab = async (tabName) => {
             loadedCSS.add(tabName);
         }
         const htmlRes = await fetch(`components/${tabName}/${tabName}.html`);
-        container.innerHTML = await htmlRes.text();
+        const rawHtml = await htmlRes.text();
+        // Saneamiento de seguridad para prevenir XSS
+        container.innerHTML = DOMPurify.sanitize(rawHtml);
 
         if (!loadedModules.has(tabName)) {
             const module = await import(`../components/${tabName}/${tabName}.js`);
@@ -38,13 +41,16 @@ window.switchTab = async (tabName) => {
 };
 
 // --- DRAG AND DROP ---
-Sortable.create(document.getElementById('tabContainer'), { 
-    animation: 150, ghostClass: 'sortable-ghost', 
-    onEnd: function () { 
-        state.tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); 
-        saveDataToCloud(); 
-    } 
-});
+const tabContainer = document.getElementById('tabContainer');
+if (tabContainer) {
+    Sortable.create(tabContainer, { 
+        animation: 150, ghostClass: 'sortable-ghost', 
+        onEnd: function () { 
+            state.tabOrder = Array.from(tabContainer.children).map(btn => btn.id); 
+            // Guardar orden en tabla de configuración si lo deseas
+        } 
+    });
+}
 
 window.addEventListener('stateChanged', () => {
     if (state.tabOrder && state.tabOrder.length > 0) { 
@@ -58,9 +64,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     const user = session?.user;
     if (user) { 
         document.getElementById('authScreen').style.display = 'none'; 
-        document.getElementById('mainApp').style.display = 'block'; 
-        // Supabase usa 'id' en lugar de 'uid'
+        // Esperamos a que los datos se carguen COMPLETAMENTE antes de mostrar la app
         await initCloudData(user.id); 
+        document.getElementById('mainApp').style.display = 'block'; 
+        
         if(!currentTab) window.switchTab('actividades'); 
     } else { 
         document.getElementById('authScreen').style.display = 'flex'; 
@@ -80,16 +87,16 @@ window.appLogin = async () => {
 
 window.appRegister = async () => { 
     const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value; 
-    if(p.length < 6) return alert("Min 6 chars"); 
+    if(p.length < 6) return alert("La contraseña debe tener al menos 6 caracteres"); 
     const { error } = await supabase.auth.signUp({ email: e, password: p });
-    if(error) alert(error.message); else alert("Cuenta creada con éxito.");
+    if(error) alert(error.message); else alert("Cuenta creada. Ya puedes iniciar sesión.");
 };
 
 window.appResetPassword = async () => { 
-    const e = prompt("Correo:"); 
+    const e = prompt("Introduce tu correo electrónico:"); 
     if(e) {
         const { error } = await supabase.auth.resetPasswordForEmail(e);
-        if(error) alert(error.message); else alert("¡Enviado!");
+        if(error) alert(error.message); else alert("¡Enlace de recuperación enviado!");
     }
 };
 
@@ -114,7 +121,6 @@ cmdInput.addEventListener('input', (e) => { const val = e.target.value.toLowerCa
 function renderCmdResults(list) { cmdResults.innerHTML = ''; list.forEach((item, index) => { const li = document.createElement('li'); li.innerText = item.name; if(index === 0) li.classList.add('active-cmd'); li.onclick = () => { item.action(); cmdOverlay.style.display = 'none'; }; cmdResults.appendChild(li); }); } 
 cmdInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const active = cmdResults.querySelector('.active-cmd'); if(active) active.click(); } });
 
-
 // ==========================================================================
 // --- MOTOR GLOBAL DE ALARMAS ---
 // ==========================================================================
@@ -123,47 +129,31 @@ setInterval(() => {
     if(!state.currentUid) return;
     const now = new Date();
     
-    // 1. Revisar Recordatorios (De la pestaña Recordatorios)
     state.reminders?.forEach((rem) => {
         if (!rem.completed && !rem.notified && now >= new Date(rem.datetime)) {
             rem.notified = true;
-            saveDataToCloud(); 
-
+            saveDataToCloud('recordatorios', rem); 
             if(window.triggerSystemAlarm) {
-                window.triggerSystemAlarm(
-                    "Recordatorio", 
-                    rem.text, 
-                    () => { 
-                        const actualRem = state.reminders.find(r => r.text === rem.text && r.datetime === rem.datetime);
-                        if (actualRem) actualRem.completed = true; else rem.completed = true; 
-                        recordActivity(); 
-                        saveDataToCloud(); 
-                        if(window.renderReminders) window.renderReminders();
-                        window.dispatchEvent(new Event('stateChanged')); 
-                    }
-                );
+                window.triggerSystemAlarm("Recordatorio", rem.text, () => { 
+                    rem.completed = true;
+                    saveDataToCloud('recordatorios', rem);
+                    recordActivity();
+                    window.dispatchEvent(new Event('stateChanged')); 
+                });
             }
         }
     });
 
-    // 2. Revisar Hábitos (De la pestaña Actividades)
     state.recurringTasks?.forEach((rec) => {
         if (!rec.notified && now >= new Date(rec.nextTrigger)) {
             rec.notified = true;
-            saveDataToCloud();
-
+            saveDataToCloud('actividades', rec);
             if(window.triggerSystemAlarm) {
-                window.triggerSystemAlarm(
-                    "Hábito / Rutina", 
-                    rec.text, 
-                    () => { 
-                        if(window.rescheduleRecurring) window.rescheduleRecurring(rec);
-                        recordActivity(); 
-                        saveDataToCloud(); 
-                        if(window.renderRecurringTasks) window.renderRecurringTasks();
-                        window.dispatchEvent(new Event('stateChanged'));
-                    }
-                );
+                window.triggerSystemAlarm("Hábito / Rutina", rec.text, () => { 
+                    if(window.rescheduleRecurring) window.rescheduleRecurring(rec);
+                    recordActivity(); 
+                    window.dispatchEvent(new Event('stateChanged'));
+                });
             }
         }
     });
