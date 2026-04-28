@@ -82,18 +82,20 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     const user = session?.user;
     
     if (user && user.id) { 
-        // 1. Ocultar Auth, mostrar carga
         document.getElementById('authScreen').style.display = 'none'; 
         const app = document.getElementById('mainApp');
         app.style.display = 'block';
         app.innerHTML = '<div style="color:white; text-align:center; padding:50px; font-size:1.5em;">Sincronizando datos con la nube...</div>';
         
-        // 2. Espera bloqueante
-        await initCloudData(user.id); 
+        // 3. Solución: try/catch para evitar bloqueo por error de red o Supabase
+        try {
+            await initCloudData(user.id); 
+        } catch (err) {
+            console.error("Fallo al sincronizar datos, intentando continuar:", err);
+        }
         
-        // 3. Restaurar App y navegar
-        app.innerHTML = ''; // Limpiar mensaje de carga si es necesario o recargar
-        window.location.reload(); // Recarga limpia tras obtener datos de Supabase
+        app.innerHTML = ''; 
+        window.location.reload(); 
     } else { 
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('mainApp').style.display = 'none'; 
@@ -130,7 +132,8 @@ window.closeCmd = (e) => { if(e.target === cmdOverlay) cmdOverlay.style.display 
 // Exponer el estado a la consola para depuración
 window.appState = state;
 
-// --- MOTOR GLOBAL DE ALARMAS ---
+// --- MOTOR GLOBAL DE ALARMAS (Bloqueado temporalmente por CSP) ---
+/*
 setInterval(() => {
     if(!state.currentUid) return;
     const now = new Date();
@@ -149,3 +152,4 @@ setInterval(() => {
         }
     });
 }, 5000);
+*/
