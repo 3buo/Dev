@@ -1,4 +1,4 @@
-// app.js - Versión lista para navegador con CDN de Supabase
+// app.js - Versión final para navegador con CDN de Supabase
 
 import { state } from './state.js';
 import { initCloudData, fetchData, addData, updateData, deleteData } from './supabase-actions.js';
@@ -6,14 +6,7 @@ import { renderHeader } from './components/header.js';
 import { renderSidebar } from './components/sidebar.js';
 import { renderDashboard } from './components/dashboard.js';
 
-// Supabase URL y Publishable Key
-const supabaseUrl = 'https://snruccregkwcsnptojvw.supabase.co';
-const supabaseKey = 'sb_publishable_c-NOpMRqd0E2P-QW3IEfOw_MHRuq9FO';
-
-// Creamos el cliente Supabase usando la variable global creada por CDN
-export const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-// Inicialización de la App
+// Inicialización de la app
 document.addEventListener('DOMContentLoaded', async () => {
   await initApp();
 });
@@ -41,7 +34,7 @@ function renderUI() {
   const appContainer = document.getElementById('app');
   if (!appContainer) return;
 
-  // Limpiamos container
+  // Limpiar container
   appContainer.innerHTML = '';
 
   // Render de componentes
