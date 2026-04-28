@@ -4,245 +4,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taskify</title>
+
+    <!-- 🔥 PERFORMANCE -->
     <meta name="theme-color" content="#121212">
-    
+    <meta name="description" content="Captura ideas y tareas en segundos sin perder el flujo.">
+
+    <!-- 🔥 PRELOAD -->
+    <link rel="preload" href="global.css" as="style">
+
     <link rel="stylesheet" href="global.css">
     <link rel="stylesheet" href="components/devmode/devmode.css">
-    <link rel="stylesheet" href="components/alarm/alarm.css"> <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="components/alarm/alarm.css">
+
+    <!-- LIBS -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js" defer></script>
+
+    <!-- 🔥 LOADER STYLE -->
+    <style>
+        #globalLoader {
+            position: fixed;
+            inset: 0;
+            background: #121212;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loader-dot {
+            width: 10px;
+            height: 10px;
+            margin: 5px;
+            border-radius: 50%;
+            background: #bb86fc;
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            to { transform: translateY(-10px); }
+        }
+    </style>
 </head>
+
 <body>
 
-    <div id="cmdOverlay" onclick="closeCmd(event)">
-        <div class="cmd-box">
-            <input type="text" id="cmdInput" class="cmd-input" placeholder="Escribe un comando..." autocomplete="off">
-            <ul id="cmdResults" class="cmd-results"></ul>
+<!-- 🔥 GLOBAL LOADER -->
+<div id="globalLoader">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+</div>
+
+<!-- 🔥 CMD -->
+<div id="cmdOverlay" onclick="closeCmd(event)">
+    <div class="cmd-box">
+        <input type="text" id="cmdInput" class="cmd-input" placeholder="Escribe un comando..." autocomplete="off">
+        <ul id="cmdResults" class="cmd-results"></ul>
+    </div>
+</div>
+
+<!-- 🔐 AUTH -->
+<div id="authScreen">
+    <div class="auth-container">
+
+        <h1 style="color: var(--primary); margin-top: 0;">
+            Taskify ⚡
+        </h1>
+
+        <p style="color: #aaa; margin-bottom: 25px;">
+            Captura sin fricción. Organiza sin esfuerzo.
+        </p>
+
+        <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required autocomplete="email">
+        <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required autocomplete="current-password">
+
+        <!-- 🔥 BOTÓN CON ESTADO -->
+        <button class="auth-btn" id="loginBtn" onclick="handleLogin()">
+            Iniciar Sesión
+        </button>
+
+        <button class="auth-btn auth-btn-sec" onclick="appRegister()">
+            Crear Cuenta Nueva
+        </button>
+
+        <div class="auth-links" onclick="appResetPassword()">
+            ¿Olvidaste tu contraseña?
         </div>
+
+    </div>
+</div>
+
+<!-- 🧠 APP -->
+<div id="mainApp" style="display: none;">
+
+    <div id="mdToolbar">
+        <button class="md-btn" onmousedown="applyMd(event, '**', '**')">B</button>
+        <button class="md-btn" onmousedown="applyMd(event, '*', '*')">I</button>
+        <button class="md-btn" onmousedown="applyMd(event, '- ', '')">Lista</button>
+        <button class="md-btn" onmousedown="applyMd(event, '[[', ']]')">[[ ]]</button> 
+        <button class="md-btn" onmousedown="applyMd(event, '### ', '')">H3</button>
+        <button class="md-btn" onmousedown="applyMdTable(event)">📊</button>
     </div>
 
-    <div id="authScreen">
-        <div class="auth-container">
-            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">Modular</span></h1>
-            <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia segura</p>
-            <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required>
-            <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required>
-            <button class="auth-btn" onclick="appLogin()">Iniciar Sesión</button>
-            <button class="auth-btn auth-btn-sec" onclick="appRegister()">Crear Cuenta Nueva</button>
-            <div class="auth-links" onclick="appResetPassword()">¿Olvidaste tu contraseña?</div>
-        </div>
+    <div class="tabs" id="tabContainer">
+        <button class="tab-btn active" id="tab-actividades" onclick="switchTab('actividades')">📝</button>
+        <button class="tab-btn" id="tab-checklists" onclick="switchTab('checklists')">☑️</button>
+        <button class="tab-btn" id="tab-recordatorios" onclick="switchTab('recordatorios')">🔔</button>
+        <button class="tab-btn" id="tab-finanzas" onclick="switchTab('finanzas')">🔒</button>
+        <button class="tab-btn" id="tab-notas" onclick="switchTab('notas')">📓</button>
+        <button class="tab-btn" onclick="appLogout()" style="flex-grow: 0;">🚪</button>
     </div>
 
-    <div id="mainApp" style="display: none;">
-        
-        <div id="mdToolbar">
-            <button class="md-btn" onmousedown="applyMd(event, '**', '**')" title="Negrita">B</button>
-            <button class="md-btn" onmousedown="applyMd(event, '*', '*')" title="Cursiva">I</button>
-            <button class="md-btn" onmousedown="applyMd(event, '- ', '')" title="Lista">Lista</button>
-            <button class="md-btn" onmousedown="applyMd(event, '[[', ']]')" title="Enlace Zettelkasten">[[ ]]</button> 
-            <button class="md-btn" onmousedown="applyMd(event, '### ', '')" title="Título">H3</button>
-            <button class="md-btn" onmousedown="applyMdTable(event)" style="color: var(--secondary);">📊 Tabla</button>
-        </div>
+    <div id="tab-content-container"></div>
+</div>
 
-        <div class="tabs" id="tabContainer">
-            <button class="tab-btn active" id="tab-actividades" onclick="switchTab('actividades')">📝 Actividades</button>
-            <button class="tab-btn" id="tab-checklists" onclick="switchTab('checklists')">☑️ Check-list</button>
-            <button class="tab-btn" id="tab-recordatorios" onclick="switchTab('recordatorios')">🔔 Recordatorios</button>
-            <button class="tab-btn" id="tab-finanzas" onclick="switchTab('finanzas')">🔒 Finanzas</button>
-            <button class="tab-btn" id="tab-notas" onclick="switchTab('notas')">📓 Notas</button>
-            <button class="tab-btn" onclick="appLogout()" style="flex-grow: 0; background-color: #cf6679; color: black; font-weight: bold; border-radius: 8px 8px 0 0;">🚪</button>
-        </div>
+<!-- 🔊 BOTÓN FLOTANTE -->
+<button class="alarm-floating-btn" onclick="window.toggleAlarmConfig()">🔊</button>
 
-        <div id="tab-content-container"></div>
-        
-        </div>
+<!-- 🔥 LOGIN SCRIPT UX -->
+<script>
+function handleLogin() {
+    const btn = document.getElementById("loginBtn");
 
+    btn.disabled = true;
+    btn.innerText = "Entrando...";
 
-    <button class="alarm-floating-btn" onclick="window.toggleAlarmConfig()" title="Configurar sonido de alertas">🔊</button>
+    window.appLogin();
 
-    <div id="alarmConfigPanel" class="alarm-config-panel">
-        <h3>⚙️ Sonido de Alertas</h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <label>Tono de Aviso</label>
-            <select id="alarmSoundSelect" class="alarm-select" onchange="window.previewAndSaveAlarmSettings()">
-                <option value="digital">Reloj Digital</option>
-                <option value="bell">Campanilla Suave</option>
-                <option value="scifi">Notificación Sci-Fi</option>
-            </select>
-        </div>
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerText = "Iniciar Sesión";
+    }, 2000);
+}
+</script>
 
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <label>Volumen</label>
-            <input type="range" id="alarmVolumeSlider" class="alarm-slider" min="0" max="1" step="0.1" value="0.5" onchange="window.previewAndSaveAlarmSettings()">
-        </div>
+<!-- 🔥 LOADER CONTROL -->
+<script>
+window.addEventListener("load", () => {
+    const loader = document.getElementById("globalLoader");
 
-        <button onclick="window.toggleAlarmConfig()" style="background: transparent; border: 1px solid #30363d; color: white; padding: 8px; border-radius: 6px; cursor: pointer; margin-top: 5px;">Cerrar</button>
-    </div>
+    setTimeout(() => {
+        loader.style.opacity = "0";
+        setTimeout(() => loader.remove(), 300);
+    }, 300);
+});
+</script>
 
-    <div id="sysAlarmModal" class="alarm-overlay" style="display: none;">
-        <div class="alarm-content">
-            <h1 style="color: #b392f0; margin-top: 0;">⏰ ¡Es Hora!</h1>
-            <h2 id="sysAlarmTitle" style="color: white; font-size: 1.5em; margin: 15px 0;">Recordatorio</h2>
-            <div id="sysAlarmDesc" style="font-size: 1em; color: #aaa; margin-bottom: 25px;"></div>
-            
-            <div class="alarm-buttons">
-                <button class="alarm-btn alarm-btn-outline" onclick="window.snoozeSystemAlarm()">Posponer 5m</button>
-                <button class="alarm-btn alarm-btn-solid" onclick="window.completeSystemAlarm()">¡Entendido!</button>
-            </div>
-        </div>
-    </div>
+<!-- APP -->
+<script type="module" src="js/app.js"></script>
 
+<script type="module">
+    import { initDevMode } from './components/devmode/devmode.js';
+    initDevMode();
+</script>
 
-    <div id="devLoginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999999; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-        <div style="background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #58a6ff; width: 300px; box-shadow: 0 0 50px rgba(88, 166, 255, 0.2);">
-            <h2 style="color: #58a6ff; margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
-            <input type="text" id="devUser" placeholder="Usuario" style="width: 100%; margin-bottom: 15px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
-            <input type="password" id="devPass" placeholder="Contraseña" style="width: 100%; margin-bottom: 20px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
-            <div style="display: flex; gap: 10px;">
-                <button onclick="authenticateDev()" style="flex: 1; background: #58a6ff; color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">Ingresar</button>
-                <button onclick="closeDevLogin()" style="flex: 1; background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 10px; border-radius: 6px; cursor: pointer;">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="devEditorPanel" class="dev-panel">
-        <div class="dev-panel-header">
-            <span>🛠️ UI Builder</span>
-            <button onclick="toggleInspectorMode()" id="btnInspectorToggle" style="background: transparent; border: 1px solid #58a6ff; color: #58a6ff; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 0.8em;">Inspeccionar: ON</button>
-            <button onclick="closeDevPanel()" style="background: transparent; border: none; color: #8b949e; cursor: pointer; font-size: 1.2em;">✖</button>
-        </div>
-        
-        <div class="dev-panel-body">
-            <div style="font-size: 0.85em; color: #8b949e;">Editando Elemento:</div>
-            <div id="devTargetSelector" class="dev-target-badge">Ninguno</div>
-
-            <div class="dev-control-group dev-feature-box dev-feature-box-highlight" id="devTextGroup" style="display: none;">
-                <label style="color: var(--note-accent);">📝 Texto del Elemento</label>
-                <input type="text" id="devElementText" class="dev-input" placeholder="Sobreescribir texto original...">
-            </div>
-
-            <div class="dev-control-group">
-                <label>Fondo (Background)</label>
-                <div class="dev-color-wrapper">
-                    <input type="color" id="devBgColor" class="dev-color-input">
-                    <input type="text" id="devBgText" class="dev-input" style="flex: 1;" placeholder="#000000 o rgba()">
-                </div>
-            </div>
-
-            <div class="dev-control-group">
-                <label>Color de Texto</label>
-                <div class="dev-color-wrapper">
-                    <input type="color" id="devTextColor" class="dev-color-input">
-                    <input type="text" id="devTextText" class="dev-input" style="flex: 1;">
-                </div>
-            </div>
-
-            <div class="dev-control-group">
-                <label>Color de Borde (Global)</label>
-                <div class="dev-color-wrapper">
-                    <input type="color" id="devBorderColor" class="dev-color-input">
-                    <input type="text" id="devBorderText" class="dev-input" style="flex: 1;" placeholder="Ej: #ffffff">
-                </div>
-            </div>
-            
-            <div class="dev-control-group">
-                <label>Línea Inferior</label>
-                <input type="text" id="devBorderBottom" class="dev-input" placeholder="Ej: 3px solid #b392f0">
-            </div>
-
-            <div class="dev-control-group">
-                <label>Radio de Borde (Border Radius)</label>
-                <input type="text" id="devBorderRadius" class="dev-input" placeholder="Ej: 12px">
-            </div>
-
-            <div class="dev-control-group">
-                <label>Relleno (Padding)</label>
-                <input type="text" id="devPadding" class="dev-input" placeholder="Ej: 15px 20px">
-            </div>
-            
-            <div class="dev-control-group">
-                <label>Tamaño de Fuente (Font Size)</label>
-                <input type="text" id="devFontSize" class="dev-input" placeholder="Ej: 1.2em o 16px">
-            </div>
-
-            <div id="devAnimGroup" class="dev-control-group dev-feature-box" style="display: none;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: white;">
-                    <input type="checkbox" id="devAnimEnable">
-                    ✨ Animación al hacer Clic
-                </label>
-                <select id="devAnimType" class="dev-input" style="display: none; margin-top: 10px; width: 100%; cursor: pointer;">
-                    <option value="scale-down">Hundimiento Suave (Scale Down)</option>
-                    <option value="scale-up">Salto 3D (Scale Up)</option>
-                    <option value="pulse-glow">Resplandor Neón (Glow Pulse)</option>
-                </select>
-            </div>
-
-            <button id="devBtnSave" class="dev-btn" onclick="applyAndSaveDevStyles()">💾 Guardar Cambios</button>
-            <button class="dev-btn dev-btn-danger" onclick="resetTargetStyles()">🔄 Revertir Elemento</button>
-            <button class="dev-btn dev-btn-danger" style="margin-top: 5px; border-style: dashed;" onclick="factoryResetStyles()">⚠️ Borrar TODO (CSS y Textos)</button>
-        </div>
-    </div>
-
-
-    <script type="module" src="js/app.js"></script>
-
-    <script type="module">
-        import { initDevMode } from './components/devmode/devmode.js';
-        initDevMode();
-    </script>
-
-    <script type="module">
-        import { initAlarmSystem } from './components/alarm/alarm.js';
-        // Aseguramos que se inicie cuando el estado de la app cambie/cargue
-        window.addEventListener('stateChanged', () => {
-            initAlarmSystem();
-        });
-    </script>
-
-    <script type="module">
-        import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@latest';
-
-        console.log("🚀 Pretext activado: Optimizando cajas de texto en segundo plano.");
-
-        const autoResizeTextarea = (textarea) => {
-            if (textarea.clientWidth === 0) return;
-            const text = textarea.value || textarea.placeholder || " ";
-            const style = window.getComputedStyle(textarea);
-
-            const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-            const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-            const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-            const availableWidth = textarea.clientWidth - paddingX;
-
-            let lineHeight = parseFloat(style.lineHeight);
-            if (isNaN(lineHeight)) lineHeight = parseFloat(style.fontSize) * 1.5;
-
-            try {
-                const prepared = prepare(text, font);
-                const result = layout(prepared, availableWidth, lineHeight);
-                const finalHeight = Math.max(result.height + paddingY, 80); 
-                textarea.style.height = `${finalHeight}px`;
-                textarea.style.overflowY = 'hidden'; 
-            } catch (error) {
-                textarea.style.height = 'auto';
-                textarea.style.height = (textarea.scrollHeight) + 'px';
-            }
-        };
-
-        document.addEventListener('input', (e) => {
-            if (e.target.tagName.toLowerCase() === 'textarea') {
-                autoResizeTextarea(e.target);
-            }
-        });
-
-        window.addEventListener('stateChanged', () => {
-            setTimeout(() => {
-                document.querySelectorAll('textarea').forEach(autoResizeTextarea);
-            }, 100);
-        });
-    </script>
+<script type="module">
+    import { initAlarmSystem } from './components/alarm/alarm.js';
+    window.addEventListener('stateChanged', () => {
+        initAlarmSystem();
+    });
+</script>
 
 </body>
 </html>
