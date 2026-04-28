@@ -1,5 +1,3 @@
-// sidebar.js
-
 export function renderSidebar(containerId = 'app') {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -15,17 +13,9 @@ export function renderSidebar(containerId = 'app') {
       </ul>
     </nav>
   `;
-
   container.prepend(sidebar);
 
-  // Listeners de ejemplo
-  document.getElementById('dashboard-btn').addEventListener('click', () => {
-    console.log('Mostrar dashboard');
-  });
-  document.getElementById('add-item-btn').addEventListener('click', () => {
-    console.log('Abrir formulario de agregar');
-  });
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    console.log('Cerrar sesión');
-  });
+  document.getElementById('dashboard-btn').addEventListener('click', () => console.log('Dashboard'));
+  document.getElementById('add-item-btn').addEventListener('click', () => console.log('Agregar'));
+  document.getElementById('logout-btn').addEventListener('click', () => console.log('Logout'));
 }
