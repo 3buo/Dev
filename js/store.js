@@ -36,22 +36,25 @@ export async function initCloudData(userId) {
     state.isReady = false; 
     
     try {
+        // Tablas que intentaremos cargar
         const tables = ['actividades', 'checklists', 'recordatorios', 'finanzas', 'notas'];
         
+        // Ejecución tolerante: map devuelve resultados aunque alguna tabla falle
         const results = await Promise.all(tables.map(table => 
             supabase.from(table).select('*').eq('user_id', userId)
                 .then(res => ({ table, data: res.data, error: res.error }))
         ));
 
+        // Asignamos datos de cada tabla exitosa
         results.forEach(res => {
             if (res.error) {
                 console.error(`Error cargando tabla ${res.table}:`, res.error);
             } else {
-                // Asegura que el array exista antes de asignar
-                state[res.table] = res.data || []; 
+                state[res.table] = res.data || []; // Asegura que el array exista
             }
         });
 
+        // Intentamos cargar el PIN (tabla configuración)
         const { data: cfg, error: cfgError } = await supabase.from('configuracion').select('masterpin').eq('user_id', userId).maybeSingle();
         if (cfgError) console.error("Error cargando PIN:", cfgError);
         if (cfg && cfg.masterpin) {
@@ -60,6 +63,8 @@ export async function initCloudData(userId) {
         
         state.isReady = true;
         notifyStateChange();
+        
+        // Guardado de emergencia local
         localStorage.setItem('taskify_emergency_backup', JSON.stringify(state));
 
     } catch (error) {
@@ -76,7 +81,7 @@ export async function initCloudData(userId) {
     if (unsubSnapshot) supabase.removeChannel(unsubSnapshot);
     unsubSnapshot = supabase.channel('db-changes')
         .on('postgres_changes', { event: '*', schema: 'public', filter: `user_id=eq.${userId}` }, () => {
-            initCloudData(userId);
+            initCloudData(userId); // Re-inicializa todo si hay cambios
         })
         .subscribe();
 }
@@ -87,38 +92,41 @@ export async function initCloudData(userId) {
 export async function saveDataToCloud(table, dataObject) {
     if(!state.currentUid || !state.isReady) return;
 
+    // Si guardamos configuración, usamos el nombre de columna correcto 'masterpin'
     if (table === 'configuracion') {
-        // Guarda el PIN
         const { error } = await supabase.from('configuracion').upsert({ user_id: state.currentUid, masterpin: state.masterPin });
         if (error) console.error("Error guardando PIN:", error);
         return;
     }
 
-    // Para tablas normales (tareas, hábitos, etc.)
+    // Para tablas normales (actividades, checklists, etc.)
     const record = { ...dataObject, user_id: state.currentUid };
+    // Eliminamos campos temporales que no deben guardarse en la BD (ej: '_delete')
+    // Ajusta esto si tienes otras propiedades temporales que no van a la BD
+    delete record.recurring; 
+    
     const { error } = await supabase.from(table).upsert([record]);
     
     if (error) {
         console.error("Error guardando en", table, error);
     } else {
-        // Refrescamos todos los datos para consistencia
-        initCloudData(state.currentUid); 
+        initCloudData(state.currentUid); // Refrescamos los datos para consistencia
     }
 }
 
 /**
- * Elimina datos en una tabla específica por su ID.
+ * Elimina datos en una tabla específica por su ID y user_id.
  */
 export async function deleteDataFromCloud(table, id) {
     if(!state.currentUid || !state.isReady) return;
     
+    // Aseguramos la eliminación solo para el usuario actual
     const { error } = await supabase.from(table).delete().eq('id', id).eq('user_id', state.currentUid);
     
     if (error) {
         console.error("Error eliminando en", table, error);
     } else {
-        // Refrescamos todos los datos después de eliminar
-        initCloudData(state.currentUid); 
+        initCloudData(state.currentUid); // Refrescar datos después de eliminar
     }
 }
 
@@ -134,10 +142,11 @@ export function recordActivity() {
  * Resetea el estado local al cerrar sesión
  */
 export function clearLocalData() {
+    // Reseteamos a un estado limpio
     Object.assign(state, { 
         isReady: false, 
         currentUid: null,
-        masterPin: "1234",
+        masterPin: "1234", // Restablecer al PIN por defecto
         actividades: [], 
         reminders: [], 
         finanzas: [], 

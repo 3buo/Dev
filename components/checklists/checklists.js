@@ -47,10 +47,10 @@ window.toggleClItem = async (checklistId, itemIndex) => {
 
 window.deleteChecklist = async (checklistId) => {
     if(confirm("¿Eliminar esta lista por completo?")) {
-        // Eliminar de Supabase y luego del estado local a través de initCloudData
-        await deleteDataFromCloud('checklists', checklistId);
+        state.checklists = (state.checklists || []).filter(cl => cl.id !== checklistId);
+        await deleteDataFromCloud('checklists', checklistId); // Eliminar de Supabase
         recordActivity();
-        // initCloudData en store.js ya refresca el estado y dispara renderChecklists
+        window.renderChecklists();
     }
 };
 
@@ -66,9 +66,9 @@ window.openEditClModal = (checklistId) => {
     const title = document.getElementById('editClTitle');
     if(title) title.value = cl.title;
     
-    currentEditItems = JSON.parse(JSON.stringify(cl.items || [])); // Asegurar array vacío si no hay items
-    
+    currentEditItems = JSON.parse(JSON.stringify(cl.items || [])); 
     window.renderEditClItems();
+    
     const modal = document.getElementById('editClModal');
     if(modal) modal.style.display = 'flex';
 };
@@ -103,13 +103,16 @@ window.renderEditClItems = () => {
         textInput.style.flexGrow = '1'; textInput.style.padding = '8px';
         textInput.style.background = '#2c2c2c'; textInput.style.border = '1px solid #444';
         textInput.style.color = 'white'; textInput.style.borderRadius = '4px';
-        textInput.addEventListener('input', (e) => { currentEditItems[i].text = e.target.value; });
+        textInput.addEventListener('input', (e) => { item.text = e.target.value; });
 
         const removeBtn = document.createElement('button');
         removeBtn.innerText = 'X';
         removeBtn.style.background = '#cf6679'; removeBtn.style.padding = '8px 12px';
         removeBtn.style.fontWeight = 'bold'; removeBtn.style.borderRadius = '4px';
-        removeBtn.addEventListener('click', () => { currentEditItems.splice(i, 1); window.renderEditClItems(); });
+        removeBtn.addEventListener('click', () => { 
+            currentEditItems.splice(i, 1); 
+            window.renderEditClItems(); 
+        });
         
         div.append(checkbox, textInput, removeBtn);
         container.appendChild(div);
@@ -119,6 +122,7 @@ window.renderEditClItems = () => {
 window.addEditClItem = () => {
     const input = document.getElementById('editClNewItem');
     if(!input || input.value.trim() === '') return;
+    
     currentEditItems.push({text: input.value.trim(), checked: false});
     input.value = '';
     window.renderEditClItems();
@@ -187,10 +191,10 @@ window.renderChecklists = () => {
         document.getElementById(`del-cl-${cl.id}`)?.addEventListener('click', () => window.deleteChecklist(cl.id));
         document.getElementById(`add-item-${cl.id}`)?.addEventListener('click', () => window.addClItem(cl.id));
         
-        // Listener para Enter en el input de añadir item
-        document.getElementById(`clItemInput-${cl.id}`)?.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') window.addClItem(cl.id);
-        });
+        const itemInput = document.getElementById(`clItemInput-${cl.id}`);
+        if (itemInput) {
+            itemInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.addClItem(cl.id); });
+        }
         
         // Enlazar checkboxes a toggleClItem
         (cl.items || []).forEach((item, i) => {
@@ -202,19 +206,18 @@ window.renderChecklists = () => {
 export function init() {
     window.renderChecklists();
 
-    // BLINDADO: Enlazar evento para crear checklist
+    // BLINDADO: Enlazar eventos a los botones principales
     document.getElementById('createClBtn')?.addEventListener('click', window.createChecklist);
-    document.getElementById('clTitle')?.addEventListener('keypress', (e) => { 
-        if(e.key === 'Enter') window.createChecklist(); 
-    });
+    document.getElementById('clTitle')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.createChecklist(); });
 
     // Eventos para el modal de edición
     document.getElementById('saveEditClBtn')?.addEventListener('click', window.saveEditChecklist);
     document.getElementById('closeEditClModalBtn')?.addEventListener('click', window.closeEditClModal);
     document.getElementById('addEditClItemBtn')?.addEventListener('click', window.addEditClItem);
-    document.getElementById('editClNewItem')?.addEventListener('keypress', (e) => { 
-        if(e.key === 'Enter') window.addEditClItem(); 
-    });
+    const editClNewItemInput = document.getElementById('editClNewItem');
+    if (editClNewItemInput) {
+        editClNewItemInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') window.addEditClItem(); });
+    }
 }
 
 window.addEventListener('stateChanged', () => { 
