@@ -1,48 +1,71 @@
-import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
+import { state, saveDataToCloud, recordActivity, deleteDataFromCloud } from '../../js/store.js';
 
 // --- GESTIÓN DE TAREAS SIMPLES ---
-window.addTask = () => { 
+window.addTask = async () => { 
     const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
+    if (!input || !dateInput || !pri) return;
+
     if (input.value.trim() === '') return alert('Escribe la actividad.'); 
     
-    const newTask = { text: input.value, date: dateInput.value, priority: pri.value, completed: false };
+    const newTask = { 
+        id: crypto.randomUUID(), // Usar UUID para ID único
+        text: input.value, 
+        date: dateInput.value, 
+        priority: pri.value, 
+        completed: false 
+    };
     
-    if(!state.tasks) state.tasks = [];
-    state.tasks.push(newTask); 
+    if(!state.actividades) state.actividades = [];
+    state.actividades.push(newTask); 
     
     input.value = ''; dateInput.value = ''; 
     recordActivity(); 
     
-    // Guardar en Supabase usando la nueva función genérica
-    saveDataToCloud('actividades', newTask); 
+    await saveDataToCloud('actividades', newTask); // Guardar la nueva tarea
     window.renderTasks(); 
 };
 
 window.renderTasks = () => { 
-    const pendingList = document.getElementById('pendingList'), completedList = document.getElementById('completedList'); 
+    const pendingList = document.getElementById('pendingList');
+    const completedList = document.getElementById('completedList'); 
     if (!pendingList || !completedList) return;
-    pendingList.innerHTML = ''; completedList.innerHTML = ''; 
     
-    // VERIFICACIÓN DE SEGURIDAD AÑADIDA: (state.tasks || [])
-    (state.tasks || []).forEach((task, index) => { 
+    pendingList.innerHTML = ''; 
+    completedList.innerHTML = ''; 
+    
+    (state.actividades || []).filter(task => !task.recurring).forEach((task) => { // Filtrar si hay una propiedad 'recurring'
         const li = document.createElement('li'); 
-        const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; 
-        checkbox.onchange = () => { 
-            state.tasks[index].completed = !state.tasks[index].completed; 
-            if(state.tasks[index].completed) { state.tasks[index].completedAt = new Date().toLocaleString('es-VE'); recordActivity(); } 
-            else { state.tasks[index].completedAt = null; }
+        
+        const checkbox = document.createElement('input'); 
+        checkbox.type = 'checkbox'; 
+        checkbox.checked = task.completed; 
+        // BLINDADO: Listener de evento
+        checkbox.addEventListener('change', async () => { 
+            task.completed = !task.completed; 
+            if(task.completed) { task.completedAt = new Date().toLocaleString('es-VE'); recordActivity(); } 
+            else { task.completedAt = null; }
             
-            saveDataToCloud('actividades', state.tasks[index]); 
+            await saveDataToCloud('actividades', task); // Actualizar tarea
             window.renderTasks(); 
-        }; 
+        }); 
         
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
         let completedInfo = (task.completed && task.completedAt) ? `<br><span style="font-size: 0.8em; color: var(--secondary);">✅ Completada: ${task.completedAt}</span>` : '';
         contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>${completedInfo}`; 
         
         const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; 
-        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
-        deleteBtn.onclick = () => { state.tasks.splice(index, 1); saveDataToCloud('actividades', task); window.renderTasks(); }; 
+        const deleteBtn = document.createElement('button'); 
+        deleteBtn.innerText = 'X'; 
+        deleteBtn.style.background = '#cf6679'; 
+        deleteBtn.style.padding = '5px 10px'; 
+        deleteBtn.style.marginLeft = '10px'; 
+        // BLINDADO: Listener de evento
+        deleteBtn.addEventListener('click', async () => { 
+            if(confirm("¿Eliminar esta tarea?")) {
+                await deleteDataFromCloud('actividades', task.id); // Eliminar de Supabase
+                window.renderTasks(); 
+            }
+        }); 
         
         li.append(checkbox, contentDiv, badge, deleteBtn); 
         task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li);
@@ -50,7 +73,7 @@ window.renderTasks = () => {
 };
 
 // --- GESTIÓN DE HÁBITOS RECURRENTES ---
-window.addRecurringTask = () => { 
+window.addRecurringTask = async () => { 
     const input = document.getElementById('recTaskInput');
     const dateInput = document.getElementById('recTaskDate').value;
     const timeInput = document.getElementById('recTaskTime').value;
@@ -74,25 +97,31 @@ window.addRecurringTask = () => {
     baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
 
     const newTask = { 
+        id: crypto.randomUUID(), // Usar UUID para ID único
         text: input.value, 
         interval: parseInt(interval) || 1, 
         freq: freq, 
         days: selectedDays.length > 0 ? selectedDays : null,
         notified: false,
+        recurring: true, // Identificar como tarea recurrente
         nextTrigger: (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16)
     };
     
     if (baseDate <= new Date()) window.rescheduleRecurring(newTask, false); 
     else window.rescheduleRecurring(newTask, true); 
 
-    if(!state.recurringTasks) state.recurringTasks = [];
-    state.recurringTasks.push(newTask); 
+    if(!state.actividades) state.actividades = [];
+    state.actividades.push(newTask); // Añadir a actividades, que ahora contendrá tareas y hábitos
     
-    input.value = ''; document.getElementById('recTaskDate').value = ''; document.getElementById('recTaskTime').value = ''; 
+    input.value = ''; 
+    const recTaskDateEl = document.getElementById('recTaskDate');
+    if(recTaskDateEl) recTaskDateEl.value = ''; 
+    const recTaskTimeEl = document.getElementById('recTaskTime');
+    if(recTaskTimeEl) recTaskTimeEl.value = ''; 
     document.querySelectorAll('#recTaskDays input').forEach(cb => cb.checked = false);
     
     recordActivity(); 
-    saveDataToCloud('actividades', newTask); 
+    await saveDataToCloud('actividades', newTask); // Guardar el nuevo hábito
     window.renderRecurringTasks();
 };
 
@@ -132,10 +161,12 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
     task.notified = false; 
 };
 
-// --- EDICIÓN Y RENDERIZADO ---
-window.openEditHabitModal = (index) => {
-    const task = state.recurringTasks[index];
-    document.getElementById('editHabitIndex').value = index;
+// --- EDICIÓN Y RENDERIZADO DE HÁBITOS ---
+window.openEditHabitModal = (id) => {
+    const task = (state.actividades || []).find(t => t.id === id); // Buscar por ID
+    if (!task) return;
+
+    document.getElementById('editHabitId').value = task.id; // Guardar ID para actualización
     document.getElementById('editHabitName').value = task.text;
     const d = new Date(task.nextTrigger);
     document.getElementById('editHabitDate').value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -145,41 +176,208 @@ window.openEditHabitModal = (index) => {
 
 window.closeEditHabitModal = () => { document.getElementById('editHabitModal').style.display = 'none'; };
 
-window.saveEditHabit = () => {
-    const index = document.getElementById('editHabitIndex').value;
-    const task = state.recurringTasks[index];
+window.saveEditHabit = async () => {
+    const taskId = document.getElementById('editHabitId').value;
+    const task = (state.actividades || []).find(t => t.id === taskId);
+    if (!task) return;
+
     task.text = document.getElementById('editHabitName').value;
     const [year, month, day] = document.getElementById('editHabitDate').value.split('-');
     const [hours, mins] = document.getElementById('editHabitTime').value.split(':');
-    let baseDate = new Date(year, month - 1, day, hours, mins);
+    let baseDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(mins));
     task.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
     
     window.rescheduleRecurring(task, false); 
-    saveDataToCloud('actividades', task); 
+    await saveDataToCloud('actividades', task); // Actualizar hábito
     window.closeEditHabitModal(); 
     window.renderRecurringTasks();
 };
 
 window.renderRecurringTasks = () => { 
-    const list = document.getElementById('recurringList'); if(!list) return; list.innerHTML = ''; 
-    (state.recurringTasks || []).forEach((rec, index) => { 
+    const list = document.getElementById('recurringList'); 
+    if(!list) return; 
+    list.innerHTML = ''; 
+    
+    (state.actividades || []).filter(task => task.recurring).forEach((rec) => { // Filtrar por propiedad 'recurring'
         const li = document.createElement('li'); 
-        const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; 
-        checkbox.onchange = () => { window.rescheduleRecurring(state.recurringTasks[index]); recordActivity(); saveDataToCloud('actividades', rec); window.renderRecurringTasks(); }; 
-        const dateString = new Date(rec.nextTrigger).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
-        const patternStr = rec.days ? `Días: ${rec.days.join(',')}` : `Cada ${rec.interval} ${rec.freq}`;
-        li.innerHTML = `<strong>${rec.text}</strong><br><span>⏰ ${dateString}</span><span class="badge">${patternStr}</span>`;
+        
+        const checkbox = document.createElement('input'); 
+        checkbox.type = 'checkbox'; 
+        checkbox.checked = false; // Siempre inicia desmarcado, se marca al completar
+        // BLINDADO: Listener de evento
+        checkbox.addEventListener('change', async () => { 
+            window.rescheduleRecurring(rec); 
+            recordActivity(); 
+            await saveDataToCloud('actividades', rec); // Actualizar hábito
+            window.renderRecurringTasks(); 
+        }); 
+        
+        let dateString = "Fecha inválida";
+        if(rec.nextTrigger) {
+            const nextD = new Date(rec.nextTrigger);
+            if(!isNaN(nextD.getTime())) dateString = nextD.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
+        }
+        
+        const dayMap = {1:'L', 2:'M', 3:'X', 4:'J', 5:'V', 6:'S', 0:'D'};
+        let patternStr = rec.days && rec.days.length > 0 ? `Días: ${rec.days.map(d => dayMap[d]).join(', ')}` : `Cada ${rec.interval} ${rec.freq}`;
+
+        const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
+        contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; 
+        const badge = document.createElement('span'); badge.className = 'badge rec-badge'; badge.innerText = patternStr; 
+        
+        const btnBox = document.createElement('div');
+        btnBox.style.display = 'flex'; btnBox.style.marginLeft = 'auto'; btnBox.style.gap = '5px';
+        
+        const editBtn = document.createElement('button'); 
+        editBtn.innerText = '✏️'; 
+        editBtn.style.background = 'var(--secondary)'; 
+        editBtn.style.padding = '5px 10px'; 
+        editBtn.style.color = 'black';
+        // BLINDADO: Listener de evento
+        editBtn.addEventListener('click', () => window.openEditHabitModal(rec.id)); // Pasar el ID
+        
+        const deleteBtn = document.createElement('button'); 
+        deleteBtn.innerText = 'X'; 
+        deleteBtn.style.background = '#cf6679'; 
+        deleteBtn.style.padding = '5px 10px'; 
+        // BLINDADO: Listener de evento
+        deleteBtn.addEventListener('click', async () => { 
+            if(confirm("¿Eliminar este hábito?")) {
+                await deleteDataFromCloud('actividades', rec.id); // Eliminar de Supabase
+                window.renderRecurringTasks(); 
+            }
+        }); 
+        
+        btnBox.append(editBtn, deleteBtn);
+        li.append(checkbox, contentDiv, badge, btnBox); 
         list.appendChild(li); 
     }); 
+};
+
+// --- SISTEMA DE CALENDARIO ---
+let calDate = new Date();
+
+window.openCalendarModal = () => {
+    calDate = new Date(); 
+    const modal = document.getElementById('calendarModal');
+    if(modal) modal.style.display = 'flex';
+    window.renderCalendar();
+};
+
+window.closeCalendarModal = () => {
+    const modal = document.getElementById('calendarModal');
+    if(modal) modal.style.display = 'none';
+};
+
+window.changeMonth = (dir) => {
+    calDate.setMonth(calDate.getMonth() + dir);
+    window.renderCalendar();
+};
+
+window.renderCalendar = () => {
+    const grid = document.getElementById('calendarGrid');
+    const title = document.getElementById('calendarMonthYear');
+    if (!grid || !title) return;
+    
+    grid.innerHTML = '';
+    
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    title.innerText = `${monthNames[month]} ${year}`;
+    
+    ['D', 'L', 'M', 'X', 'J', 'V', 'S'].forEach(d => {
+        let el = document.createElement('div');
+        el.innerText = d;
+        el.style.textAlign = 'center';
+        el.style.fontWeight = 'bold';
+        el.style.color = 'var(--secondary)';
+        el.style.fontSize = '0.8em';
+        el.style.marginBottom = '5px';
+        grid.appendChild(el);
+    });
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    for(let i=0; i<firstDay; i++) {
+        let el = document.createElement('div');
+        grid.appendChild(el);
+    }
+    
+    for(let i=1; i<=daysInMonth; i++) {
+        let el = document.createElement('div');
+        el.innerText = String(i); // Convertir a string explícitamente
+        el.className = 'cal-day';
+        
+        let currentDateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        
+        let dayActivities = [];
+        
+        (state.actividades || []).forEach(t => {
+            if(!t.recurring && !t.completed && t.date === currentDateStr) { // Tareas simples
+                dayActivities.push(`📌 ${t.text}`);
+            }
+            if(t.recurring && t.nextTrigger && t.nextTrigger.startsWith(currentDateStr)) { // Hábitos recurrentes
+                let time = new Date(t.nextTrigger).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+                dayActivities.push(`🔄 ${t.text} (${time})`);
+            }
+        });
+        
+        if(dayActivities.length > 0) {
+            el.classList.add('has-activities');
+            el.innerHTML = `${i} <div class="cal-tooltip">${dayActivities.join('<br>')}</div>`;
+        }
+        
+        const hoy = new Date();
+        if (year === hoy.getFullYear() && month === hoy.getMonth() && i === hoy.getDate()) {
+            el.style.borderBottom = "3px solid var(--primary)";
+        }
+
+        grid.appendChild(el);
+    }
 };
 
 export function init() {
     window.renderTasks();
     window.renderRecurringTasks();
+    
+    // BLINDADO: Enlazar eventos a elementos estáticos o que no se regeneran completamente
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    if (addTaskBtn) addTaskBtn.addEventListener('click', window.addTask);
+    const recTaskAddBtn = document.getElementById('recTaskAddBtn');
+    if (recTaskAddBtn) recTaskAddBtn.addEventListener('click', window.addRecurringTask);
+    const openCalendarBtn = document.getElementById('openCalendarBtn');
+    if (openCalendarBtn) openCalendarBtn.addEventListener('click', window.openCalendarModal);
+    const closeCalendarModalBtn = document.getElementById('closeCalendarModalBtn');
+    if (closeCalendarModalBtn) closeCalendarModalBtn.addEventListener('click', window.closeCalendarModal);
+    const prevMonthBtn = document.getElementById('prevMonthBtn');
+    if (prevMonthBtn) prevMonthBtn.addEventListener('click', () => window.changeMonth(-1));
+    const nextMonthBtn = document.getElementById('nextMonthBtn');
+    if (nextMonthBtn) nextMonthBtn.addEventListener('click', () => window.changeMonth(1));
+    const saveEditHabitBtn = document.getElementById('saveEditHabitBtn');
+    if (saveEditHabitBtn) saveEditHabitBtn.addEventListener('click', window.saveEditHabit);
+    const closeEditHabitModalBtn = document.getElementById('closeEditHabitModalBtn');
+    if (closeEditHabitModalBtn) closeEditHabitModalBtn.addEventListener('click', window.closeEditHabitModal);
+    
+    // Listener para Enter en inputs de tareas
+    const taskInput = document.getElementById('taskInput');
+    if(taskInput) taskInput.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') window.addTask();
+    });
+    const recTaskInput = document.getElementById('recTaskInput');
+    if(recTaskInput) recTaskInput.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') window.addRecurringTask();
+    });
 }
 
 window.addEventListener('stateChanged', () => {
-    if(document.getElementById('pendingList')) {
+    if(document.getElementById('view-actividades')) { // Verificar si el tab está activo
         init();
+        const calendarModal = document.getElementById('calendarModal');
+        if(calendarModal && calendarModal.style.display === 'flex') {
+            window.renderCalendar();
+        }
     }
 });

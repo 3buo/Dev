@@ -83,11 +83,13 @@ window.changeViewFormat = (viewType) => {
     const btnList = document.getElementById('btnViewList');
     
     if(viewType === 'list') {
-        grid.classList.add('list-view');
-        btnList.classList.add('active'); btnGrid.classList.remove('active');
+        if(grid) grid.classList.add('list-view');
+        if(btnList) btnList.classList.add('active'); 
+        if(btnGrid) btnGrid.classList.remove('active');
     } else {
-        grid.classList.remove('list-view');
-        btnGrid.classList.add('active'); btnList.classList.remove('active');
+        if(grid) grid.classList.remove('list-view');
+        if(btnGrid) btnGrid.classList.add('active'); 
+        if(btnList) btnList.classList.remove('active');
     }
 };
 
@@ -104,12 +106,14 @@ function buildEditableTableHTML(tablesArray, containerId, prefix) {
         const wrapper = document.createElement('div');
         const controls = document.createElement('div');
         controls.className = 'table-controls';
+        
+        // CORREGIDO: Botones con IDs o data-attributes para listeners de JS
         controls.innerHTML = `
-            <button class="md-tool-btn" onclick="addCol('${prefix}', ${tIndex})">+ Col</button>
-            <button class="md-tool-btn" onclick="addRow('${prefix}', ${tIndex})">+ Fila</button>
-            <button class="md-tool-btn" onclick="delCol('${prefix}', ${tIndex})" style="color:#ff7b72;">- Col</button>
-            <button class="md-tool-btn" onclick="delRow('${prefix}', ${tIndex})" style="color:#ff7b72;">- Fila</button>
-            <button class="md-tool-btn" onclick="deleteTable('${prefix}', ${tIndex})" style="background:#da3633; color:white; margin-left:auto; border:none;">🗑️ Eliminar</button>
+            <button class="md-tool-btn" data-action="addCol" data-prefix="${prefix}" data-index="${tIndex}">+ Col</button>
+            <button class="md-tool-btn" data-action="addRow" data-prefix="${prefix}" data-index="${tIndex}">+ Fila</button>
+            <button class="md-tool-btn" data-action="delCol" data-prefix="${prefix}" data-index="${tIndex}" style="color:#ff7b72;">- Col</button>
+            <button class="md-tool-btn" data-action="delRow" data-prefix="${prefix}" data-index="${tIndex}" style="color:#ff7b72;">- Fila</button>
+            <button class="md-tool-btn" data-action="deleteTable" data-prefix="${prefix}" data-index="${tIndex}" style="background:#da3633; color:white; margin-left:auto; border:none;">🗑️ Eliminar</button>
         `;
         
         const tableContainer = document.createElement('div');
@@ -121,16 +125,35 @@ function buildEditableTableHTML(tablesArray, containerId, prefix) {
             rowArray.forEach((cellValue, cIndex) => {
                 const cell = rIndex === 0 ? document.createElement('th') : document.createElement('td');
                 const input = document.createElement('input'); input.type = 'text'; input.value = cellValue;
-                input.oninput = (e) => {
+                
+                // CORREGIDO: Listener de JS para input
+                input.addEventListener('input', (e) => {
                     tablesArray[tIndex][rIndex][cIndex] = e.target.value;
                     if(prefix === 'edit') window.updateLivePreview();
-                };
+                });
                 cell.appendChild(input); tr.appendChild(cell);
             });
             table.appendChild(tr);
         });
 
         tableContainer.appendChild(table); wrapper.append(controls, tableContainer); container.appendChild(wrapper);
+        
+        // CORREGIDO: Añadir listeners a los botones de control de tabla
+        controls.querySelectorAll('.md-tool-btn').forEach(button => {
+            const action = button.dataset.action;
+            const idx = parseInt(button.dataset.index);
+            const pref = button.dataset.prefix;
+
+            button.addEventListener('click', () => {
+                switch(action) {
+                    case 'addCol': window.addCol(pref, idx); break;
+                    case 'addRow': window.addRow(pref, idx); break;
+                    case 'delCol': window.delCol(pref, idx); break;
+                    case 'delRow': window.delRow(pref, idx); break;
+                    case 'deleteTable': window.deleteTable(pref, idx); break;
+                }
+            });
+        });
     });
 }
 
@@ -161,28 +184,44 @@ window.delCol = (prefix, idx) => { const arr = prefix === 'main' ? tempMainTable
 window.deleteTable = (prefix, idx) => { const arr = prefix === 'main' ? tempMainTables : tempEditTables; arr.splice(idx, 1); buildEditableTableHTML(arr, `${prefix}TablesContainer`, prefix); if(prefix === 'edit') window.updateLivePreview(); };
 
 // --- GESTIÓN CRUD DE NOTAS ---
-window.saveNote = () => {
-    const title = document.getElementById('noteTitle').value.trim();
-    const content = document.getElementById('noteContent').value.trim();
+window.saveNote = async () => {
+    const titleInput = document.getElementById('noteTitle');
+    const contentInput = document.getElementById('noteContent');
+    
+    if(!titleInput || !contentInput) return; // Asegura que los elementos existan
+
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
     
     if (!title && !content && tempMainTables.length === 0) return alert('La nota está vacía.');
-    if (!state.notes) state.notes = [];
-    
-    state.notes.unshift({
-        id: Date.now(), title: title || 'Sin Título', content: content,
+    if (!state.notas) state.notas = []; // Asegura que el array exista
+
+    const newNote = {
+        id: Date.now(), // ID temporal, Supabase lo generará si no se provee UUID
+        title: title || 'Sin Título', 
+        content: content,
         tables: JSON.parse(JSON.stringify(tempMainTables)),
-        date: new Date().toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' }),
+        date: new Date().toISOString().slice(0, 10), // Formato ISO para consistencia
         tags: analyzeSemantics(title + " " + content)
-    });
+    };
+    
+    state.notas.unshift(newNote); // Añadir al estado local primero
+    
+    // Guardar en Supabase
+    await saveDataToCloud('notas', newNote);
     
     // Reset interfaz
-    document.getElementById('noteTitle').value = ''; document.getElementById('noteContent').value = '';
+    titleInput.value = ''; 
+    contentInput.value = '';
     tempMainTables = []; buildEditableTableHTML(tempMainTables, 'mainTablesContainer', 'main');
     
     // Forzar salir de previsualización si estaba activa
-    if(document.getElementById('zenPreviewArea').style.display === 'block') window.toggleZenPreview();
+    const zenPreviewArea = document.getElementById('zenPreviewArea');
+    if(zenPreviewArea && zenPreviewArea.style.display === 'block') window.toggleZenPreview();
     
-    recordActivity(); saveDataToCloud(); window.renderNotes(); updateMindGraph();
+    recordActivity(); 
+    window.renderNotes(); 
+    updateMindGraph();
 };
 
 window.renderNotes = () => {
@@ -190,14 +229,15 @@ window.renderNotes = () => {
     if (!grid) return;
     grid.innerHTML = '';
 
-    if (!state.notes || state.notes.length === 0) {
+    if (!state.notas || state.notas.length === 0) {
         grid.innerHTML = '<div style="color: #8b949e; width: 100%; text-align: center; grid-column: 1 / -1; padding: 40px;">No hay notas registradas.</div>';
         return;
     }
 
-    state.notes.forEach((note, index) => {
+    (state.notas || []).forEach((note, index) => {
         const card = document.createElement('div'); card.className = 'note-card';
-        card.onclick = () => openNoteModal(index);
+        // CORREGIDO: Listener para abrir modal
+        card.addEventListener('click', () => openNoteModal(index));
 
         const header = document.createElement('div'); header.className = 'card-header';
         header.innerHTML = `<div style="font-weight:bold; color:white; font-size:1.1em; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${note.title}</div><div style="font-size:0.75em; color:#8b949e;">${note.date}</div>`;
@@ -221,52 +261,95 @@ window.renderNotes = () => {
 // --- MODAL Y PREVIEW ---
 let currentEditIndex = null;
 window.openNoteModal = (index) => {
-    currentEditIndex = index; const note = state.notes[index];
-    document.getElementById('editNoteTitle').value = note.title; document.getElementById('editNoteContent').value = note.content || '';
+    currentEditIndex = index; 
+    const note = state.notas[index]; // Acceder a state.notas
+    
+    document.getElementById('editNoteTitle').value = note.title; 
+    document.getElementById('editNoteContent').value = note.content || '';
+    
     tempEditTables = note.tables ? JSON.parse(JSON.stringify(note.tables)) : [];
     buildEditableTableHTML(tempEditTables, 'editTablesContainer', 'edit');
-    window.updateLivePreview(); document.getElementById('noteModal').style.display = 'flex';
+    window.updateLivePreview(); 
+    document.getElementById('noteModal').style.display = 'flex';
 };
 window.closeNoteModal = () => { document.getElementById('noteModal').style.display = 'none'; currentEditIndex = null; };
 window.updateLivePreview = () => {
     document.getElementById('livePreviewMarkdown').innerHTML = parseMarkdown(document.getElementById('editNoteContent').value);
     document.getElementById('livePreviewTables').innerHTML = buildReadOnlyTablesHTML(tempEditTables);
 };
-window.updateNote = () => {
+
+window.updateNote = async () => {
     if (currentEditIndex === null) return;
-    const title = document.getElementById('editNoteTitle').value.trim(), content = document.getElementById('editNoteContent').value.trim();
-    state.notes[currentEditIndex].title = title || 'Sin título'; state.notes[currentEditIndex].content = content;
-    state.notes[currentEditIndex].tables = JSON.parse(JSON.stringify(tempEditTables));
-    state.notes[currentEditIndex].tags = analyzeSemantics(title + " " + content);
-    recordActivity(); saveDataToCloud(); window.renderNotes(); updateMindGraph(); closeNoteModal();
+    const title = document.getElementById('editNoteTitle').value.trim();
+    const content = document.getElementById('editNoteContent').value.trim();
+    
+    state.notas[currentEditIndex].title = title || 'Sin título'; 
+    state.notas[currentEditIndex].content = content;
+    state.notas[currentEditIndex].tables = JSON.parse(JSON.stringify(tempEditTables));
+    state.notas[currentEditIndex].tags = analyzeSemantics(title + " " + content);
+    
+    recordActivity(); 
+    // Guardar en Supabase
+    await saveDataToCloud('notas', state.notas[currentEditIndex]); 
+    
+    window.renderNotes(); 
+    updateMindGraph(); 
+    closeNoteModal();
 };
-window.deleteNote = () => {
+
+window.deleteNote = async () => {
     if (currentEditIndex === null) return;
     if(confirm('¿Eliminar esta nota permanentemente?')) {
-        state.notes.splice(currentEditIndex, 1);
-        recordActivity(); saveDataToCloud(); window.renderNotes(); updateMindGraph(); closeNoteModal();
+        const noteToDelete = state.notas[currentEditIndex];
+        state.notas.splice(currentEditIndex, 1); // Remover del estado local
+
+        // Guardar la lista actualizada de notas (o borrar por ID)
+        // Opción 1: Borrar por ID (más limpio)
+        // await supabase.from('notas').delete().eq('id', noteToDelete.id);
+        // Opción 2: Reemplazar toda la lista si tu tabla es una sola columna JSONB
+        // Aquí asumimos tabla 'notas' con cada nota como fila
+        
+        recordActivity(); 
+        // Si la tabla 'notas' es de cada nota una fila, borramos por ID
+        // Supabase hará la eliminación, luego initCloudData refrescará
+        await saveDataToCloud('notas', { id: noteToDelete.id, _delete: true }); // Envía un flag para eliminar
+
+        window.renderNotes(); 
+        updateMindGraph(); 
+        closeNoteModal();
     }
 };
 
 // --- CÁPSULA Y CANVAS ---
 function handleTimeCapsule() {
     const capsule = document.getElementById('timeCapsule');
-    if (!state.notes || state.notes.length < 3) { capsule.style.display = 'none'; return; }
+    if (!state.notas || state.notas.length < 3) { 
+        if(capsule) capsule.style.display = 'none'; 
+        return; 
+    }
+    
     if(Math.random() > 0.6) {
-        capsule.style.display = 'block'; const randIndex = Math.floor(Math.random() * (state.notes.length - 2)) + 2;
-        let preview = (state.notes[randIndex].content || state.notes[randIndex].title).substring(0, 100).replace(/\n/g, ' ');
-        document.getElementById('tcContent').innerHTML = `<strong>${state.notes[randIndex].title}</strong>: "${preview}..."`;
-        capsule.onclick = () => window.openNoteModal(randIndex);
-    } else { capsule.style.display = 'none'; }
+        if(capsule) capsule.style.display = 'block'; 
+        const randIndex = Math.floor(Math.random() * (state.notas.length - 2)) + 2;
+        let preview = (state.notas[randIndex].content || state.notas[randIndex].title).substring(0, 100).replace(/\n/g, ' ');
+        
+        const tcContent = document.getElementById('tcContent');
+        if(tcContent) tcContent.innerHTML = `<strong>${state.notas[randIndex].title}</strong>: "${preview}..."`;
+        
+        // CORREGIDO: Listener para abrir modal
+        if(capsule) capsule.addEventListener('click', () => window.openNoteModal(randIndex), { once: true }); // {once:true} para evitar múltiples llamadas
+    } else { 
+        if(capsule) capsule.style.display = 'none'; 
+    }
 }
 
 let graphAnimFrame, isGraphActive = false;
 function updateMindGraph() {
     const canvas = document.getElementById('mindGraph'); if (!canvas) return; const ctx = canvas.getContext('2d');
     canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
-    document.getElementById('graphStats').innerText = `${state.notes ? state.notes.length : 0} conexiones neuronales`;
+    document.getElementById('graphStats').innerText = `${state.notas ? state.notas.length : 0} conexiones neuronales`;
     let particles = [];
-    for(let i=0; i < Math.min((state.notes?.length||5), 40); i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, size: Math.random() * 2 + 1 });
+    for(let i=0; i < Math.min((state.notas?.length||5), 40); i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, size: Math.random() * 2 + 1 });
     function animate() {
         if(!isGraphActive) return; ctx.clearRect(0, 0, canvas.width, canvas.height);
         for(let i=0; i < particles.length; i++) {
@@ -287,9 +370,64 @@ export function init() {
     window.renderNotes(); 
     window.changeViewFormat(window.currentNotesView); // Aplicar vista guardada
     updateMindGraph(); 
+
+    // Re-enlazar eventos a los botones MD Toolbar si existen
+    const mdToolbar = document.getElementById('mdToolbar');
+    if(mdToolbar) {
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'**\', \'**\')"]').removeEventListener('mousedown', window.applyMdBold);
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'**\', \'**\')"]').addEventListener('mousedown', window.applyMdBold = (e) => { e.preventDefault(); window.insertMD('**', '**', 'noteContent'); });
+        
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'*\', \'*\')"]').removeEventListener('mousedown', window.applyMdItalic);
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'*\', \'*\')"]').addEventListener('mousedown', window.applyMdItalic = (e) => { e.preventDefault(); window.insertMD('*', '*', 'noteContent'); });
+        
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'- \', \'\')"]').removeEventListener('mousedown', window.applyMdList);
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'- \', \'\')"]').addEventListener('mousedown', window.applyMdList = (e) => { e.preventDefault(); window.insertMD('- ', '', 'noteContent'); });
+        
+        mdToolbar.querySelector(`[onmousedown="applyMd(event, '[[', ']]')"]`).removeEventListener('mousedown', window.applyMdLink);
+        mdToolbar.querySelector(`[onmousedown="applyMd(event, '[[', ']]')"]`).addEventListener('mousedown', window.applyMdLink = (e) => { e.preventDefault(); window.insertMD('[[', ']]', 'noteContent'); });
+        
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'### \', \'\')"]').removeEventListener('mousedown', window.applyMdH3);
+        mdToolbar.querySelector('[onmousedown="applyMd(event, \'### \', \'\')"]').addEventListener('mousedown', window.applyMdH3 = (e) => { e.preventDefault(); window.insertMD('### ', '', 'noteContent'); });
+        
+        mdToolbar.querySelector('[onmousedown="applyMdTable(event)"]').removeEventListener('mousedown', window.applyMdTableEvent);
+        mdToolbar.querySelector('[onmousedown="applyMdTable(event)"]').addEventListener('mousedown', window.applyMdTableEvent = (e) => { e.preventDefault(); window.addMainTable(); });
+    }
+
+    // Re-enlazar eventos a los botones de la nota
+    document.getElementById('btnSaveNote')?.removeEventListener('click', window.saveNote);
+    document.getElementById('btnSaveNote')?.addEventListener('click', window.saveNote);
+    
+    document.getElementById('btnTogglePreview')?.removeEventListener('click', window.toggleZenPreview);
+    document.getElementById('btnTogglePreview')?.addEventListener('click', window.toggleZenPreview);
+
+    document.getElementById('editNoteSaveBtn')?.removeEventListener('click', window.updateNote);
+    document.getElementById('editNoteSaveBtn')?.addEventListener('click', window.updateNote);
+
+    document.getElementById('editNoteDeleteBtn')?.removeEventListener('click', window.deleteNote);
+    document.getElementById('editNoteDeleteBtn')?.addEventListener('click', window.deleteNote);
+
+    document.getElementById('editNoteCloseBtn')?.removeEventListener('click', window.closeNoteModal);
+    document.getElementById('editNoteCloseBtn')?.addEventListener('click', window.closeNoteModal);
+
+    // Enlazar los botones de edición del modal
+    document.getElementById('addEditTableBtn')?.removeEventListener('click', window.addEditTable);
+    document.getElementById('addEditTableBtn')?.addEventListener('click', window.addEditTable);
+
+    document.getElementById('editClNewItemBtn')?.removeEventListener('click', window.addEditClItem);
+    document.getElementById('editClNewItemBtn')?.addEventListener('click', window.addEditClItem);
+
+    document.getElementById('editNoteContent')?.removeEventListener('input', window.updateLivePreview);
+    document.getElementById('editNoteContent')?.addEventListener('input', window.updateLivePreview);
 }
 
 window.addEventListener('stateChanged', () => { 
-    if(!document.getElementById('view-notas')) { isGraphActive = false; if(graphAnimFrame) cancelAnimationFrame(graphAnimFrame); } 
-    else { init(); }
+    const view = document.getElementById('view-notas');
+    if(view) {
+        // CORREGIDO: Asegurarse de que el graph se detenga al salir del tab
+        if(!document.getElementById('view-notas')) { 
+            isGraphActive = false; 
+            if(graphAnimFrame) cancelAnimationFrame(graphAnimFrame); 
+        } 
+        init(); 
+    }
 });

@@ -15,10 +15,11 @@ const logError = (tabName, context, error) => {
                 <h3 style="margin-top:0;">⚠️ Error de Módulo: ${tabName}</h3>
                 <p><strong>Contexto:</strong> ${context}</p>
                 <p><strong>Detalle Técnico:</strong> ${error.message || error}</p>
-                <p style="font-size: 0.9em;">Revisa la consola (F12 -> Console) para ver el stack trace completo.</p>
-                <button onclick="window.location.reload()" style="background: #ff6b6b; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px;">Recargar Aplicación</button>
+                <p style="font-size: 0.9em;">Revisa la consola (F12) para ver el stack trace completo.</p>
+                <button id="btnReloadApp" style="background: #ff6b6b; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px;">Recargar Aplicación</button>
             </div>
         `;
+        document.getElementById('btnReloadApp').addEventListener('click', () => window.location.reload());
     }
 };
 
@@ -46,7 +47,6 @@ window.switchTab = async (tabName) => {
         
         const rawHtml = await htmlRes.text();
 
-        // AJUSTE PREVENTIVO DOMPURIFY
         if (typeof DOMPurify !== 'undefined') {
             container.innerHTML = DOMPurify.sanitize(rawHtml);
         } else {
@@ -77,7 +77,7 @@ if (tabContainer) {
     });
 }
 
-// --- AUTH (Migrado a Supabase - BLINDADO CON ESPERA VISUAL) ---
+// --- AUTH (Migrado a Supabase - BLINDADO) ---
 supabase.auth.onAuthStateChange(async (event, session) => { 
     const user = session?.user;
     
@@ -85,17 +85,15 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         document.getElementById('authScreen').style.display = 'none'; 
         const app = document.getElementById('mainApp');
         app.style.display = 'block';
-        app.innerHTML = '<div style="color:white; text-align:center; padding:50px; font-size:1.5em;">Sincronizando datos con la nube...</div>';
         
-        // 3. Solución: try/catch para evitar bloqueo por error de red o Supabase
         try {
             await initCloudData(user.id); 
         } catch (err) {
-            console.error("Fallo al sincronizar datos, intentando continuar:", err);
+            console.error("Fallo al sincronizar datos:", err);
         }
         
-        app.innerHTML = ''; 
-        window.location.reload(); 
+        if(!currentTab) window.switchTab('actividades');
+        window.dispatchEvent(new Event('stateChanged'));
     } else { 
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('mainApp').style.display = 'none'; 
@@ -113,31 +111,29 @@ window.appLogin = async () => {
     if(error) alert("Error: " + error.message); 
 };
 
-window.appLogout = async () => { if(confirm("¿Cerrar sesión?")) await supabase.auth.signOut(); };
+window.appLogout = () => { if(confirm("¿Cerrar sesión?")) supabase.auth.signOut(); };
 
 // --- PALETA DE COMANDOS ---
-const cmdOverlay = document.getElementById('cmdOverlay'), cmdInput = document.getElementById('cmdInput'), cmdResults = document.getElementById('cmdResults'); 
-let cmdOptions = [ 
-    { name: "💰 Nuevo Gasto", action: () => { window.switchTab('finanzas'); } }, 
-    { name: "📓 Nueva Nota", action: () => { window.switchTab('notas'); } }, 
-    { name: "📝 Nueva Tarea", action: () => { window.switchTab('actividades'); } }, 
-    { name: "🚪 Cerrar Sesión", action: () => { window.appLogout(); } } 
-];
+const cmdOverlay = document.getElementById('cmdOverlay'), cmdInput = document.getElementById('cmdInput'); 
+
 document.addEventListener('keydown', (e) => { 
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if(!state.currentUid) return; cmdOverlay.style.display = 'flex'; cmdInput.value = ''; cmdInput.focus(); } 
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { 
+        e.preventDefault(); 
+        if(!state.currentUid) return; 
+        cmdOverlay.style.display = 'flex'; 
+        cmdInput.value = ''; 
+        cmdInput.focus(); 
+    } 
     if (e.key === 'Escape') cmdOverlay.style.display = 'none'; 
-}); 
+});
+
 window.closeCmd = (e) => { if(e.target === cmdOverlay) cmdOverlay.style.display = 'none'; };
 
-// Exponer el estado a la consola para depuración
-window.appState = state;
-
-// --- MOTOR GLOBAL DE ALARMAS (Bloqueado temporalmente por CSP) ---
-/*
+// --- MOTOR GLOBAL DE ALARMAS (BLINDADO - Sin strings en setInterval) ---
 setInterval(() => {
     if(!state.currentUid) return;
     const now = new Date();
-    state.reminders?.forEach((rem) => {
+    (state.reminders || []).forEach((rem) => {
         if (!rem.completed && !rem.notified && now >= new Date(rem.datetime)) {
             rem.notified = true;
             saveDataToCloud('recordatorios', rem); 
@@ -152,4 +148,6 @@ setInterval(() => {
         }
     });
 }, 5000);
-*/
+
+// Exponer el estado a la consola para depuración
+window.appState = state;
