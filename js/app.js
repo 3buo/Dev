@@ -127,6 +127,9 @@ document.addEventListener('keydown', (e) => {
 }); 
 window.closeCmd = (e) => { if(e.target === cmdOverlay) cmdOverlay.style.display = 'none'; };
 
+// Exponer el estado a la consola para depuración
+window.appState = state;
+
 // --- MOTOR GLOBAL DE ALARMAS ---
 setInterval(() => {
     if(!state.currentUid) return;
