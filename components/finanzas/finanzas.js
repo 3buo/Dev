@@ -11,20 +11,19 @@ window.currentSmartFilter = null;
 // --- MEJORA: Lógica de desbloqueo reactiva ---
 window.unlockVault = () => { 
     const input = document.getElementById('pinInput').value; 
-    if (input === state.masterPin) { 
+    console.log("PIN ingresado:", input, "PIN esperado:", state.masterPin); // DEBUG
+    
+    if (String(input).trim() === String(state.masterPin).trim()) { 
+        isUnlocked = true;
         document.getElementById('vaultOverlay').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('vaultOverlay').classList.add('vault-hidden'); 
             document.getElementById('vaultContent').classList.remove('vault-hidden'); 
-        }, 400); 
-        isUnlocked = true;
-        if(navigator.vibrate) navigator.vibrate([50, 50, 50]); 
-        init();
-        if(window.rateBcvVal === 0) window.fetchExchangeRates(true);
+            init(); // Inicializar UI
+        }, 400);
     } else { 
         alert("PIN Incorrecto."); 
         document.getElementById('pinInput').value = ''; 
-        if(navigator.vibrate) navigator.vibrate(200); 
     } 
 };
 

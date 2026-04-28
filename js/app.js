@@ -77,20 +77,24 @@ if (tabContainer) {
     });
 }
 
-// --- AUTH (Migrado a Supabase - BLINDADO) ---
+// --- AUTH (Migrado a Supabase - BLINDADO CON ESPERA VISUAL) ---
 supabase.auth.onAuthStateChange(async (event, session) => { 
     const user = session?.user;
+    
     if (user && user.id) { 
+        // 1. Ocultar Auth, mostrar carga
         document.getElementById('authScreen').style.display = 'none'; 
+        const app = document.getElementById('mainApp');
+        app.style.display = 'block';
+        app.innerHTML = '<div style="color:white; text-align:center; padding:50px; font-size:1.5em;">Sincronizando datos con la nube...</div>';
+        
+        // 2. Espera bloqueante
         await initCloudData(user.id); 
-        document.getElementById('mainApp').style.display = 'block'; 
         
-        // Disparamos evento general para que todos los tabs carguen si ya existen
-        window.dispatchEvent(new Event('stateChanged'));
-        
-        if(!currentTab) window.switchTab('actividades');
+        // 3. Restaurar App y navegar
+        app.innerHTML = ''; // Limpiar mensaje de carga si es necesario o recargar
+        window.location.reload(); // Recarga limpia tras obtener datos de Supabase
     } else { 
-        console.log("Sesión cerrada o usuario no encontrado.");
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('mainApp').style.display = 'none'; 
         if (unsubSnapshot) supabase.removeChannel(unsubSnapshot); 
