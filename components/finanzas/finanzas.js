@@ -8,6 +8,7 @@ let financeChartInstance = null;
 let isUnlocked = false;
 window.currentSmartFilter = null; 
 
+// --- MEJORA: Lógica de desbloqueo reactiva ---
 window.unlockVault = () => { 
     const input = document.getElementById('pinInput').value; 
     if (input === state.masterPin) { 
@@ -33,7 +34,6 @@ window.changePin = async () => {
     if(newPin && newPin.trim().length > 0) { 
         const pin = newPin.trim();
         state.masterPin = pin; 
-        // Se utiliza saveDataToCloud configurada para la tabla 'configuracion' con columna 'masterpin'
         saveDataToCloud('configuracion', { masterpin: pin }); 
         alert("✅ PIN actualizado."); 
     }
@@ -218,7 +218,7 @@ window.renderExpenses = () => {
     
     if(window.currentSmartFilter) {
         filtered = filtered.filter(e => {
-            const dYMD = e.date.substring(0, 10); // Asumiendo formato YYYY-MM-DD
+            const dYMD = e.date.substring(0, 10);
             return dYMD >= window.currentSmartFilter.start && dYMD <= window.currentSmartFilter.end;
         });
     }
@@ -236,7 +236,7 @@ window.renderExpenses = () => {
     window.updateFinanceChart(chartSums);
 };
 
-window.updateFinanceChart = (chartSums) => { /* ... (igual al anterior) ... */ };
+window.updateFinanceChart = (chartSums) => { /* ... lógica de Chart.js ... */ };
 
 window.updateBalance = (accKey, accName) => { 
     const input = prompt(`Ingresa saldo en ${accName}:`); 
@@ -258,9 +258,20 @@ window.addExpense = () => {
 
 window.renderBalances = () => { if(!isUnlocked) return; state.wallets.forEach(w => { const el = document.getElementById(`bal-${w.id}`); if(el) el.innerText = `${w.symbol} ${parseFloat(state.balances[w.id] || 0).toFixed(2)}`; }); };
 
+// --- REACTIVIDAD MEJORADA ---
 export function init() {
     if(!isUnlocked) return;
     initVoiceEngine(); window.renderWallets(); window.renderBalances(); window.renderExpenses();
 }
 
-window.addEventListener('stateChanged', () => { if(isUnlocked) init(); });
+window.addEventListener('stateChanged', () => { 
+    const view = document.getElementById('view-finanzas');
+    if(view) {
+        if(isUnlocked) {
+            init();
+        } else {
+            document.getElementById('vaultOverlay').classList.remove('vault-hidden');
+            document.getElementById('vaultContent').classList.add('vault-hidden');
+        }
+    }
+});
