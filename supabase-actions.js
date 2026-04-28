@@ -1,10 +1,6 @@
-// supabase-actions.js
 import { supabase } from './app.js';
 import { setData } from './state.js';
 
-// ------------------------------
-// Inicializar datos desde Supabase
-// ------------------------------
 export async function initCloudData() {
   try {
     const { data, error } = await supabase.from('mi_tabla').select('*').order('id', { ascending: true });
@@ -17,9 +13,6 @@ export async function initCloudData() {
   }
 }
 
-// ------------------------------
-// Obtener datos (fetch)
-// ------------------------------
 export async function fetchData() {
   try {
     const { data, error } = await supabase.from('mi_tabla').select('*').order('id', { ascending: true });
@@ -32,14 +25,11 @@ export async function fetchData() {
   }
 }
 
-// ------------------------------
-// Agregar dato
-// ------------------------------
 export async function addData(item) {
   try {
     const { data, error } = await supabase.from('mi_tabla').insert([item]);
     if (error) throw error;
-    await fetchData(); // Actualizar estado
+    await fetchData();
     return data;
   } catch (error) {
     console.error('Error al agregar dato:', error.message);
@@ -47,14 +37,11 @@ export async function addData(item) {
   }
 }
 
-// ------------------------------
-// Actualizar dato
-// ------------------------------
 export async function updateData(id, updatedItem) {
   try {
     const { data, error } = await supabase.from('mi_tabla').update(updatedItem).eq('id', id);
     if (error) throw error;
-    await fetchData(); // Actualizar estado
+    await fetchData();
     return data;
   } catch (error) {
     console.error('Error al actualizar dato:', error.message);
@@ -62,14 +49,11 @@ export async function updateData(id, updatedItem) {
   }
 }
 
-// ------------------------------
-// Borrar dato
-// ------------------------------
 export async function deleteData(id) {
   try {
     const { data, error } = await supabase.from('mi_tabla').delete().eq('id', id);
     if (error) throw error;
-    await fetchData(); // Actualizar estado
+    await fetchData();
     return data;
   } catch (error) {
     console.error('Error al borrar dato:', error.message);
