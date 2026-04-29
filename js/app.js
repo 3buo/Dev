@@ -1,224 +1,166 @@
-import { supabase } from './supabase-config.js';
+import { auth } from './firebase-config.js';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { state, initCloudData, clearLocalData, unsubSnapshot, saveDataToCloud, recordActivity } from './store.js';
 
 const loadedModules = new Set();
 const loadedCSS = new Set(); 
 let currentTab = null;
 
-// --- SISTEMA DE LOG DE DIAGNÓSTICO INTEGRADO ---
-const logError = (tabName, context, error) => {
-    console.error(`[DEBUG ERROR] Tab: ${tabName} | Contexto: ${context}`, error);
-    const container = document.getElementById('tab-content-container');
-    if (container) {
-        container.innerHTML = `
-            <div style="background: #2d1b1b; color: #ff6b6b; padding: 20px; border: 1px solid #ff6b6b; border-radius: 8px; margin: 20px; font-family: monospace;">
-                <h3 style="margin-top:0;">⚠️ Error de Módulo: ${tabName}</h3>
-                <p><strong>Contexto:</strong> ${context}</p>
-                <p><strong>Detalle Técnico:</strong> ${error.message || error}</p>
-                <p style="font-size: 0.9em;">Revisa la consola (F12 -> Console) para ver el stack trace completo.</p>
-                <button id="btnReloadApp" style="background: #ff6b6b; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px;">Recargar Aplicación</button>
-            </div>
-        `;
-        document.getElementById('btnReloadApp')?.addEventListener('click', () => window.location.reload());
-    }
-};
-
 // --- SISTEMA DE PESTAÑAS ---
 window.switchTab = async (tabName) => {
     currentTab = tabName;
-    
-    // Actualizar UI de pestañas
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById(`tab-${tabName}`);
-    if(activeBtn) activeBtn.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
     document.body.setAttribute('data-theme', tabName);
     
     const container = document.getElementById('tab-content-container');
     container.innerHTML = '<div style="text-align:center; padding: 40px; color: #aaa;">Cargando interfaz...</div>';
 
     try {
-        // Cargar CSS dinámicamente
         if (!loadedCSS.has(tabName)) {
             const link = document.createElement('link');
-            link.rel = 'stylesheet'; 
-            link.href = `components/${tabName}/${tabName}.css`;
+            link.rel = 'stylesheet'; link.href = `components/${tabName}/${tabName}.css`;
             document.head.appendChild(link);
             loadedCSS.add(tabName);
         }
-
-        // Cargar HTML
         const htmlRes = await fetch(`components/${tabName}/${tabName}.html`);
-        if (!htmlRes.ok) throw new Error(`HTTP ${htmlRes.status} - Archivo no encontrado: components/${tabName}/${tabName}.html`);
-        
-        const rawHtml = await htmlRes.text();
-        
-        // Renderizar HTML (DOMPurify ya no es necesario si quitamos CSP y confiamos en las fuentes)
-        container.innerHTML = rawHtml;
+        container.innerHTML = await htmlRes.text();
 
-        // Cargar Módulo JS
         if (!loadedModules.has(tabName)) {
             const module = await import(`../components/${tabName}/${tabName}.js`);
             if (module.init) module.init();
             loadedModules.add(tabName);
         } else {
-            // Si el módulo ya cargó, solo notificamos el cambio de estado
             window.dispatchEvent(new Event('stateChanged'));
         }
     } catch (e) {
-        logError(tabName, 'Carga de interfaz', e);
+        container.innerHTML = `<div style="color:var(--warning)">Error cargando el módulo ${tabName}.</div>`;
     }
 };
 
-// --- DRAG AND DROP PARA TABS ---
-const tabContainer = document.getElementById('tabContainer');
-if (tabContainer) {
-    Sortable.create(tabContainer, { 
-        animation: 150, ghostClass: 'sortable-ghost', 
-        onEnd: function () { 
-            state.tabOrder = Array.from(tabContainer.children).map(btn => btn.id); 
-        } 
-    });
-}
+// --- DRAG AND DROP ---
+Sortable.create(document.getElementById('tabContainer'), { 
+    animation: 150, ghostClass: 'sortable-ghost', 
+    onEnd: function () { 
+        state.tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); 
+        saveDataToCloud(); 
+    } 
+});
 
-// --- GESTIÓN DE SESIÓN (SUPABASE) ---
-supabase.auth.onAuthStateChange(async (event, session) => { 
-    const user = session?.user;
-    
-    if (user && user.id) { 
+window.addEventListener('stateChanged', () => {
+    if (state.tabOrder && state.tabOrder.length > 0) { 
+        const container = document.getElementById('tabContainer'); 
+        state.tabOrder.forEach(id => { const btn = document.getElementById(id); if (btn) container.appendChild(btn); }); 
+    } 
+});
+
+// --- AUTH ---
+onAuthStateChanged(auth, async (user) => { 
+    if (user) { 
         document.getElementById('authScreen').style.display = 'none'; 
-        const mainApp = document.getElementById('mainApp');
-        mainApp.style.display = 'block';
-        
-        mainApp.innerHTML = '<div style="color:white; text-align:center; padding:50px; font-size:1.5em;">Sincronizando datos con la nube...</div>';
-        
-        try {
-            await initCloudData(user.id); 
-        } catch (err) {
-            console.error("Fallo al sincronizar datos:", err);
-            logError('Auth', 'initCloudData', err); // Loggear el error si falla la inicialización
-        }
-        
-        mainApp.innerHTML = ''; // Limpiar mensaje de carga
-        // Navegar a la pestaña por defecto o la última activa
-        if(!currentTab) window.switchTab('actividades');
-        window.dispatchEvent(new Event('stateChanged')); // Notificar a otros módulos
+        document.getElementById('mainApp').style.display = 'block'; 
+        await initCloudData(user.uid); 
+        window.switchTab('actividades'); 
     } else { 
-        // Estado de logout
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('mainApp').style.display = 'none'; 
-        if (unsubSnapshot) supabase.removeChannel(unsubSnapshot); // Desuscribir de realtime
+        if (unsubSnapshot) unsubSnapshot(); 
         clearLocalData(); 
         document.body.removeAttribute('data-theme');
     } 
 });
 
-// --- FUNCIONES DE AUTH ---
-window.appLogin = async () => { 
-    const e = document.getElementById('authEmail')?.value;
-    const p = document.getElementById('authPassword')?.value; 
+window.appLogin = () => { 
+    const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value; 
     if(!e || !p) return alert("Campos vacíos"); 
-    const { error } = await supabase.auth.signInWithPassword({ email: e, password: p });
-    if(error) alert("Error: " + error.message); 
+    signInWithEmailAndPassword(auth, e, p).catch(err => alert("Error: " + err.message)); 
 };
-
-window.appRegister = async () => { 
-    const e = document.getElementById('authEmail')?.value;
-    const p = document.getElementById('authPassword')?.value; 
-    if(p.length < 6) return alert("Mínimo 6 caracteres"); 
-    const { error } = await supabase.auth.signUp({ email: e, password: p });
-    if(error) alert(error.message); else alert("Registro exitoso. Revisa tu correo o inicia sesión.");
+window.appRegister = () => { 
+    const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value; 
+    if(p.length < 6) return alert("Min 6 chars"); 
+    createUserWithEmailAndPassword(auth, e, p).then(() => alert("Cuenta creada.")).catch(err => alert(err.message)); 
 };
-
-window.appLogout = async () => { 
-    if(confirm("¿Cerrar sesión?")) await supabase.auth.signOut(); 
-};
+window.appResetPassword = () => { const e = prompt("Correo:"); if(e) sendPasswordResetEmail(auth, e).then(() => alert("Enviado!")).catch(err=>alert(err.message)); };
+window.appLogout = () => { if(confirm("¿Cerrar sesión?")) signOut(auth); };
 
 // --- PALETA DE COMANDOS ---
-const cmdOverlay = document.getElementById('cmdOverlay'), cmdInput = document.getElementById('cmdInput'); 
-
+const cmdOverlay = document.getElementById('cmdOverlay'), cmdInput = document.getElementById('cmdInput'), cmdResults = document.getElementById('cmdResults'); 
+let cmdOptions = [ 
+    { name: "💰 Nuevo Gasto", action: () => { window.switchTab('finanzas'); setTimeout(()=>document.getElementById('expDesc')?.focus(), 500); } }, 
+    { name: "📓 Nueva Nota", action: () => { window.switchTab('notas'); setTimeout(()=>document.getElementById('noteTitle')?.focus(), 500); } }, 
+    { name: "📝 Nueva Tarea", action: () => { window.switchTab('actividades'); setTimeout(()=>document.getElementById('taskInput')?.focus(), 500); } }, 
+    { name: "🚪 Cerrar Sesión", action: () => { window.appLogout(); } } 
+];
 document.addEventListener('keydown', (e) => { 
-    // Atajo para abrir la paleta (Ctrl+K)
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { 
-        e.preventDefault(); 
-        if(!state.currentUid) return; // No hacer nada si no hay usuario logueado
-        if (cmdOverlay) cmdOverlay.style.display = 'flex'; 
-        if (cmdInput) cmdInput.value = ''; 
-        if (cmdInput) cmdInput.focus(); 
-    } 
-    // Cerrar con Escape
-    if (e.key === 'Escape') {
-        if (cmdOverlay) cmdOverlay.style.display = 'none';
-    }
-});
-
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if(!state.currentUid) return; cmdOverlay.style.display = 'flex'; cmdInput.value = ''; renderCmdResults(cmdOptions); cmdInput.focus(); } 
+    if (e.key === 'Escape') cmdOverlay.style.display = 'none'; 
+}); 
 window.closeCmd = (e) => { if(e.target === cmdOverlay) cmdOverlay.style.display = 'none'; };
+cmdInput.addEventListener('input', (e) => { const val = e.target.value.toLowerCase(); renderCmdResults(cmdOptions.filter(opt => opt.name.toLowerCase().includes(val))); }); 
+function renderCmdResults(list) { cmdResults.innerHTML = ''; list.forEach((item, index) => { const li = document.createElement('li'); li.innerText = item.name; if(index === 0) li.classList.add('active-cmd'); li.onclick = () => { item.action(); cmdOverlay.style.display = 'none'; }; cmdResults.appendChild(li); }); } 
+cmdInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') { const active = cmdResults.querySelector('.active-cmd'); if(active) active.click(); } });
 
-// --- MOTOR GLOBAL DE ALARMAS (Comentado por seguridad CSP) ---
+
+// ==========================================================================
+// --- MOTOR GLOBAL DE ALARMAS (CONECTADO AL NUEVO MÓDULO ALARM.JS) ---
+// ==========================================================================
 
 setInterval(() => {
-    if(!state.currentUid || !state.isReady) return;
+    if(!state.currentUid) return;
     const now = new Date();
-    (state.reminders || []).forEach((rem) => {
+    
+    // 1. Revisar Recordatorios (De la pestaña Recordatorios)
+    state.reminders?.forEach((rem) => {
         if (!rem.completed && !rem.notified && now >= new Date(rem.datetime)) {
+            // Marcamos como notificado
             rem.notified = true;
-            saveDataToCloud('recordatorios', rem); 
+            saveDataToCloud(); 
+
             if(window.triggerSystemAlarm) {
-                window.triggerSystemAlarm("Recordatorio", rem.text, () => { 
-                    rem.completed = true;
-                    saveDataToCloud('recordatorios', rem);
-                    recordActivity();
-                    window.dispatchEvent(new Event('stateChanged')); 
-                });
+                window.triggerSystemAlarm(
+                    "Recordatorio", 
+                    rem.text, 
+                    () => { 
+                        // Búsqueda segura en tiempo real para evitar pérdida de memoria
+                        const actualRem = state.reminders.find(r => r.text === rem.text && r.datetime === rem.datetime);
+                        if (actualRem) {
+                            actualRem.completed = true; 
+                        } else {
+                            rem.completed = true; // Fallback
+                        }
+                        
+                        // Añade puntos a tus estadísticas
+                        recordActivity(); 
+                        saveDataToCloud(); 
+                        
+                        // Forzamos al HTML de recordatorios a repintarse instantáneamente
+                        if(window.renderReminders) window.renderReminders();
+                        window.dispatchEvent(new Event('stateChanged')); 
+                    }
+                );
+            }
+        }
+    });
+
+    // 2. Revisar Hábitos (De la pestaña Actividades)
+    state.recurringTasks?.forEach((rec) => {
+        if (!rec.notified && now >= new Date(rec.nextTrigger)) {
+            rec.notified = true;
+            saveDataToCloud();
+
+            if(window.triggerSystemAlarm) {
+                window.triggerSystemAlarm(
+                    "Hábito / Rutina", 
+                    rec.text, 
+                    () => { 
+                        if(window.rescheduleRecurring) window.rescheduleRecurring(rec);
+                        recordActivity(); 
+                        saveDataToCloud(); 
+                        if(window.renderRecurringTasks) window.renderRecurringTasks();
+                        window.dispatchEvent(new Event('stateChanged'));
+                    }
+                );
             }
         }
     });
 }, 5000);
-
-
-// Exponer estado para debug
-window.appState = state;
-
-// --- CONEXIÓN DE ELEMENTOS DE UI (Auth y otros) ---
-document.addEventListener('DOMContentLoaded', () => {
-  // Botones de Autenticación
-  document.getElementById('btnLoginBtn')?.addEventListener('click', window.appLogin);
-  document.getElementById('btnRegBtn')?.addEventListener('click', window.appRegister);
-  document.getElementById('appLogoutBtn')?.addEventListener('click', window.appLogout);
-
-  // Enlace de Recuperación de Contraseña
-  document.getElementById('appResetPasswordLink')?.addEventListener('click', async () => {
-    const email = document.getElementById('authEmail')?.value;
-    if (!email) {
-      alert('Por favor, ingresa tu correo electrónico primero.');
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://project-sq8he.vercel.app/',
-    });
-    if (error) {
-      alert('Error: ' + error.message);
-    } else {
-      alert('Se ha enviado un enlace de recuperación a tu correo.');
-    }
-  });
-
-  // Visibilidad de Contraseña
-  document.getElementById('togglePasswordVisibilityBtn')?.addEventListener('click', () => {
-    const passInput = document.getElementById('authPassword');
-    if (passInput) {
-      const isPassword = passInput.type === 'password';
-      passInput.type = isPassword ? 'text' : 'password';
-      document.getElementById('togglePasswordVisibilityBtn').innerText = isPassword ? '🙈' : '👁️';
-    }
-  });
-
-  // Switch de pestañas iniciales si existen
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tabName = btn.id.replace('tab-', '');
-      if (tabName !== 'appLogoutBtn' && btn.id !== 'appLogoutBtn') {
-        window.switchTab(tabName);
-      }
-    });
-  });
-});

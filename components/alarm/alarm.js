@@ -16,7 +16,7 @@ function getAlarmSettings() {
     try {
         const saved = localStorage.getItem('taskify_alarm_prefs');
         return saved ? JSON.parse(saved) : { sound: 'digital', volume: 0.5 };
-        } catch (_) {
+    } catch(e) {
         return { sound: 'digital', volume: 0.5 };
     }
 }
@@ -52,10 +52,10 @@ window.previewAndSaveAlarmSettings = () => {
     // 3. Probar el nuevo sonido con el volumen exacto
     currentAudio = new Audio(SOUNDS[sound]);
     currentAudio.volume = volume;
-    currentAudio.play().catch(() => console.warn("Autoplay bloqueado por el navegador en la preview."));
+    currentAudio.play().catch(e => console.warn("Autoplay bloqueado por el navegador en la preview."));
 };
 
-// API GLOBAL PARA DISPARAR ALARMAS
+// API GLOBAL PARA DISPARAR ALARMAS (Esta es la que debes usar en app.js)
 window.triggerSystemAlarm = (title, description, onCompleteCallback) => {
     
     // Detener sonidos previos si se superponen
@@ -78,7 +78,7 @@ window.triggerSystemAlarm = (title, description, onCompleteCallback) => {
     currentAudio.volume = settings.volume;
     currentAudio.loop = true; // Repetir hasta que el usuario decida
     
-    currentAudio.play().catch(() => console.warn("El navegador bloqueó el autoplay visual de la alarma."));
+    currentAudio.play().catch(e => console.warn("El navegador bloqueó el autoplay visual de la alarma."));
 };
 
 window.completeSystemAlarm = () => {
@@ -92,7 +92,7 @@ window.snoozeSystemAlarm = () => {
     const savedDesc = document.getElementById('sysAlarmDesc').innerText;
     const savedCallback = activeCallback;
     
-    // CORREGIDO: Re-disparar en 5 minutos usando función de flecha segura
+    // Re-disparar en 5 minutos
     setTimeout(() => {
         window.triggerSystemAlarm(`(Pospuesto) ${savedTitle}`, savedDesc, savedCallback);
     }, 300000); 
