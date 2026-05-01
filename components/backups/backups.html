@@ -1,0 +1,459 @@
+<!-- ============================================
+     BACKUPS PANEL - UI para gestionar backups
+     ============================================ -->
+<div id="backupsPanel" class="backups-panel" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 999999; align-items: center; justify-content: center;">
+    
+    <!-- Contenedor principal del panel -->
+    <div id="backupsContainer" class="backups-container">
+        
+        <!-- Header con título y botón de cerrar -->
+        <div class="backups-header">
+            <h2 style="color: white; margin: 0; font-size: 1.5em;">📦 Gestión de Backups</h2>
+            <button id="closeBackupsBtn" class="backups-close-btn" onclick="window.closeBackupsPanel()" style="background: none; border: none; color: white; font-size: 1.5em; cursor: pointer; margin-left: 10px;">&times;</button>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div id="backupsStats" class="backups-stats" style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: center;">
+            <div class="stat-box stat-online" id="statOnlineBox">
+                <span class="stat-icon" style="font-size: 1.2em;">🌐</span>
+                <span class="stat-label" id="statOnlineLabel">Online</span>
+            </div>
+            <div class="stat-box stat-offline" id="statOfflineBox">
+                <span class="stat-icon" style="font-size: 1.2em;">💾</span>
+                <span class="stat-label" id="statOfflineLabel">Offline</span>
+            </div>
+        </div>
+
+        <!-- Botones de acción rápida -->
+        <div id="backupsQuickActions" class="backups-quick-actions" style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
+            <button id="btnCreateBackup" class="action-btn btn-primary" onclick="window.createManualBackup()">
+                <span style="font-size: 1.2em;">💾</span> Crear Backup Manual
+            </button>
+            <button id="btnRestoreLast" class="action-btn btn-success" onclick="window.restoreFromLastBackup()">
+                <span style="font-size: 1.2em;">↩️</span> Restaurar Último
+            </button>
+            <button id="btnAutoSnapshot" class="action-btn btn-secondary" onclick="window.createAutoSnapshot()">
+                <span style="font-size: 1.2em;">📸</span> Snapshot Automático
+            </button>
+        </div>
+
+        <!-- Lista de backups disponibles -->
+        <div id="backupsListContainer" class="backups-list-container">
+            <h3 style="color: white; margin-bottom: 10px; font-size: 1.2em;">📋 Backups Disponibles (<span id="backupsCount">0</span>)</h3>
+            
+            <!-- Lista de backups (renderizada dinámicamente) -->
+            <div id="backupsList" class="backups-list"></div>
+
+            <!-- Mensaje cuando no hay backups -->
+            <div id="noBackupsMessage" class="no-backups-message" style="display: none; text-align: center; color: white;">
+                <span style="font-size: 2em;">📭</span><br>
+                <strong>No hay backups disponibles.</strong><br>
+                <small>Haz clic en "Crear Backup Manual" para guardar tu estado actual.</small>
+            </div>
+        </div>
+
+        <!-- Estadísticas detalladas -->
+        <div id="backupsDetailedStats" class="backups-detailed-stats" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+            <h4 style="color: white; margin-bottom: 10px; font-size: 1em;">📊 Estadísticas</h4>
+            <div id="detailedStatsContent" class="detailed-stats-content"></div>
+        </div>
+
+        <!-- Botones de acción avanzada -->
+        <div id="backupsAdvancedActions" class="backups-advanced-actions" style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+            <button id="btnExportAll" class="action-btn btn-secondary" onclick="window.exportAllBackups()">
+                <span style="font-size: 1.2em;">📤</span> Exportar Todos
+            </button>
+            <button id="btnCleanupOld" class="action-btn btn-warning" onclick="window.cleanupOldBackups(10)">
+                <span style="font-size: 1.2em;">🧹</span> Limpiar Antiguos (Mantener 10)
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modal de confirmación para restaurar -->
+    <div id="restoreConfirmModal" class="backups-restore-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 1000000;">
+        <h3 style="color: #333; margin-top: 0; text-align: center;">⚠️ Confirmar Restauración</h3>
+        <p id="restoreConfirmMessage" style="color: #666; text-align: center; font-size: 0.95em;"></p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+            <button id="btnConfirmRestore" class="action-btn btn-primary" onclick="window.confirmRestore()">Sí, Restaurar</button>
+            <button id="btnCancelRestore" class="action-btn btn-secondary" onclick="window.closeBackupsPanel()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal de estado actual -->
+    <div id="currentStateModal" class="backups-current-state-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); z-index: 1000000;">
+        <h3 style="color: #333; margin-top: 0; text-align: center;">📋 Estado Actual</h3>
+        <pre id="currentStateContent" style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.9em; color: #666;"></pre>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+            <button id="btnCloseCurrent" class="action-btn btn-secondary" onclick="window.closeBackupsPanel()">Cerrar</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================
+     BACKUPS PANEL - CSS Styles
+     ============================================ -->
+<style>
+    /* Contenedor principal */
+    .backups-container {
+        width: 500px;
+        max-width: 90%;
+        background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 50px rgba(88, 166, 255, 0.2);
+        border: 1px solid #58a6ff;
+    }
+
+    /* Header */
+    .backups-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .backups-close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5em;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .backups-close-btn:hover {
+        transform: rotate(90deg);
+    }
+
+    /* Estadísticas */
+    .backups-stats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        justify-content: center;
+    }
+
+    .stat-box {
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .stat-online {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .stat-offline {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    /* Botones de acción rápida */
+    .backups-quick-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Lista de backups */
+    .backups-list-container {
+        max-height: 400px;
+        overflow-y: auto;
+        background: rgba(0,0,0,0.2);
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    /* Items de backup */
+    .backup-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .backup-item:hover {
+        background: rgba(255,255,255,0.12);
+        transform: translateX(4px);
+    }
+
+    /* Icono de fuente */
+    .backup-source-icon {
+        font-size: 1em;
+        flex-shrink: 0;
+    }
+
+    /* Información del backup */
+    .backup-info {
+        flex-grow: 1;
+    }
+
+    .backup-date {
+        color: #aaa;
+        font-size: 0.85em;
+        margin-bottom: 2px;
+    }
+
+    .backup-type-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75em;
+        background: rgba(88, 166, 255, 0.2);
+        color: #58a6ff;
+    }
+
+    /* Botones de acción del item */
+    .backup-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    .action-btn {
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+
+    /* Mensaje cuando no hay backups */
+    .no-backups-message {
+        padding: 20px;
+        text-align: center;
+        color: rgba(255,255,255,0.7);
+    }
+
+    /* Estadísticas detalladas */
+    .backups-detailed-stats {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+    }
+
+    .detailed-stats-content {
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 0.8em;
+        color: #aaa;
+        white-space: pre-wrap;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+
+    /* Modal de confirmación */
+    .backups-restore-modal,
+    .backups-current-state-modal {
+        background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+        border: 1px solid #58a6ff;
+        box-shadow: 0 8px 32px rgba(88, 166, 255, 0.4);
+    }
+
+    .backups-restore-modal h3,
+    .backups-current-state-modal h3 {
+        color: #58a6ff;
+    }
+
+    /* Animación de carga */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .loading-indicator {
+        animation: pulse 1.5s infinite;
+    }
+
+</style>
+
+<!-- ============================================
+     BACKUPS PANEL - JavaScript
+     ============================================ -->
+<script type="module">
+    import { BackupManager, listAllBackups, createManualBackup, restoreFromLastBackup, 
+             createAutoSnapshot, exportAllBackups, cleanupOldBackups, getFullReport } from '../../js/backups-manager.js';
+
+    // Instancia global del BackupManager
+    window.backupManager = new BackupManager();
+
+    // Referencias al DOM
+    const backupsListEl = document.getElementById('backupsList');
+    const backupsCountEl = document.getElementById('backupsCount');
+    const noBackupsMessageEl = document.getElementById('noBackupsMessage');
+    const statOnlineBox = document.getElementById('statOnlineBox');
+    const statOfflineBox = document.getElementById('statOfflineBox');
+
+    /**
+     * Renderiza la lista de backups disponibles
+     */
+    async function renderBackupsList() {
+        try {
+            const backups = await listAllBackups();
+            
+            if (backups.length === 0) {
+                noBackupsMessageEl.style.display = 'block';
+                backupsCountEl.textContent = '0';
+                return;
+            }
+
+            noBackupsMessageEl.style.display = 'none';
+            backupsCountEl.textContent = backups.length;
+
+            // Renderizar cada backup
+            backupsListEl.innerHTML = '';
+            
+            for (const backup of backups) {
+                const item = document.createElement('div');
+                item.className = 'backup-item';
+                
+                // Icono según fuente
+                let sourceIcon = '💾';
+                if (backup.source === 'Firebase') {
+                    sourceIcon = '🌐';
+                } else if (backup.source === 'IndexedDB') {
+                    sourceIcon = '🗄️';
+                }
+
+                item.innerHTML = `
+                    <span class="backup-source-icon">${sourceIcon}</span>
+                    <div class="backup-info">
+                        <div class="backup-date">
+                            📅 ${formatDate(backup.date || backup.timestamp)}
+                        </div>
+                        <span class="backup-type-badge">${backup.type || 'Backup'}</span>
+                    </div>
+                    <div class="backup-actions">
+                        <button class="action-btn btn-primary" onclick="window.viewBackupDetails('${backup.key}')">👁️</button>
+                        <button class="action-btn btn-success" onclick="window.confirmRestoreFromItem('${backup.key}')">↩️</button>
+                    </div>
+                `;
+
+                backupsListEl.appendChild(item);
+            }
+
+            // Actualizar estadísticas detalladas
+            updateDetailedStats(backups);
+
+        } catch (error) {
+            console.error('Error al renderizar lista de backups:', error);
+            noBackupsMessageEl.style.display = 'block';
+            noBackupsMessageEl.innerHTML = `<span style="font-size: 2em;">⚠️</span><br>
+                <strong>Error al cargar backups.</strong><br>
+                <small>${error.message}</small>`;
+        }
+    }
+
+    /**
+     * Actualiza estadísticas detalladas
+     */
+    function updateDetailedStats(backups) {
+        const statsContent = document.getElementById('detailedStatsContent');
+        
+        // Contar por fuente y tipo
+        const bySource = {};
+        const byType = {};
+        
+        for (const backup of backups) {
+            if (!bySource[backup.source]) bySource[backup.source] = 0;
+            bySource[backup.source]++;
+            
+            if (!byType[backup.type]) byType[backup.type] = 0;
+            byType[backup.type]++;
+        }
+
+        // Crear string de estadísticas
+        const statsString = `Total: ${backups.length} backups
+----------------------------------------
+Por Fuente:
+${Object.entries(bySource).map(([k, v]) => `  ${k}: ${v}`).join('\n')}
+----------------------------------------
+Por Tipo:
+${Object.entries(byType).map(([k, v]) => `  ${k}: ${v}`).join('\n')}`;
+
+        statsContent.textContent = statsString;
+    }
+
+    /**
+     * Formatea fecha para display
+     */
+    function formatDate(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('es-VE', { 
+            day: '2-digit', 
+            month: 'short', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    /**
+     * Inicializa el panel (llamado al abrir)
+     */
+    async function initPanel() {
+        // Cargar lista de backups
+        await renderBackupsList();
+        
+        // Actualizar estado online/offline
+        updateOnlineStatus();
+    }
+
+    /**
+     * Actualiza indicador online/offline
+     */
+    function updateOnlineStatus() {
+        const isOnline = window.isFirebaseOnline();
+        
+        if (isOnline) {
+            statOnlineBox.style.display = 'flex';
+            statOfflineBox.style.display = 'none';
+        } else {
+            statOnlineBox.style.display = 'none';
+            statOfflineBox.style.display = 'flex';
+        }
+    }
+
+    // Exponer funciones globales para acceso desde HTML
+    window.initBackupsPanel = initPanel;
+    window.renderBackupsList = renderBackupsList;
+    window.updateOnlineStatus = updateOnlineStatus;
+
+</script>

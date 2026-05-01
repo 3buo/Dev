@@ -1,0 +1,246 @@
+/* ============================================
+   BACKUPS PANEL - Estilos CSS
+   ============================================ */
+
+/* Contenedor principal */
+#backupsPanel {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.backups-container {
+    width: 500px;
+    max-width: 90%;
+    background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 50px rgba(88, 166, 255, 0.2);
+    border: 1px solid #58a6ff;
+}
+
+/* Header */
+.backups-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.backups-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.backups-close-btn:hover {
+    transform: rotate(90deg);
+}
+
+/* Estadísticas */
+.backups-stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.stat-box {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat-online {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.stat-offline {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+/* Botones de acción rápida */
+.backups-quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+/* Lista de backups */
+.backups-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* Items de backup */
+.backup-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.backup-item:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateX(4px);
+}
+
+/* Icono de fuente */
+.backup-source-icon {
+    font-size: 1em;
+    flex-shrink: 0;
+}
+
+/* Información del backup */
+.backup-info {
+    flex-grow: 1;
+}
+
+.backup-date {
+    color: #aaa;
+    font-size: 0.85em;
+    margin-bottom: 2px;
+}
+
+.backup-type-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    background: rgba(88, 166, 255, 0.2);
+    color: #58a6ff;
+}
+
+/* Botones de acción del item */
+.backup-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Mensaje cuando no hay backups */
+.no-backups-message {
+    padding: 20px;
+    text-align: center;
+    color: rgba(255,255,255,0.7);
+}
+
+/* Estadísticas detalladas */
+.backups-detailed-stats {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+}
+
+.detailed-stats-content {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.8em;
+    color: #aaa;
+    white-space: pre-wrap;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* Modal de confirmación */
+.backups-restore-modal,
+.backups-current-state-modal {
+    background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+    border: 1px solid #58a6ff;
+    box-shadow: 0 8px 32px rgba(88, 166, 255, 0.4);
+}
+
+.backups-restore-modal h3,
+.backups-current-state-modal h3 {
+    color: #58a6ff;
+}
+
+/* Animación de carga */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.loading-indicator {
+    animation: pulse 1.5s infinite;
+}
+
+/* Scrollbar personalizado */
+.backups-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.backups-list-container::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+
+.backups-list-container::-webkit-scrollbar-thumb {
+    background: #58a6ff;
+    border-radius: 4px;
+}
+
+.backups-list-container::-webkit-scrollbar-thumb:hover {
+    background: #7c9aff;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .backups-container {
+        width: calc(100vw - 20px);
+        padding: 15px;
+    }
+    
+    .action-btn {
+        font-size: 0.8em;
+        padding: 7px 12px;
+    }
+}
