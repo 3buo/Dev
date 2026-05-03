@@ -641,8 +641,17 @@ window.executeBulkAdd = (walletId) => {
     }
     
     // Clear textarea and reset
-    document.getElementById('bulkTextarea').value = '';
+    const textarea = document.getElementById('bulkTextarea');
+    if(textarea) textarea.value = '';
     parsedBulkRecords = [];
+    
+    // Re-enable buttons after successful add (updatePreviewDisplay would disable them again)
+    const btnConfirm = document.getElementById('btnConfirm');
+    const btnPreview = document.getElementById('btnPreview');
+    if(btnConfirm) btnConfirm.disabled = false;
+    if(btnPreview) btnPreview.disabled = false;
+    
+    // Update preview to show empty state
     updatePreviewDisplay();
     
     if(totalAdded > 0) {
@@ -651,10 +660,10 @@ window.executeBulkAdd = (walletId) => {
         alert('⚠️ Algunos gastos no se pudieron agregar.');
     }
     
-    // Close bulk panel after a short delay
+    // Keep panel open for more entries
     setTimeout(() => {
         if(bulkPanel && bulkPanel.style.display !== 'none') {
-            bulkPanel.style.display = 'none';
+            // Panel stays open, buttons already enabled above
         }
     }, 500);
 };
