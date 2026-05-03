@@ -205,4 +205,87 @@ try {
 
 ## Support
 
-For issues or questions, check the console logs for detailed error messages and restore point IDs.
+For issues or questions, check the console logs for detailed error messages and restore point IDs. 
+
+```
+
+Respuestas Claras al Sistema de Backup
+1. ¿Dónde se guardan los respaldos de la base de datos? ¿En qué archivo?
+Los respaldos se guardan en DOS lugares simultáneamente:
+
+A En Firebase (la nube)
+Archivo lógico: firebase-backup-config.js dentro del módulo de backup
+Ubicación física: Se guardan como documentos en tus colecciones de Firebase con IDs tipo RP-1234567890-abc
+Qué contiene: Snapshots completos de cada colección (actividades, checklists, finanzas, notas, recordatorios)
+B En LocalStorage del navegador (localmente)
+Archivo físico: Se guarda en localStorage con la clave "firebase-backup-local-storage"
+Ubicación física: En el navegador donde se ejecuta tu app (Chrome, Firefox, Edge, etc.)
+Qué contiene:
+Datos actuales de cada colección
+Historial de puntos de restauración (últimos 50)
+Logs de operaciones (últimos 100)
+C En archivos JSON exportados (opcional)
+Cuando ejecutas exportCompleteBackup(), se genera un archivo JSON que puedes guardar manualmente en:
+
+full-recovery.json (puedes guardarlo donde quieras, ej: js/backups/full-recovery.json)
+Este archivo contiene TODO el estado del sistema de backup
+2. ¿Dónde veo el registro de puntos de restauración de la DB?
+Hay DOS formas de ver los registros:
+
+A En la Consola del Navegador (Principal)
+Abre las herramientas de desarrollador (F12) → pestaña "Console" y verás mensajes como:
+
+[BACKUP-LOG] 2026-05-02T19:30:45 (4) - [INFO] Creating Firebase restore point for: AFTER_ACTIVITY_SAVE
+[RESTORE-POINT] 2026-05-02T19:30:45 (4) - Created restore point for type: AFTER_ACTIVITY_SAVE
+
+B En el Archivo Exportado
+Ejecuta backupManager.exportCompleteBackup() y verás en la consola:
+
+{
+  "firebase": {
+    "logs": [...],        // Todos los logs de operaciones
+    "restorePoints": [...] // Todos los puntos de restauración
+  },
+  "local": {
+    "stats": {...},       // Estadísticas del backup local
+    "restoreHistory": [...] // Historial de restore points locales
+  }
+}
+
+3. Si se pierden todos los datos por estar offline y guardar, y al reconectar está todo vacío...
+Paso a Paso para Recuperar:
+Paso 1: Abrir la Consola del Navegador
+Presiona F12 o haz clic derecho → "Inspeccionar" → pestaña "Console"
+Paso 2: Importar el Backup Guardado
+Ejecuta en la consola:
+
+import { backupManager } from './js/backups/backup-manager.js';
+
+// Opción A: Si ya exportaste antes a un archivo
+const fileContent = await readFile('full-recovery.json', 'utf8');
+backupManager.importCompleteBackup(fileContent);
+
+// Opción B: Si quieres usar el último backup de localStorage
+const lastSnapshot = await backupManager.exportLocalBackup();
+backupManager.importCompleteBackup(lastSnapshot);
+
+Paso 3: Verificar que se Restauró
+Ejecuta en la consola:
+
+const stats = backupManager.getStats();
+console.log(stats.summary.totalBackups); // Debería mostrar número > 0
+console.log(stats.summary.lastBackup);   // Timestamp del último backup
+
+Paso 4: Los Datos se Cargan Automáticamente
+Después de importar, los datos están disponibles en:
+
+backupManager.localBackup.backupData (memoria)
+localStorage (persistido)
+Resumen Visual
+Pregunta	Respuesta Rápida
+¿Dónde se guardan?	Firebase (nube) + LocalStorage (navegador) + Archivos JSON opcionales
+¿Dónde ver los logs?	Consola del navegador (F12 → Console) o archivo exportado
+¿Qué ejecutar para recuperar?	backupManager.importCompleteBackup(jsonString) en la consola
+
+
+```
