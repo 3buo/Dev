@@ -645,14 +645,12 @@ window.executeBulkAdd = (walletId) => {
     if(textarea) textarea.value = '';
     parsedBulkRecords = [];
     
-    // Re-enable buttons after successful add (updatePreviewDisplay would disable them again)
-    const btnConfirm = document.getElementById('btnConfirm');
-    const btnPreview = document.getElementById('btnPreview');
-    if(btnConfirm) btnConfirm.disabled = false;
-    if(btnPreview) btnPreview.disabled = false;
-    
-    // Update preview to show empty state
+    // Update preview to show empty state (this will disable buttons)
     updatePreviewDisplay();
+    
+    // Then re-enable confirm button for more entries
+    const btnConfirm = document.getElementById('btnConfirm');
+    if(btnConfirm) btnConfirm.disabled = false;
     
     if(totalAdded > 0) {
         alert(`✅ Se agregaron ${totalAdded} gasto(s) correctamente.`);
