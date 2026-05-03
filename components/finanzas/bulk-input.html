@@ -1,0 +1,29 @@
+<div class="bulk-panel" id="bulkPanel" style="display: none; border-color: rgba(0, 210, 255, 0.4); background: linear-gradient(180deg, rgba(0, 210, 255, 0.08) 0%, rgba(10, 15, 24, 0) 100%);">
+    <h3 style="margin-top: 0; color: white; text-align: center;">Entrada Masiva de Datos</h3>
+    <p style="color: #8ba4b5; text-align: center; font-size: 0.85em; margin-bottom: 10px;">Ingresa montos y descripciones en formato: <strong>"monto - descripcion"</strong></p>
+    
+    <div id="bulkInputArea" style="background: #0d141f; border: 1px solid #2d3446; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+        <textarea id="bulkDataInput" placeholder="Ej: 15 - Netflix&#10;30 - Comida&#10;50 - Transporte" style="width: 100%; height: 80px; background: #111a28; color: white; border: 1px solid #2d3446; padding: 10px; font-family: inherit; resize: vertical;" oninput="processBulkInput()"></textarea>
+        <div id="bulkPreview" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; border-top: 1px solid #1a273a; padding-top: 15px;">
+        <select id="bulkWalletSelect" onchange="updateBulkPreview()" style="width: 200px; background: #111a28; color: white; border: 1px solid #2d3446; padding: 8px;"></select>
+        <button onclick="confirmBulkAdd()" id="btnBulkConfirm" style="background: var(--fin-trust); color: black; font-weight: bold;">✅ Confirmar y Agregar</button>
+    </div>
+    
+    <div style="text-align: center; margin-top: 10px; color: #8ba4b5; font-size: 0.8em;">
+        <span id="bulkCount">0 registros listos para agregar</span>
+    </div>
+</div>
+
+<div class="confirm-modal" id="bulkConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9998; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); align-items: center; justify-content: center;">
+    <div class="fin-panel" style="width: 350px; max-width: 90%; text-align: left;">
+        <h2 style="color: white; margin-top: 0;">Confirmar Agregación</h2>
+        <div id="bulkModalContent"></div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="confirmBulkAdd()" id="btnModalConfirm" style="flex: 1; background: var(--fin-trust); color: black;">✅ Confirmar</button>
+            <button onclick="closeBulkConfirmModal()" style="flex: 1; background: transparent; color: #8ba4b5; border: 1px solid #2d3446;">❌ Cancelar</button>
+        </div>
+    </div>
+</div>

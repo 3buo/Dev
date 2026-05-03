@@ -455,8 +455,208 @@ export function init() {
     initVoiceEngine(); window.renderWallets(); window.renderBalances(); window.renderExpenses();
     if(window.rateBcvVal === 0 || window.rateBinanceVal === 0) window.fetchExchangeRates(true); 
 }
-
-window.addEventListener('stateChanged', () => { 
-    if(!document.getElementById('view-finanzas')) { if(recognition && isListening) { recognition.stop(); stopVoiceUI(); } } 
+window.addEventListener('stateChanged', () => {
+    if(!document.getElementById('view-finanzas')) { if(recognition && isListening) { recognition.stop(); stopVoiceUI(); } }
     else if(isUnlocked) { init(); }
 });
+
+// --- BULK INPUT MANAGER ---
+let bulkPanel = null;
+let parsedBulkRecords = [];
+
+window.toggleBulkInput = () => {
+    if(!bulkPanel) {
+        // Create bulk panel container
+        const container = document.createElement('div');
+        container.id = 'bulkPanel';
+        container.style.cssText = `
+            position: fixed; top: 20px; right: 20px;
+            width: 350px; max-height: 400px;
+            background: #1a273a; border: 2px solid #ff4d4d;
+            border-radius: 12px; padding: 15px;
+            box-shadow: 0 8px 32px rgba(255, 77, 77, 0.3);
+            z-index: 1000; display: flex; flex-direction: column;
+        `;
+        
+        container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="color:#ff4d4d; margin:0; font-size:1.2em;">📥 Entrada Masiva</h3>
+                <button onclick="toggleBulkInput()" style="background:none; border:none; color:#8ba4b5; cursor:pointer; font-size:1.5em;">×</button>
+            </div>
+            
+            <textarea id="bulkTextarea" placeholder="Ingresa datos en formato: monto - descripcion&#10;&#10;Ejemplo:&#10;15 - Netflix&#10;30 - Spotify&#10;50 - Amazon"
+                style="flex:1; min-height:200px; background:#111a28; border:1px solid #2d3446; color:#fff; padding:10px; font-size:0.9em; resize:none; font-family:inherit;"
+                oninput="updateBulkPreview()"></textarea>
+            
+            <div style="margin-top:10px;">
+                <label style="color:#8ba4b5; font-size:0.85em; display:block; margin-bottom:5px;">Cartera:</label>
+                <select id="bulkWalletSelect" style="width:100%; background:#111a28; border:1px solid #2d3446; color:#fff; padding:8px; font-size:0.9em; border-radius:4px;">
+                    ${state.wallets.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+                </select>
+            </div>
+            
+            <div style="margin-top:auto; display:flex; gap:10px;">
+                <button onclick="processBulkInput()" id="btnPreview"
+                    style="flex:1; background:#2d3446; color:#8ba4b5; border:none; padding:10px; font-size:0.9em; cursor:pointer; border-radius:4px;">
+                    👁️ Previsualizar
+                </button>
+                <button onclick="confirmBulkAdd()" id="btnConfirm"
+                    style="flex:1; background:#ff4d4d; color:#fff; border:none; padding:10px; font-size:0.9em; cursor:pointer; border-radius:4px;">
+                    ✅ Confirmar
+                </button>
+            </div>
+        `;
+        
+        bulkPanel = container;
+        document.body.appendChild(bulkPanel);
+    } else {
+        // Toggle visibility
+        if(bulkPanel.style.display === 'none' || bulkPanel.style.display === '') {
+            bulkPanel.style.display = 'flex';
+        } else {
+            bulkPanel.style.display = 'none';
+        }
+    }
+};
+
+window.updateBulkPreview = () => {
+    const textarea = document.getElementById('bulkTextarea');
+    if(!textarea) return;
+    
+    const rawText = textarea.value.trim();
+    parsedBulkRecords = [];
+    
+    if(rawText) {
+        // Split by newlines and parse each line
+        const lines = rawText.split('\n').filter(l => l.trim());
+        
+        for(const line of lines) {
+            // Match pattern: number - text (case insensitive for the dash)
+            const match = line.match(/^([\d,]+)\s*[-–—]\s*(.+)$/);
+            
+            if(match) {
+                let amount = parseFloat(match[1].replace(/,/g, ''));
+                let desc = match[2].trim();
+                
+                // Capitalize first letter of description
+                if(desc && desc.length > 0) {
+                    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+                } else {
+                    desc = "Gasto sin descripción";
+                }
+                
+                parsedBulkRecords.push({ amount, desc });
+            }
+        }
+    }
+    
+    updatePreviewDisplay();
+};
+
+function updatePreviewDisplay() {
+    const previewEl = document.getElementById('bulkPreview');
+    if(!previewEl) return;
+    
+    if(parsedBulkRecords.length === 0) {
+        previewEl.innerHTML = '<span style="color:#8ba4b5; font-size:0.9em;">Escribe algo para ver la previsualización...</span>';
+        document.getElementById('btnPreview').disabled = false;
+        document.getElementById('btnConfirm').disabled = true;
+    } else {
+        previewEl.innerHTML = parsedBulkRecords.map((r, i) => `
+            <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px; font-size:0.9em;">
+                <span style="color:#fff;"><strong>${i+1}.</strong> ${r.desc}</span>
+                <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
+            </div>`).join('');
+        
+        document.getElementById('btnPreview').disabled = true;
+        document.getElementById('btnConfirm').disabled = false;
+    }
+};
+
+window.confirmBulkAdd = () => {
+    if(parsedBulkRecords.length === 0) return;
+    
+    const walletId = document.getElementById('bulkWalletSelect')?.value || 'bs';
+    const walletName = state.wallets.find(w => w.id === walletId)?.name || 'Bolívares';
+    
+    // Show confirmation modal
+    if(!window.bulkConfirmModal) {
+        window.bulkConfirmModal = document.createElement('div');
+        window.bulkConfirmModal.id = 'bulkConfirmModal';
+        window.bulkConfirmModal.style.cssText = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1a273a; border: 2px solid #ff4d4d; border-radius: 12px;
+            padding: 25px; min-width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 2000; display: flex; flex-direction: column; align-items: center;
+        `;
+        
+        window.bulkConfirmModal.innerHTML = `
+            <h3 style="color:#ff4d4d; margin-bottom:10px;">✅ Confirmar Entrada Masiva</h3>
+            <p style="color:#8ba4b5; text-align:center; margin-bottom:20px;">
+                ¿Agregar <strong>${parsedBulkRecords.length}</strong> gasto(s) a la cartera de <strong>${walletName.toUpperCase()}</strong>?
+            </p>
+            <div id="bulkConfirmList" style="width:100%; max-height:200px; overflow-y:auto; background:#111a28; border:1px solid #2d3446; padding:10px; margin-bottom:15px; font-size:0.9em;">
+                ${parsedBulkRecords.map((r, i) => `
+                    <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px;">
+                        <span style="color:#fff;">${i+1}. ${r.desc}</span>
+                        <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
+                    </div>`).join('')}
+            </div>
+            <button onclick="executeBulkAdd('${walletId}')"
+                style="background:#ff4d4d; color:#fff; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px; margin-bottom:10px;">
+                ✅ Agregar Todos
+            </button>
+            <button onclick="window.bulkConfirmModal.remove()"
+                style="background:#2d3446; color:#8ba4b5; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px;">
+                Cancelar
+            </button>
+        `;
+        
+        document.body.appendChild(window.bulkConfirmModal);
+    } else {
+        // Update modal content with current records and wallet
+        const listEl = document.getElementById('bulkConfirmList');
+        if(listEl) {
+            listEl.innerHTML = parsedBulkRecords.map((r, i) => `
+                <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px;">
+                    <span style="color:#fff;">${i+1}. ${r.desc}</span>
+                    <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
+                </div>`).join('');
+        }
+    }
+};
+
+window.executeBulkAdd = (walletId) => {
+    if(window.bulkConfirmModal) window.bulkConfirmModal.remove();
+    
+    // Execute each expense one by one using the existing executeExpense function
+    let totalAdded = 0;
+    for(const record of parsedBulkRecords) {
+        try {
+            executeExpense(record.desc, record.amount, walletId);
+            totalAdded++;
+        } catch(e) {
+            console.error('Error adding expense:', e);
+        }
+    }
+    
+    // Clear textarea and reset
+    document.getElementById('bulkTextarea').value = '';
+    parsedBulkRecords = [];
+    updatePreviewDisplay();
+    
+    if(totalAdded > 0) {
+        alert(`✅ Se agregaron ${totalAdded} gasto(s) correctamente.`);
+    } else {
+        alert('⚠️ Algunos gastos no se pudieron agregar.');
+    }
+    
+    // Close bulk panel after a short delay
+    setTimeout(() => {
+        if(bulkPanel && bulkPanel.style.display !== 'none') {
+            bulkPanel.style.display = 'none';
+        }
+    }, 500);
+};
+
+// --- BULK INPUT MANAGER ---
