@@ -579,51 +579,39 @@ window.confirmBulkAdd = () => {
     const walletId = document.getElementById('bulkWalletSelect')?.value || 'bs';
     const walletName = state.wallets.find(w => w.id === walletId)?.name || 'Bolívares';
     
-    // Show confirmation modal
-    if(!window.bulkConfirmModal) {
-        window.bulkConfirmModal = document.createElement('div');
-        window.bulkConfirmModal.id = 'bulkConfirmModal';
-        window.bulkConfirmModal.style.cssText = `
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #1a273a; border: 2px solid #ff4d4d; border-radius: 12px;
-            padding: 25px; min-width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            z-index: 2000; display: flex; flex-direction: column; align-items: center;
-        `;
-        
-        window.bulkConfirmModal.innerHTML = `
-            <h3 style="color:#ff4d4d; margin-bottom:10px;">✅ Confirmar Entrada Masiva</h3>
-            <p style="color:#8ba4b5; text-align:center; margin-bottom:20px;">
-                ¿Agregar <strong>${parsedBulkRecords.length}</strong> gasto(s) a la cartera de <strong>${walletName.toUpperCase()}</strong>?
-            </p>
-            <div id="bulkConfirmList" style="width:100%; max-height:200px; overflow-y:auto; background:#111a28; border:1px solid #2d3446; padding:10px; margin-bottom:15px; font-size:0.9em;">
-                ${parsedBulkRecords.map((r, i) => `
-                    <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px;">
-                        <span style="color:#fff;">${i+1}. ${r.desc}</span>
-                        <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
-                    </div>`).join('')}
-            </div>
-            <button onclick="executeBulkAdd('${walletId}')"
-                style="background:#ff4d4d; color:#fff; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px; margin-bottom:10px;">
-                ✅ Agregar Todos
-            </button>
-            <button onclick="window.bulkConfirmModal.remove()"
-                style="background:#2d3446; color:#8ba4b5; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px;">
-                Cancelar
-            </button>
-        `;
-        
-        document.body.appendChild(window.bulkConfirmModal);
-    } else {
-        // Update modal content with current records and wallet
-        const listEl = document.getElementById('bulkConfirmList');
-        if(listEl) {
-            listEl.innerHTML = parsedBulkRecords.map((r, i) => `
+    // Show confirmation modal - recreate it each time to ensure fresh data
+    window.bulkConfirmModal = document.createElement('div');
+    window.bulkConfirmModal.id = 'bulkConfirmModal';
+    window.bulkConfirmModal.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: #1a273a; border: 2px solid #ff4d4d; border-radius: 12px;
+        padding: 25px; min-width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        z-index: 2000; display: flex; flex-direction: column; align-items: center;
+    `;
+    
+    window.bulkConfirmModal.innerHTML = `
+        <h3 style="color:#ff4d4d; margin-bottom:10px;">✅ Confirmar Entrada Masiva</h3>
+        <p style="color:#8ba4b5; text-align:center; margin-bottom:20px;">
+            ¿Agregar <strong>${parsedBulkRecords.length}</strong> gasto(s) a la cartera de <strong>${walletName.toUpperCase()}</strong>?
+        </p>
+        <div id="bulkConfirmList" style="width:100%; max-height:400px; overflow-y:auto; background:#111a28; border:1px solid #2d3446; padding:10px; margin-bottom:15px; font-size:0.9em;">
+            ${parsedBulkRecords.map((r, i) => `
                 <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px;">
                     <span style="color:#fff;">${i+1}. ${r.desc}</span>
                     <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
-                </div>`).join('');
-        }
-    }
+                </div>`).join('')}
+        </div>
+        <button onclick="executeBulkAdd('${walletId}')"
+            style="background:#ff4d4d; color:#fff; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px; margin-bottom:10px;">
+            ✅ Agregar Todos
+        </button>
+        <button onclick="window.bulkConfirmModal.remove()"
+            style="background:#2d3446; color:#8ba4b5; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px;">
+            Cancelar
+        </button>
+    `;
+    
+    document.body.appendChild(window.bulkConfirmModal);
 };
 
 window.executeBulkAdd = (walletId) => {
@@ -650,7 +638,11 @@ window.executeBulkAdd = (walletId) => {
     
     // Then re-enable confirm button for more entries
     const btnConfirm = document.getElementById('btnConfirm');
+    const btnPreview = document.getElementById('btnPreview');
     if(btnConfirm) btnConfirm.disabled = false;
+    if(btnPreview) btnPreview.disabled = false;
+    
+    console.log(`executeBulkAdd: Cleared ${parsedBulkRecords.length} records, buttons enabled`);
     
     if(totalAdded > 0) {
         alert(`✅ Se agregaron ${totalAdded} gasto(s) correctamente.`);
