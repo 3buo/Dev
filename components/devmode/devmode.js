@@ -51,6 +51,12 @@ export function initDevMode() {
             }
         }
     });
+
+    // Inyectar panel al DOM (CORRECCIÓN: falta esto)
+    const devEditorPanel = document.getElementById('devEditorPanel');
+    if(devEditorPanel && !document.body.contains(devEditorPanel)) {
+        document.body.appendChild(devEditorPanel);
+    }
 }
 
 // Sincronización en vivo
