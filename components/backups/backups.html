@@ -2,8 +2,8 @@
      BACKUPS PANEL - UI para gestionar backups
      ============================================ -->
 <div id="backupsPanel" class="backups-panel" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 999999; align-items: center; justify-content: center;">
-    <!-- Add type="module" to enable import/export syntax -->
-    <script type="module" src="./js/backups/backup-manager.js"></script>
+    <!-- Importar funciones globales de backups -->
+    <script type="module" src="./js/backups/backups-ui.js"></script>
 
     <!-- Contenedor principal del panel -->
     <div id="backupsContainer" class="backups-container">
@@ -90,6 +90,10 @@
             <button id="btnCloseCurrent" class="action-btn btn-secondary" onclick="window.closeBackupsPanel()">Cerrar</button>
         </div>
     </div>
+
+    <!-- Botón flotante para cerrar el panel -->
+    <button id="closeBackupsBtn" class="backups-close-btn" style="position: fixed; top: 20px; right: 20px; background: rgba(88,166,255,0.2); border: none; color: white; font-size: 1.5em; cursor: pointer; padding: 10px; border-radius: 50%; width: 40px; height: 40px;" onclick="window.closeBackupsPanel()">✖</button>
+
 
 </div>
 
