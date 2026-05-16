@@ -17,18 +17,25 @@ function ensureBackupPanel() {
     height: 66vh;
     max-height: 80vh;
     overflow: auto;
-    background: #0f141b;
-    border: 1px solid rgba(255,255,255,0.12);
+    resize: both;
+    min-width: 320px;
+    max-width: 92vw;
+    min-height: 320px;
+    max-height: 85vh;
+    background: linear-gradient(180deg, rgba(18,24,39,0.98), rgba(10,14,24,0.98));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(88,166,255,0.28);
     border-radius: 12px;
     z-index: 3000;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     padding: 14px;
     color: white;
     display: none;
+    cursor: move;
   `;
 
   panel.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <div id="backupPanelHeader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:6px 6px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
       <div>
         <div style="font-weight:900; color:#58a6ff; letter-spacing:0.2px;">⛑️ Backups & Restauración</div>
         <div style="font-size:0.85em; color:#8ba4b5;">Puntos locales (offline) + export/import manual</div>
@@ -70,6 +77,44 @@ function ensureBackupPanel() {
   `;
 
   document.body.appendChild(panel);
+
+  // Soporte drag-and-drop (arrastrar desde la cabecera)
+  const headerEl = panel.querySelector('#backupPanelHeader');
+  if (headerEl) {
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let startLeft = 0, startTop = 0;
+
+    headerEl.style.cursor = 'move';
+
+    const onMouseDown = (e) => {
+      // Solo iniciar si el click es primario
+      if (e.button !== 0) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      // Para evitar NaN cuando no hay left/top
+      startLeft = panel.offsetLeft || 20;
+      startTop = panel.offsetTop || 70;
+      e.preventDefault();
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      panel.style.left = `${Math.max(0, startLeft + dx)}px`;
+      panel.style.top = `${Math.max(0, startTop + dy)}px`;
+      panel.style.right = 'auto';
+      panel.style.width = panel.style.width || '380px';
+    };
+
+    const onMouseUp = () => { isDragging = false; };
+
+    headerEl.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }
 
   panel.querySelector('#backupPanelClose').onclick = () => {
     panel.style.display = 'none';
