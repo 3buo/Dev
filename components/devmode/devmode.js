@@ -21,8 +21,12 @@ try {
 }
 
 export function initDevMode() {
+    // Used to blind privileged dev-only UI modules
+    window.__devModeIsAuthenticated = false;
+
     injectDynamicStyleSheet();
     applyContentOverrides();
+
     
     // Vigilante del DOM para Textos
     const observer = new MutationObserver(() => applyContentOverrides());
@@ -87,7 +91,9 @@ window.authenticateDev = () => {
     const pass = document.getElementById('devPass').value;
     if (user === DEV_CREDS.user && pass === DEV_CREDS.pass) {
         document.getElementById('devLoginModal').style.display = 'none';
-        isDevModeActive = true; 
+        isDevModeActive = true;
+        window.__devModeIsAuthenticated = true;
+        
         document.getElementById('devUser').value = ''; 
         document.getElementById('devPass').value = '';
         const panel = document.getElementById('devEditorPanel');
@@ -98,7 +104,8 @@ window.closeDevLogin = () => { document.getElementById('devLoginModal').style.di
 window.closeDevPanel = () => { 
     const panel = document.getElementById('devEditorPanel');
     if(panel) panel.style.display = 'none'; 
-    deactivateInspector(); isDevModeActive = false; 
+    deactivateInspector(); isDevModeActive = false;
+    window.__devModeIsAuthenticated = false;
 };
 
 // ==========================================

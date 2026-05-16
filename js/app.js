@@ -66,8 +66,32 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('mainApp').style.display = 'none'; 
         if (unsubSnapshot) unsubSnapshot(); 
         clearLocalData(); 
-        document.body.removeAttribute('data-theme');
+        document.body.removeAttribute('data-theme'); 
     } 
+});
+
+// --- Offline/Online: evitar perder cambios y forzar re-sincronización ---
+window.addEventListener('offline', () => {
+    const syncEl = document.getElementById('syncStatus');
+    if (syncEl) {
+        syncEl.innerText = '📴 Sin internet (guardando localmente)';
+        syncEl.className = 'cloud-status cloud-syncing';
+    }
+});
+
+window.addEventListener('online', async () => {
+    const syncEl = document.getElementById('syncStatus');
+    if (syncEl) {
+        syncEl.innerText = '📶 Reconectado (sincronizando...)';
+        syncEl.className = 'cloud-status cloud-syncing';
+    }
+    // Forzamos una subida con el estado local actual.
+    // Esto garantiza que si hiciste cambios offline, queden reflejados en cloud.
+    try {
+        await saveDataToCloud('reconnect');
+    } catch (e) {
+        console.warn('reconnect saveDataToCloud failed', e);
+    }
 });
 
 window.appLogin = () => { 
