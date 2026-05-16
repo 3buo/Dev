@@ -11,8 +11,11 @@ function ensureBackupPanel() {
     position: fixed;
     top: 70px;
     right: 20px;
-    width: 360px;
-    max-height: 70vh;
+    width: 380px;
+    max-width: 92vw;
+    min-width: 320px;
+    height: 66vh;
+    max-height: 80vh;
     overflow: auto;
     background: #0f141b;
     border: 1px solid rgba(255,255,255,0.12);
@@ -274,6 +277,14 @@ export function initBackupUI() {
 
   // Floating launcher button
   if (!document.getElementById('backupLauncher')) {
+    const currentBtnSize = 56;
+
+    // Mantener consistencia con el theme del resto de la app
+    // (Si existe, intenta usar variable CSS, pero funciona igual con fallback)
+    const accent = 'var(--secondary)';
+
+    
+
     const btn = document.createElement('button');
     btn.id = 'backupLauncher';
     btn.className = 'alarm-floating-btn';
