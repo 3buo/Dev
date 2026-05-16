@@ -85,10 +85,10 @@ window.addEventListener('online', async () => {
         syncEl.innerText = '📶 Reconectado (sincronizando...)';
         syncEl.className = 'cloud-status cloud-syncing';
     }
-    // Forzamos una subida con el estado local actual.
-    // Esto garantiza que si hiciste cambios offline, queden reflejados en cloud.
+    // Forzamos sincronización cuando vuelva internet.
+    // Nota: saveDataToCloud() actualmente no acepta argumentos; por ahora solo reintentamos.
     try {
-        await saveDataToCloud('reconnect');
+        await saveDataToCloud();
     } catch (e) {
         console.warn('reconnect saveDataToCloud failed', e);
     }
