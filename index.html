@@ -196,7 +196,11 @@
 
     <script type="module">
         import { initDevMode } from './components/devmode/devmode.js';
+        import { initBackupUI } from './js/backup-ui.js';
         initDevMode();
+        // Attempt init; backup UI will self-disable unless dev-mode is authenticated
+        // (and it can be triggered again from devmode auth in follow-up if needed).
+        initBackupUI();
     </script>
 
     <script type="module">
