@@ -24,6 +24,13 @@ export function initDevMode() {
     // Used to blind privileged dev-only UI modules
     window.__devModeIsAuthenticated = false;
 
+    // No-code UX extras (sonidos + micro-animaciones)
+    try {
+        injectDevNoCodeCss();
+        bindGlobalButtonSounds();
+        bindInspectorHotkeys();
+    } catch (e) {}
+
     injectDynamicStyleSheet();
     applyContentOverrides();
 
@@ -62,6 +69,117 @@ export function initDevMode() {
         document.body.appendChild(devEditorPanel);
     }
 }
+
+function injectDevNoCodeCss() {
+    if (document.getElementById('dev-nocode-css')) return;
+    const tag = document.createElement('style');
+    tag.id = 'dev-nocode-css';
+    tag.innerHTML = `
+        .dev-sparkle { animation: devSparkle 420ms ease-out; }
+        @keyframes devSparkle {
+            0% { filter: drop-shadow(0 0 0 rgba(88,166,255,0)); transform: scale(1); }
+            35% { filter: drop-shadow(0 0 16px rgba(88,166,255,0.35)); transform: scale(1.02); }
+            100% { filter: drop-shadow(0 0 0 rgba(88,166,255,0)); transform: scale(1); }
+        }
+
+        #devEditorPanel .dev-btn, #devEditorPanel .dev-btn-danger {
+            position: relative;
+            overflow: hidden;
+        }
+        #devEditorPanel .dev-btn::after, #devEditorPanel .dev-btn-danger::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            left: -30px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at center, rgba(88,166,255,0.35), rgba(88,166,255,0));
+            opacity: 0;
+            transition: opacity 220ms ease;
+            pointer-events: none;
+        }
+        #devEditorPanel .dev-btn:hover::after, #devEditorPanel .dev-btn-danger:hover::after { opacity: 1; }
+
+        .dev-toast {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 26px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(17, 26, 40, 0.92);
+            border: 1px solid rgba(88,166,255,0.35);
+            color: #c9d1d9;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            z-index: 10000000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 160ms ease, transform 160ms ease;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.55);
+        }
+        .dev-toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+    `;
+    document.head.appendChild(tag);
+}
+
+function bindGlobalButtonSounds() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const canBeep = !!AudioCtx;
+
+    function beep(freq = 560, durationMs = 45) {
+        if (!canBeep) return;
+        try {
+            const ctx = new AudioCtx();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.value = freq;
+            g.gain.value = 0.0001;
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.start();
+            const now = ctx.currentTime;
+            g.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+            o.stop(now + durationMs / 1000);
+            setTimeout(() => ctx.close?.(), durationMs + 20);
+        } catch (e) {}
+    }
+
+    document.addEventListener('click', (ev) => {
+        const t = ev.target;
+        if(!t?.closest) return;
+        const isDevBtn = !!t.closest('#devEditorPanel .dev-btn') || !!t.closest('#devEditorPanel .dev-btn-danger') || t.id === 'btnInspectorToggle';
+        if(!isDevBtn) return;
+
+        beep(560, 45);
+        t.classList?.add('dev-sparkle');
+        setTimeout(() => t.classList?.remove('dev-sparkle'), 460);
+
+        let toast = document.getElementById('dev-toast-el');
+        if(!toast) {
+            toast = document.createElement('div');
+            toast.id = 'dev-toast-el';
+            toast.className = 'dev-toast';
+            toast.textContent = '✓ UI actualizado';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = '✓ UI actualizado';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 900);
+    }, { capture: true });
+}
+
+function bindInspectorHotkeys() {
+    document.addEventListener('keydown', (e) => {
+        if (!isInspectorActive) return;
+        if (e.key === 'Escape') {
+            try { window.closeDevPanel(); } catch (err) {}
+        }
+    });
+}
+
 
 // Sincronización en vivo
 function bindColorSyncEvents() {
