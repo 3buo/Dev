@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "github.com/semgrep/semgrep/tree/develop/cli/src/semgrep/mcp/": {
+      "command": "semgrep",
+      "args": [
+        "mcp",
+        "-t",
+        "stdio"
+      ]
+    }
+  }
+}
+
