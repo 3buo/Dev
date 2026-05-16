@@ -164,7 +164,12 @@ async function refreshBackupList() {
 export function initBackupUI() {
   // DEV-MODE BLINDING: only activate once developer mode is authenticated.
   // (Avoid exposing backup controls to normal users.)
-  if (!window.__devModeIsAuthenticated) return;
+  if (!window.__devModeIsAuthenticated) {
+    // Para depuración: aseguramos que el módulo sí cargó
+    // eslint-disable-next-line no-console
+    console.log('[backup-ui] devmode not authenticated yet; UI hidden');
+    return;
+  }
 
   // Expose manual point creator to avoid circular deps in UI
 

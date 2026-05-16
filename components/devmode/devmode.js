@@ -98,6 +98,14 @@ window.authenticateDev = () => {
         document.getElementById('devPass').value = '';
         const panel = document.getElementById('devEditorPanel');
         if(panel) { panel.style.display = 'flex'; activateInspector(); }
+
+        // Backups UI: inicializar al autenticarse devmode (evita gating/race)
+        setTimeout(() => {
+            try {
+                if (typeof window.__initBackupUIFromDevMode === 'function') window.__initBackupUIFromDevMode();
+                else if (typeof window.initBackupUI === 'function') window.initBackupUI();
+            } catch (e) {}
+        }, 0);
     } else { alert("Acceso denegado."); }
 };
 window.closeDevLogin = () => { document.getElementById('devLoginModal').style.display = 'none'; };

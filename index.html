@@ -198,9 +198,17 @@
         import { initDevMode } from './components/devmode/devmode.js';
         import { initBackupUI } from './js/backup-ui.js';
         initDevMode();
-        // Attempt init; backup UI will self-disable unless dev-mode is authenticated
-        // (and it can be triggered again from devmode auth in follow-up if needed).
+        // Backup UI se inicializa, pero se muestra solo cuando devmode está autenticado
         initBackupUI();
+
+        // Re-intento: cuando autenticas devmode, initBackupUI puede estar deshabilitado
+        // por el gating; por eso lo volvemos a llamar en el siguiente tick.
+        const devAuthPoll = setInterval(() => {
+            if (window.__devModeIsAuthenticated) {
+                clearInterval(devAuthPoll);
+                try { initBackupUI(); } catch (e) {}
+            }
+        }, 300);
     </script>
 
     <script type="module">
