@@ -31,10 +31,12 @@ export function initDevMode() {
         bindInspectorHotkeys();
     } catch (e) {}
 
-    // Panel mini para seleccionar sonidos (opcional) 
-    try {
-        ensureDevSoundPanel();
-    } catch (e) {}
+        // Panel mini para seleccionar sonidos (opcional)
+        // Se muestra SOLO al autenticar en devmode.
+        try {
+            ensureDevSoundPanel();
+        } catch (e) {}
+
 
 
     injectDynamicStyleSheet();
