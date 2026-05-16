@@ -27,15 +27,33 @@ function ensureBackupPanel() {
   panel.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <div>
-        <div style="font-weight:800; color:#58a6ff;">⛑️ Auto-backups</div>
-        <div style="font-size:0.85em; color:#8ba4b5;">Puntos de restauración locales</div>
+        <div style="font-weight:900; color:#58a6ff; letter-spacing:0.2px;">⛑️ Backups & Restauración</div>
+        <div style="font-size:0.85em; color:#8ba4b5;">Puntos locales (offline) + export/import manual</div>
       </div>
       <button id="backupPanelClose" style="background:transparent; border:none; color:#8ba4b5; cursor:pointer; font-size:1.2em;">×</button>
     </div>
 
     <div style="display:flex; gap:10px; margin-bottom:10px;">
-      <button id="btnCreatePoint" style="flex:1; background:#2d3446; color:#8ba4b5; border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:10px; cursor:pointer; font-weight:700;">Crear punto</button>
-      <button id="btnRestoreLatest" style="flex:1; background:#58a6ff22; color:#58a6ff; border:1px solid rgba(88,166,255,0.35); padding:10px; border-radius:10px; cursor:pointer; font-weight:800;">Restaurar último</button>
+      <button id="btnCreatePoint" style="flex:1; background:rgba(55, 65, 81, 0.55); color:#e5e7eb; border:1px solid rgba(255,255,255,0.10); padding:10px; border-radius:14px; cursor:pointer; font-weight:850; backdrop-filter: blur(10px);">Crear punto</button>
+      <button id="btnRestoreLatest" style="flex:1; background:rgba(88,166,255,0.16); color:#9ecbff; border:1px solid rgba(88,166,255,0.35); padding:10px; border-radius:14px; cursor:pointer; font-weight:950; backdrop-filter: blur(10px);">Restaurar último</button>
+    </div>
+
+    <div style="margin: 10px 0; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;">
+      <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px;">
+        <div>
+          <div style="font-size:0.9em; color:#8ba4b5; margin-bottom:2px;">Exportación / Importación</div>
+          <div style="font-size:0.75em; color:#6e7681;">Incluye snapshot + metadatos de puntos</div>
+        </div>
+        <div style="font-size:0.75em; color:#6e7681;">JSON</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <button id="btnExport" style="flex:1; background:rgba(255,255,255,0.04); color:#e5e7eb; border:1px solid rgba(255,255,255,0.10); padding:10px; border-radius:14px; cursor:pointer; font-weight:900;">Descargar</button>
+        <button id="btnImport" style="flex:1; background:rgba(255,77,77,0.12); color:#ff9aa2; border:1px solid rgba(255,77,77,0.30); padding:10px; border-radius:14px; cursor:pointer; font-weight:900;">Importar</button>
+      </div>
+
+      <input type="file" id="backupImportFile" accept="application/json" style="display:none;" />
+      <div style="margin-bottom:10px; font-size:0.75em; color:#6e7681;">Importar reemplaza únicamente los puntos guardados en tu navegador (no toca Firestore directamente).</div>
     </div>
 
     <div style="margin: 10px 0; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;">
@@ -44,7 +62,8 @@ function ensureBackupPanel() {
     </div>
 
     <div id="backupErr" style="display:none; margin-top:10px; color:#ff7b72; font-weight:700;"></div>
-    <div style="margin-top:10px; font-size:0.75em; color:#6e7681;">Se guardan snapshots al hacer cambios. Sincroniza Firestore cuando hay internet.</div>
+    <div id="backupOk" style="display:none; margin-top:10px; color:#39ff14; font-weight:800;"></div>
+    <div style="margin-top:10px; font-size:0.75em; color:#6e7681;">Auto-snapshots cuando la app guarda. Sin internet se mantienen localmente.</div>
   `;
 
   document.body.appendChild(panel);
@@ -69,6 +88,7 @@ function ensureBackupPanel() {
 
   panel.querySelector('#btnRestoreLatest').onclick = async () => {
     panel.querySelector('#backupErr').style.display = 'none';
+    panel.querySelector('#backupOk').style.display = 'none';
     try {
       if (!state.currentUid) throw new Error('Sin sesión (uid)');
       const latest = await getLatestSnapshotForUid(state.currentUid);
@@ -77,12 +97,81 @@ function ensureBackupPanel() {
       notifyLocalBackupListChanged();
       window.dispatchEvent(new Event('stateChanged'));
       panel.style.display = 'none';
+      panel.querySelector('#backupOk').textContent = 'Restaurado ✅';
+      panel.querySelector('#backupOk').style.display = 'block';
     } catch (e) {
       const msg = e?.message || String(e);
       panel.querySelector('#backupErr').textContent = msg;
       panel.querySelector('#backupErr').style.display = 'block';
     }
   };
+
+  panel.querySelector('#btnExport').onclick = async () => {
+    panel.querySelector('#backupErr').style.display = 'none';
+    panel.querySelector('#backupOk').style.display = 'none';
+    try {
+      if (!state.currentUid) throw new Error('Sin sesión (uid)');
+
+      const snaps = await getSnapshotsForUid(state.currentUid, 500);
+      const payload = {
+        type: 'taskify_local_backup_v1',
+        uid: state.currentUid,
+        exportedAt: new Date().toISOString(),
+        snapshots: snaps
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `taskify-backup-${state.currentUid}-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      panel.querySelector('#backupOk').textContent = 'Export descargado ✅';
+      panel.querySelector('#backupOk').style.display = 'block';
+    } catch (e) {
+      const msg = e?.message || String(e);
+      panel.querySelector('#backupErr').textContent = msg;
+      panel.querySelector('#backupErr').style.display = 'block';
+    }
+  };
+
+  panel.querySelector('#btnImport').onclick = () => {
+    panel.querySelector('#backupImportFile').click();
+  };
+
+  panel.querySelector('#backupImportFile').onchange = async (e) => {
+    panel.querySelector('#backupErr').style.display = 'none';
+    panel.querySelector('#backupOk').style.display = 'none';
+
+    try {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data?.snapshots || !Array.isArray(data.snapshots)) throw new Error('JSON inválido: falta snapshots[]');
+
+      const mod = await import('./local-backup.js');
+      if (!mod.importSnapshotRecords) throw new Error('importSnapshotRecords no disponible');
+      const count = await mod.importSnapshotRecords(data.snapshots);
+
+      panel.querySelector('#backupOk').textContent = `Import completado: +${count} puntos ✅`;
+      panel.querySelector('#backupOk').style.display = 'block';
+
+      await refreshBackupList();
+      notifyLocalBackupListChanged();
+    } catch (err) {
+      const msg = err?.message || String(err);
+      panel.querySelector('#backupErr').textContent = msg;
+      panel.querySelector('#backupErr').style.display = 'block';
+    } finally {
+      // reset file input
+      panel.querySelector('#backupImportFile').value = '';
+    }
+  };
+
 
   // Expose global toggle
   window.toggleBackupPanel = () => {

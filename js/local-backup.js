@@ -119,6 +119,43 @@ export async function restoreSnapshot(snapshotRecord) {
   return snapshotRecord.snapshot;
 }
 
+// Exporta un snapshot específico tal cual quedó guardado (incluye metadatos).
+export async function exportSnapshotRecord(id) {
+  if (!id) throw new Error('exportSnapshotRecord requires id');
+  const rec = await withStore('readonly', (store, setResult) => {
+    const req = store.get(id);
+    req.onsuccess = () => setResult(req.result || null);
+    req.onerror = () => setResult(null);
+  });
+  return rec;
+}
+
+// Importa snapshots en IndexedDB. Evita duplicados por id.
+export async function importSnapshotRecords(records) {
+  if (!Array.isArray(records)) throw new Error('importSnapshotRecords expects array');
+  const normalized = records.filter(r => r && r.id && r.snapshot);
+  if (normalized.length === 0) return 0;
+
+  let added = 0;
+  await withStore('readwrite', (store, setResult) => {
+    let pending = normalized.length;
+    normalized.forEach((rec) => {
+      const req = store.put(rec);
+      req.onsuccess = () => {
+        added++;
+        pending--;
+        if (pending === 0) setResult(true);
+      };
+      req.onerror = () => {
+        pending--;
+        if (pending === 0) setResult(true);
+      };
+    });
+  });
+  return added;
+}
+
+
 export async function deleteSnapshot(id) {
   if (!id) return false;
   return withStore('readwrite', (store, setResult) => {
