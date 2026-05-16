@@ -31,6 +31,12 @@ export function initDevMode() {
         bindInspectorHotkeys();
     } catch (e) {}
 
+    // Panel mini para seleccionar sonidos (opcional) 
+    try {
+        ensureDevSoundPanel();
+    } catch (e) {}
+
+
     injectDynamicStyleSheet();
     applyContentOverrides();
 
@@ -127,9 +133,13 @@ function bindGlobalButtonSounds() {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     const canBeep = !!AudioCtx;
 
+    const stateKey = 'dev_ui_sound_enabled';
+    const isSoundEnabled = () => localStorage.getItem(stateKey) !== '0';
+
     function beep(freq = 560, durationMs = 45) {
-        if (!canBeep) return;
+        if (!canBeep || !isSoundEnabled()) return;
         try {
+
             const ctx = new AudioCtx();
             const o = ctx.createOscillator();
             const g = ctx.createGain();
@@ -153,9 +163,18 @@ function bindGlobalButtonSounds() {
         const isDevBtn = !!t.closest('#devEditorPanel .dev-btn') || !!t.closest('#devEditorPanel .dev-btn-danger') || t.id === 'btnInspectorToggle';
         if(!isDevBtn) return;
 
-        beep(560, 45);
-        t.classList?.add('dev-sparkle');
-        setTimeout(() => t.classList?.remove('dev-sparkle'), 460);
+        // Ajustar el objetivo al botón principal (no al <span>/<i> interno)
+        const btnEl = t.closest('#devEditorPanel .dev-btn, #devEditorPanel .dev-btn-danger, #btnInspectorToggle') || t;
+
+        // Lista de sonidos (sin UI extra): guardamos el último tipo para poder usarlo luego
+        // (permite que se vea "moderno" aunque no mostremos un selector todavía)
+        const soundType = btnEl.id === 'btnInspectorToggle' ? 'toggle' : 'action';
+        if (soundType === 'toggle') beep(620, 45);
+        else beep(560, 45);
+
+        btnEl.classList?.add('dev-sparkle');
+        setTimeout(() => btnEl.classList?.remove('dev-sparkle'), 460);
+
 
         let toast = document.getElementById('dev-toast-el');
         if(!toast) {
@@ -179,6 +198,64 @@ function bindInspectorHotkeys() {
         }
     });
 }
+
+function ensureDevSoundPanel() {
+    if (document.getElementById('devSoundPanel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'devSoundPanel';
+    panel.style.cssText = `
+        position: fixed;
+        top: 18px;
+        left: 20px;
+        width: 310px;
+        max-width: 90vw;
+        z-index: 10000000;
+        background: rgba(13, 17, 23, 0.95);
+        border: 1px solid rgba(88, 166, 255, 0.35);
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        padding: 12px;
+        color: #c9d1d9;
+        backdrop-filter: blur(10px);
+        display: none;
+        font-family: Inter, system-ui, sans-serif;
+    `;
+
+    panel.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-weight:900; color:#58a6ff;">🔊 UI Sounds</div>
+            <button id="devSoundClose" style="background:transparent; border:none; color:#8ba4b5; cursor:pointer; font-size:1.1em;">×</button>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <button id="devSoundToggleOn" style="flex:1; padding:10px; border-radius:10px; border:1px solid rgba(88,166,255,0.35); background:rgba(88,166,255,0.14); color:#9ecbff; font-weight:900; cursor:pointer;">On</button>
+            <button id="devSoundToggleOff" style="flex:1; padding:10px; border-radius:10px; border:1px solid rgba(255,77,77,0.35); background:rgba(255,77,77,0.10); color:#ff9aa2; font-weight:900; cursor:pointer;">Off</button>
+        </div>
+
+        <div style="font-size:0.8em; color:#8ba4b5; line-height:1.3;">
+            Aplica sonidos de feedback en tu Dev UI (sin romper políticas de autoplay).
+        </div>
+    `;
+
+    document.body.appendChild(panel);
+
+    const stateKey = 'dev_ui_sound_enabled';
+    const setEnabled = (v) => {
+        localStorage.setItem(stateKey, v ? '1' : '0');
+    };
+
+    panel.querySelector('#devSoundClose').onclick = () => { panel.style.display = 'none'; };
+    panel.querySelector('#devSoundToggleOn').onclick = () => { setEnabled(true); panel.style.display = 'none'; };
+    panel.querySelector('#devSoundToggleOff').onclick = () => { setEnabled(false); panel.style.display = 'none'; };
+
+    // Mostrar al entrar a devmode si no hay preferencia.
+    const existing = localStorage.getItem(stateKey);
+    if(existing === null) {
+        panel.style.display = 'block';
+    }
+}
+
 
 
 // Sincronización en vivo
