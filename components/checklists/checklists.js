@@ -226,13 +226,19 @@ const renderChecklistCard = ({ cl, clIndex }) => {
         : itemsHtml;
 
     card.innerHTML = `
-        <h2 style="margin-bottom: 15px; font-size: 1.3em;">
-            ${cl.title}
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button onclick="openEditClModal(${clIndex})" style="font-size: 0.7em; padding: 6px 12px; background: rgba(3, 218, 198, 0.2); border: 1px solid var(--secondary); color: var(--secondary);">✏️ Editar</button>
-                <button onclick="deleteChecklist(${clIndex})" style="font-size: 0.7em; padding: 6px 12px; background: #cf6679; color: black;">🗑️</button>
+        <div style="margin-bottom: 10px;">
+            <div style="font-size: 0.78em; color: var(--secondary); background: rgba(3, 218, 198, 0.12); border: 1px solid rgba(3, 218, 198, 0.35); padding: 4px 10px; border-radius: 999px; display: inline-block;">
+                ${formatDateKey(cl.createdAt)}
             </div>
-        </h2>
+
+            <h2 style="margin: 8px 0 10px 0; font-size: 1.25em;">
+                ${cl.title}
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                    <button onclick="openEditClModal(${clIndex})" style="font-size: 0.7em; padding: 6px 12px; background: rgba(3, 218, 198, 0.2); border: 1px solid var(--secondary); color: var(--secondary);">✏️ Editar</button>
+                    <button onclick="deleteChecklist(${clIndex})" style="font-size: 0.7em; padding: 6px 12px; background: #cf6679; color: black;">🗑️</button>
+                </div>
+            </h2>
+        </div>
 
         <div style="margin-bottom: 10px; max-height: 300px; overflow-y: auto;">
             ${normalizedItemsHtml}
