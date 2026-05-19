@@ -375,62 +375,15 @@ window.__createChecklistCategoryFromMenu = (clIndex) => {
     }
 };
 
-const renderChecklistCardsIntoContainer = (items, container, dateCollapseEnabled) => {
-    // dateCollapseEnabled applies only if we group by date (we keep date collapse for the default view)
-    if (!dateCollapseEnabled) {
-        items.forEach((it) => container.appendChild(renderChecklistCard(it)));
-        return;
-    }
-
-    // Group by date with collapse
-    const byDate = new Map();
-    items.forEach((it) => {
-        const key = formatDateKey(it.cl.createdAt);
-        if (!byDate.has(key)) byDate.set(key, []);
-        byDate.get(key).push(it);
-    });
-
-    if (!window.__clCollapseDates) window.__clCollapseDates = {};
-
-    const keys = Array.from(byDate.keys()).sort((a, b) => (a < b ? 1 : -1));
-
-    keys.forEach((dateKey) => {
-        const expanded = window.__clCollapseDates[dateKey] ?? true;
-
-        const wrap = document.createElement('div');
-        wrap.style.marginBottom = '14px';
-
-        const header = document.createElement('div');
-        header.className = 'container';
-        header.style.borderTop = '3px solid var(--secondary)';
-        header.style.cursor = 'pointer';
-        header.style.userSelect = 'none';
-
-        header.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                <h2 style="margin:0; font-size:1.1em;">${dateKey}</h2>
-                <span style="color: var(--secondary); font-weight: bold;">${expanded ? '▾' : '▸'}</span>
-            </div>
-        `;
-
-        header.onclick = () => {
-            window.__clCollapseDates[dateKey] = !expanded;
-            window.renderChecklists();
-        };
-
-        wrap.appendChild(header);
-
-        if (expanded) {
-            byDate.get(dateKey).forEach((it) => wrap.appendChild(renderChecklistCard(it)));
-        }
-
-        container.appendChild(wrap);
-    });
+const renderChecklistCardsIntoContainer = (items, container) => {
+    // Minimal: sin headers de fecha / sin expand-collapse.
+    // La fecha vive únicamente dentro del pill del card.
+    items.forEach((it) => container.appendChild(renderChecklistCard(it)));
 };
 
 const renderCategoriesAndDnD = (notCompleted) => {
-    // Psych/UX: minimize scanning by showing 1 section per category + "Sin clasificar" + DnD zones
-    // Also reuses date collapse inside each category section.
+    // UX: no mostramos headers grandes. Solo mostramos zonas de drop con las checklist cards.
+    // El título visible será el mismo card (incluye el pill con la fecha).
 
     ensureChecklistDefaults();
 
@@ -449,35 +402,11 @@ const renderCategoriesAndDnD = (notCompleted) => {
         byCat.get(catId).push(it);
     });
 
-    // Collapse states per category (in-memory)
-    if (!window.__clCollapseCats) window.__clCollapseCats = {};
-
-    const getExpanded = (key) => window.__clCollapseCats[key] ?? true;
-
-    const createCategorySection = (title, key, items) => {
-        const wrap = document.createElement('div');
-        wrap.style.marginBottom = '16px';
-
-        const header = document.createElement('div');
-        header.className = 'container';
-        header.style.borderTop = '3px solid var(--secondary)';
-        header.style.cursor = 'pointer';
-        header.style.userSelect = 'none';
-
-        const expanded = getExpanded(key);
-        header.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                <h2 style="margin:0; font-size:1.15em;">${title}</h2>
-                <span style="color: var(--secondary); font-weight: bold;">${expanded ? '▾' : '▸'}</span>
-            </div>
-        `;
-
-        wrap.appendChild(header);
-
+    const renderDropZone = (key, items) => {
         const zone = document.createElement('div');
-        zone.style.paddingTop = '10px';
+        zone.style.paddingTop = '6px';
+        zone.style.marginBottom = '14px';
 
-        // DnD drop zone
         zone.ondragover = (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
@@ -490,29 +419,22 @@ const renderCategoriesAndDnD = (notCompleted) => {
             window.__classifyChecklist(clIndex, key === null ? null : key);
         };
 
-        if (expanded) {
-            renderChecklistCardsIntoContainer(items, zone, true);
-        } else {
-            zone.innerHTML = '';
-        }
+        // Sin collapse por fecha de esta capa: mantenemos el layout minimalista.
+        // El card ya contiene el pill con la fecha.
+        items.forEach((it) => zone.appendChild(renderChecklistCard(it)));
 
-        wrap.appendChild(zone);
-
-        header.onclick = () => {
-            window.__clCollapseCats[key] = !expanded;
-            window.renderChecklists();
-        };
-
-        return wrap;
+        return zone;
     };
 
     const out = document.createDocumentFragment();
 
-    out.appendChild(createCategorySection('Sin clasificar', null, unclassified));
+    // Sin clasificar
+    if (unclassified.length > 0) out.appendChild(renderDropZone(null, unclassified));
 
     categories.forEach((c) => {
         const items = byCat.get(c.id) || [];
-        out.appendChild(createCategorySection(c.name, c.id, items));
+        if (items.length === 0) return;
+        out.appendChild(renderDropZone(c.id, items));
     });
 
     return out;
