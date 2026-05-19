@@ -1,37 +1,13 @@
-# TODO - Auto-backups y puntos de restauración (offline/online)
+# TODO - Checklists (features solicitadas)
 
-## Paso 1: Diseño e integración (ya investigado)
-- [x] Revisar `js/store.js`, `js/app.js` y componentes que mutan `state`.
-- [x] Identificar sitios de escritura: `state.*.push/splice/...`, `saveDataToCloud()`.
+## Plan implementado en pasos
 
-## Paso 2: Capa de backups local (implementación)
-- [x] Crear `js/local-backup.js` (IndexedDB) para snapshots/restoration points.
-
-## Paso 3: Motor de “restoration points” y auto-snapshots
-- [x] Actualizar `js/store.js`:
-  - [x] Agregar `scheduleLocalSnapshot()` (debounced) y `createManualRestorationPoint()`.
-  - [x] Agregar `restoreStateFromSnapshot()`.
-
-## Paso 4: Persistencia de cambios offline-first
-- [x] Modificar `saveDataToCloud()` para que también dispare snapshot local (offline nunca pierde cambios).
-
-## Paso 5: Evitar que la nube sobrescriba cambios locales al reconectar
-- [x] Actualizar `initCloudData()` para:
-  - [x] Cargar primero el último snapshot local.
-  - [x] Ignorar onSnapshot si `localVersion` local es más nuevo que el remoto.
-
-## Paso 6: Panel de UI para backups/restauración
-- [x] Crear UI en `js/backup-ui.js`.
-- [x] Incluir `js/backup-ui.js` en `index.html`.
-
-## Paso 7: Hooks en mutaciones
-- [ ] Centralizar “cada cambio” asegurando que **siempre** se llame a `saveDataToCloud()` (ya ocurre en la mayoría de acciones).
-- [ ] Para cambios que mutan `state` sin llamar `saveDataToCloud()`, agregar llamadas mínimas a `saveDataToCloud()`.
-
-## Paso 8: Validación
-- [ ] Probar flujo offline/online:
-  1) Editar offline
-  2) Recargar pantalla offline
-  3) Reconectar online
-  4) Confirmar que no se pierden cambios offline.
+- [ ] Paso 1: Actualizar modelo de checklist al crear: agregar `createdAt`.
+- [ ] Paso 2: Renderizar checklists agrupados por fecha con expand/collapse por clic.
+- [ ] Paso 3: Introducir categorías en `state` (`checklistCategories`) si no existen; render de secciones por categoría + “Sin clasificar”.
+- [ ] Paso 4: Implementar botón “Clasificar en...” con UI modal/menu para cambiar categoría y crear categorías nuevas.
+- [ ] Paso 5: Implementar drag & drop de checklists entre categorías.
+- [ ] Paso 6: Implementar apartado “Listas completadas” con criterio: todos items checked y items.length>0, con expand/collapse.
+- [ ] Paso 7: Asegurar que al togglear items se recalculen y re-renderice completadas/categorizadas.
+- [ ] Paso 8: Ejecutar verificación manual rápida y validar no romper edición/eliminación.
 
