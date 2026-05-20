@@ -643,7 +643,6 @@ function getOrCreateFloatingToolbar() {
         <span class="dev-toolbar-grip">⋮⋮</span>
         <span class="dev-toolbar-title">Context Palette</span>
       </div>
-      <button class="dev-close-btn" id="devToolbarCloseBtn">✕</button>
     </div>
     <div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;gap:4px;background:rgba(255,255,255,0.02);">
       <div style="font-size:10px;color:#8b949e;text-transform:uppercase;font-weight:800;letter-spacing:.4px;">Elemento detectado</div>
@@ -764,9 +763,6 @@ function getOrCreateFloatingToolbar() {
   bindToolbarTabs(toolbar);
   bindToolbarDragging(toolbar);
   bindToolbarActions(toolbar);
-
-  const closeBtn = toolbar.querySelector('#devToolbarCloseBtn');
-  closeBtn?.addEventListener('click', () => hideFloatingToolbar());
 
   return toolbar;
 }
@@ -1023,6 +1019,8 @@ function handleDevClick(e) {
   if (devRoot && devRoot.contains(target)) return;
   if (shouldIgnoreElementForDevMode(target)) return;
 
+  if (target.closest('#devFloatingToolbar')) return;
+
   e.preventDefault();
   e.stopPropagation();
 
@@ -1262,12 +1260,15 @@ function bindShadowUiActions() {
   const onClick = (id, handler) => {
     const el = $(id);
     if (!(el instanceof HTMLElement)) return;
-    el.onclick = null;
-    el.addEventListener('click', (e) => {
+    const clone = el.cloneNode(true);
+    el.replaceWith(clone);
+    clone.onclick = null;
+    clone.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
       handler(e);
-    });
+    }, { capture: true });
   };
 
   onClick('devLoginSubmit', authenticateDev);
