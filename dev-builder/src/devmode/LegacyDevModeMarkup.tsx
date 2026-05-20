@@ -94,7 +94,17 @@ export function LegacyDevModeMarkup() {
         </div>
       </div>
 
-      <div id="devEditorPanel" className="dev-panel">
+      <div
+        id="devEditorPanel"
+        className="dev-panel"
+        style={{
+          display: 'none',
+          position: 'fixed',
+          right: 20,
+          top: 20,
+          zIndex: 9999999,
+        }}
+      >
         <div className="dev-panel-header">
           <span>🛠️ UI Builder</span>
           <button

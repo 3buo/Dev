@@ -26,8 +26,25 @@ export function initDevmodeBridge(): void {
 
 export function toggleDevMode(): void {
   try {
-    if (!(window as any).__devModeIsAuthenticated) (window as any).initDevMode?.()
-    else (window as any).closeDevPanel?.()
+    const w = window as any
+
+    // Ensure bridge/module is initialized before toggling
+    if (!w.initDevMode) {
+      initDevmodeBridge()
+      // try again next tick after dynamic import resolves
+      window.setTimeout(() => {
+        try {
+          if (!w.__devModeIsAuthenticated) w.initDevMode?.()
+          else w.closeDevPanel?.()
+        } catch {
+          // no-op
+        }
+      }, 0)
+      return
+    }
+
+    if (!w.__devModeIsAuthenticated) w.initDevMode?.()
+    else w.closeDevPanel?.()
   } catch {
     // no-op
   }

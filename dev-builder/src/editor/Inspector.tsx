@@ -1,19 +1,20 @@
-import { useNode } from '@craftjs/core'
+import { useEditor } from '@craftjs/core'
 import type { MotionPreset } from '../devmode/types'
 
 const motionPresetOptions: Array<MotionPreset> = ['fade-in', 'bounce', 'slide-up', 'none']
 
 export const Inspector = () => {
-  const { actions, selected, id, node } = useNode((n) => ({
-    selected: n.events.selected,
-    id: n.id,
-    node: n,
-  }))
+  const { selectedId, selectedNode, actions } = useEditor((state, query) => {
+    const selected = Array.from(state.events.selected)
+    const id = selected.length > 0 ? selected[0] : null
+    const node = id ? query.node(id).get() : null
+    return {
+      selectedId: id,
+      selectedNode: node,
+    }
+  })
 
-  const props = node.data?.props ?? {}
-  const motionPreset = (props.motionPreset ?? 'none') as MotionPreset
-
-  if (!selected) {
+  if (!selectedId || !selectedNode) {
     return (
       <aside className="col-span-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
         <div className="text-sm font-semibold text-zinc-300">Inspector</div>
@@ -22,8 +23,14 @@ export const Inspector = () => {
     )
   }
 
-  const type = node.data?.type as string | undefined
-  const name = node.data?.name as string | undefined
+  const props = selectedNode.data?.props ?? {}
+  const motionPreset = (props.motionPreset ?? 'none') as MotionPreset
+
+  const type =
+    typeof selectedNode.data?.type === 'string'
+      ? selectedNode.data.type
+      : selectedNode.data?.displayName ?? 'Node'
+  const name = selectedNode.data?.name as string | undefined
   const label = name ?? type
 
   return (
@@ -31,7 +38,7 @@ export const Inspector = () => {
       <div className="flex items-center justify-between">
         <div>
           <div className="text-sm font-semibold text-zinc-300">Inspector</div>
-          <div className="mt-1 text-xs text-zinc-500">Node ID: {id}</div>
+          <div className="mt-1 text-xs text-zinc-500">Node ID: {selectedId}</div>
         </div>
         <div className="rounded border border-zinc-800 bg-zinc-900/60 px-2 py-1 text-xs text-zinc-300">{label}</div>
       </div>
@@ -46,12 +53,11 @@ export const Inspector = () => {
                 className="rounded border border-zinc-800 bg-zinc-950 px-2 py-2 text-xs text-zinc-200"
                 value={String(props.text ?? '')}
                 onChange={(e) => {
-                  actions.setProp((p: { text?: string }) => {
+                  actions.setProp(selectedId, (p: { text?: string }) => {
                     p.text = e.target.value
-                  }, 0)
+                  })
                 }}
               />
-
             </div>
           ) : type === 'ActionButtonNode' || (name ?? '').includes('ActionButtonNode') ? (
             <div className="flex flex-col gap-2">
@@ -60,12 +66,11 @@ export const Inspector = () => {
                 className="rounded border border-zinc-800 bg-zinc-950 px-2 py-2 text-xs text-zinc-200"
                 value={String(props.label ?? '')}
                 onChange={(e) => {
-                  actions.setProp((p: { label?: string }) => {
+                  actions.setProp(selectedId, (p: { label?: string }) => {
                     p.label = e.target.value
-                  }, 0)
+                  })
                 }}
               />
-
 
               <label className="text-xs text-zinc-400">Sound URL</label>
               <input
@@ -73,12 +78,11 @@ export const Inspector = () => {
                 value={String(props.soundUrl ?? '')}
                 placeholder="https://..."
                 onChange={(e) => {
-                  actions.setProp((p: { soundUrl?: string }) => {
+                  actions.setProp(selectedId, (p: { soundUrl?: string }) => {
                     p.soundUrl = e.target.value
-                  }, 0)
+                  })
                 }}
               />
-
             </div>
           ) : (
             <div className="text-xs text-zinc-500">Sin inspector para este nodo.</div>
@@ -92,12 +96,11 @@ export const Inspector = () => {
             value={motionPreset}
             onChange={(e) => {
               const v = e.target.value as MotionPreset
-              actions.setProp((p: { motionPreset?: MotionPreset }) => {
+              actions.setProp(selectedId, (p: { motionPreset?: MotionPreset }) => {
                 p.motionPreset = v
-              }, 300)
+              })
             }}
           >
-
             {motionPresetOptions.map((opt) => (
               <option key={opt} value={opt}>
                 {opt}
@@ -109,5 +112,3 @@ export const Inspector = () => {
     </aside>
   )
 }
-
-

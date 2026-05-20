@@ -72,6 +72,20 @@ export const DevModeProvider = ({ children }: { children: React.ReactNode }) => 
             // no-op
           }
         }
+
+        // Wire backup/local DB UI entrypoints expected by legacy devmode.js
+        const w = window as any
+        const backupInit = () => {
+          const init = w.initBackupUI
+          if (typeof init === 'function') {
+            try {
+              init()
+            } catch {
+              // no-op
+            }
+          }
+        }
+        w.__initBackupUIFromDevMode = backupInit
       } catch {
         // no-op
       }
