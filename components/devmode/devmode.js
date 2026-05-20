@@ -19,6 +19,7 @@ let activeInlineEditor = null;
 let activeToolbar = null;
 let hasGlobalBindings = false;
 let isSelectionLocked = false;
+let isNoCodeUiVisible = false;
 
 const state = {
   dynamicStylesById: {},
@@ -93,6 +94,8 @@ function shouldIgnoreElementForDevMode(el) {
   if (!(el instanceof HTMLElement)) return true;
   if (devRoot && devRoot.contains(el)) return true;
   if (el.closest('#devmode-shadow-host')) return true;
+  if (el.closest('#backupPanel')) return true;
+  if (el.id === 'backupLauncher' || el.closest('#backupLauncher')) return true;
   if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') return true;
   return false;
 }
@@ -651,6 +654,9 @@ function getOrCreateFloatingToolbar() {
         <button id="devQuickEditTextBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">✍️ Editar texto</button>
         <button id="devSelectionLockBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">🔓 Selección libre</button>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+        <button id="devToggleUiBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">👁️ Ocultar No‑Code UI</button>
+      </div>
     </div>
 
     <div class="dev-toolbar-tabs">
@@ -1092,6 +1098,34 @@ function updateSelectionLockButton() {
   btn.style.background = isSelectionLocked ? 'rgba(255,88,88,0.14)' : 'rgba(88,166,255,0.12)';
 }
 
+function updateNoCodeUiToggleButton() {
+  const btn = $('devToggleUiBtn');
+  if (!(btn instanceof HTMLElement)) return;
+  btn.textContent = isNoCodeUiVisible ? '👁️ Ocultar No‑Code UI' : '🧩 Mostrar No‑Code UI';
+}
+
+function setNoCodeUiVisible(visible) {
+  const toolbar = getOrCreateFloatingToolbar();
+  if (toolbar instanceof HTMLElement) {
+    toolbar.style.display = visible ? 'flex' : 'none';
+  }
+  isNoCodeUiVisible = visible;
+  updateNoCodeUiToggleButton();
+
+  if (!visible) {
+    deactivateInspector();
+    isSelectionLocked = false;
+    updateSelectionLockButton();
+  } else if (isDevModeActive) {
+    activateInspector();
+  }
+}
+
+function toggleNoCodeUiVisibility() {
+  setNoCodeUiVisible(!isNoCodeUiVisible);
+  showToast(isNoCodeUiVisible ? '🧩 No‑Code UI activa' : '🛑 No‑Code UI oculta');
+}
+
 function toggleSelectionLock() {
   isSelectionLocked = !isSelectionLocked;
   updateSelectionLockButton();
@@ -1107,7 +1141,7 @@ function closeDevLogin() {
 function closeDevPanel() {
   const panel = $('devEditorPanel');
   if (panel instanceof HTMLElement) panel.style.display = 'none';
-  hideFloatingToolbar();
+  setNoCodeUiVisible(false);
 
   if (currentTargetElement) {
     currentTargetElement.classList.remove('dev-selected-target', 'dev-hover-target');
@@ -1140,7 +1174,7 @@ function authenticateDev() {
   if (user instanceof HTMLInputElement) user.value = '';
   if (pass instanceof HTMLInputElement) pass.value = '';
 
-  activateInspector();
+  setNoCodeUiVisible(true);
   showToast('✅ DevMode activo (selecciona un nodo)');
 
   setTimeout(() => {
@@ -1231,6 +1265,7 @@ function bindShadowUiActions() {
   const animCheck = $('devAnimEnable');
   const selectionLockBtn = $('devSelectionLockBtn');
   const quickEditTextBtn = $('devQuickEditTextBtn');
+  const toggleUiBtn = $('devToggleUiBtn');
 
   loginSubmit?.addEventListener('click', authenticateDev);
   loginCancel?.addEventListener('click', closeDevLogin);
@@ -1244,8 +1279,10 @@ function bindShadowUiActions() {
     if (!currentTargetElement) return;
     beginInlineEditing(currentTargetElement);
   });
+  toggleUiBtn?.addEventListener('click', toggleNoCodeUiVisibility);
 
   updateSelectionLockButton();
+  updateNoCodeUiToggleButton();
 
   animCheck?.addEventListener('change', (e) => {
     const checked = e.target instanceof HTMLInputElement ? e.target.checked : false;
