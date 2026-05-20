@@ -65,15 +65,28 @@ export const DevModeProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
     try {
       initDevmodeBridge()
+
+      // expose bridge toggle through a stable, app-level symbol
+      // so App.tsx remains agnostic about legacy details.
+      ;(window as any).__devmode_bridge_toggle = () => {
+        try {
+          // bridge.toggleDevMode must be resolved without CommonJS require.
+          // We fallback to dynamic global call if needed.
+          ;(window as any).__devmode_bridge_toggle_internal?.()
+
+        } catch {
+          // no-op
+        }
+      }
     } catch {
       // no-op
     }
   }, [initDevmodeBridge])
 
+
   const initBridge = useCallback(() => {
     // no-op: already mounted via useEffect
   }, [])
-
 
   const value = useMemo<DevModeProviderValue>(
     () => ({

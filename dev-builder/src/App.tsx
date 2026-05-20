@@ -18,10 +18,10 @@ function App() {
       if (e.altKey && e.shiftKey && (e.code === 'KeyD' || e.key.toLowerCase() === 'd')) {
         e.preventDefault()
         try {
-          // Legacy devmode UI functions are attached globally by the legacy script.
-          // If not present, no-op.
-          if (!(window as any).__devModeIsAuthenticated) (window as any).initDevMode?.()
-          else (window as any).closeDevPanel?.()
+          // All legacy interactions must go through the bridge.
+          ;(window as any).__devmode_bridge_toggle?.()
+
+
         } catch {
           // no-op
         }
@@ -30,6 +30,7 @@ function App() {
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
+
 
   return (
     <DevModeProvider>
