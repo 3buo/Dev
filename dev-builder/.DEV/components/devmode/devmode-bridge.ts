@@ -13,9 +13,14 @@ async function loadLegacyModule(): Promise<{ initDevMode?: () => void }> {
 export type DevmodeBridgeInit = object & Record<string, never>
 
 export function initDevmodeBridge(): void {
+  const w = window as any
+  if (w.__devmode_bridge_initialized) return
+  w.__devmode_bridge_initialized = true
+
   // lazy-load legacy JS to avoid TS declaration coupling on external .js file
   void loadLegacyModule().then((m) => m.initDevMode?.()).catch(() => {
-    // no-op
+    // allow retry if init failed
+    w.__devmode_bridge_initialized = false
   })
 }
 
