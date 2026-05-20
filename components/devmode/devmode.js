@@ -10,6 +10,8 @@ const DEV_CREDS = { user: 'admin_neo', pass: 'dev_77Xq' };
 const KEY_STYLES = 'dev_dynamic_styles_v2';
 const KEY_CONTENT = 'dev_dynamic_content_v2';
 const KEY_PANEL_POS = 'dev_panel_position_v2';
+const KEY_BINDINGS = 'dev_dynamic_bindings_v1';
+const AUTOSAVE_DEBOUNCE_MS = 1500;
 
 let shadowRootRef = null;
 let isDevModeActive = false;
@@ -23,7 +25,8 @@ let globalBindingsReady = false;
 
 const state = {
   dynamicStylesById: {},
-  dynamicContentById: {}
+  dynamicContentById: {},
+  dynamicBindingsById: {}
 };
 
 function rootEl(id) {
@@ -64,11 +67,19 @@ function loadState() {
     state.dynamicContentById = {};
     localStorage.removeItem(KEY_CONTENT);
   }
+
+  try {
+    state.dynamicBindingsById = JSON.parse(localStorage.getItem(KEY_BINDINGS) || '{}');
+  } catch {
+    state.dynamicBindingsById = {};
+    localStorage.removeItem(KEY_BINDINGS);
+  }
 }
 
 function saveState() {
   localStorage.setItem(KEY_STYLES, JSON.stringify(state.dynamicStylesById));
   localStorage.setItem(KEY_CONTENT, JSON.stringify(state.dynamicContentById));
+  localStorage.setItem(KEY_BINDINGS, JSON.stringify(state.dynamicBindingsById));
 }
 
 function getNodeStyleBucket(devId) {
@@ -102,10 +113,51 @@ function injectDynamicStyleSheet() {
   styleTag.textContent = cssText;
 }
 
+function getBindingContext() {
+  const currentUserName = localStorage.getItem('currentUserName') || 'Usuario';
+  return {
+    currentUser: {
+      name: currentUserName
+    },
+    app: {
+      title: document.title || 'App'
+    },
+    now: {
+      iso: new Date().toISOString(),
+      locale: new Date().toLocaleString()
+    }
+  };
+}
+
+function getValueFromPath(obj, path) {
+  if (!path) return '';
+  return path.split('.').reduce((acc, key) => {
+    if (acc && typeof acc === 'object' && key in acc) return acc[key];
+    return '';
+  }, obj);
+}
+
+function resolveDynamicExpression(expression) {
+  const context = getBindingContext();
+  const raw = expression.trim();
+  const normalized = raw.replace(/^\{\{|\}\}$/g, '').trim();
+  const value = getValueFromPath(context, normalized);
+  if (value === undefined || value === null || value === '') return `{{${normalized}}}`;
+  return String(value);
+}
+
 function applyContentOverrides() {
   for (const devId in state.dynamicContentById) {
     const el = getElementByDevId(devId);
     if (!el) continue;
+
+    const binding = state.dynamicBindingsById[devId];
+    if (binding) {
+      const resolved = resolveDynamicExpression(binding);
+      if (el.textContent !== resolved) el.textContent = resolved;
+      continue;
+    }
+
     const next = (state.dynamicContentById[devId] || '').trim();
     if (next && el.textContent !== next) el.textContent = next;
   }
@@ -119,6 +171,7 @@ function applyAllPersisted() {
 function syncFieldsFromSelectedElement() {
   const targetBadge = rootEl('devTargetSelector');
   const textGroup = rootEl('devTextGroup');
+  const flexGroup = rootEl('devFlexGroup');
   const textInput = rootEl('devElementText');
   const bgColor = rootEl('devBgColor');
   const bgText = rootEl('devBgText');
@@ -130,17 +183,21 @@ function syncFieldsFromSelectedElement() {
   const borderRadius = rootEl('devBorderRadius');
   const padding = rootEl('devPadding');
   const fontSize = rootEl('devFontSize');
+  const flexGap = rootEl('devFlexGap');
 
   if (!(targetBadge instanceof HTMLElement)) return;
 
   if (!currentTargetElement || !currentTargetDevId) {
     targetBadge.textContent = 'Ninguno';
     if (textGroup instanceof HTMLElement) textGroup.style.display = 'none';
+    if (flexGroup instanceof HTMLElement) flexGroup.style.display = 'none';
+    syncFlexButtons({});
     return;
   }
 
   targetBadge.textContent = `[data-dev-id="${currentTargetDevId}"]`;
   if (textGroup instanceof HTMLElement) textGroup.style.display = 'flex';
+  if (flexGroup instanceof HTMLElement) flexGroup.style.display = 'flex';
 
   const computed = getComputedStyle(currentTargetElement);
   const nodeStyles = state.dynamicStylesById[currentTargetDevId]?.styles || {};
@@ -158,6 +215,19 @@ function syncFieldsFromSelectedElement() {
   if (borderRadius instanceof HTMLInputElement) borderRadius.value = nodeStyles.borderRadius || computed.borderRadius || '';
   if (padding instanceof HTMLInputElement) padding.value = nodeStyles.padding || computed.padding || '';
   if (fontSize instanceof HTMLInputElement) fontSize.value = nodeStyles.fontSize || computed.fontSize || '';
+
+  const flexValues = {
+    flexDirection: nodeStyles.flexDirection || computed.flexDirection || '',
+    flexWrap: nodeStyles.flexWrap || computed.flexWrap || '',
+    justifyContent: nodeStyles.justifyContent || computed.justifyContent || '',
+    alignItems: nodeStyles.alignItems || computed.alignItems || ''
+  };
+
+  if (flexGap instanceof HTMLInputElement) {
+    flexGap.value = nodeStyles.gap || computed.gap || '';
+  }
+
+  syncFlexButtons(flexValues);
 }
 
 function normalizeHex(color) {
@@ -278,6 +348,7 @@ function applyAndSaveDevStyles() {
   const padding = rootEl('devPadding');
   const fontSize = rootEl('devFontSize');
   const textInput = rootEl('devElementText');
+  const flexGap = rootEl('devFlexGap');
 
   if (bgText instanceof HTMLInputElement && bgText.value.trim()) styles.background = bgText.value.trim();
   if (txtText instanceof HTMLInputElement && txtText.value.trim()) styles.color = txtText.value.trim();
@@ -286,6 +357,12 @@ function applyAndSaveDevStyles() {
   if (borderRadius instanceof HTMLInputElement && borderRadius.value.trim()) styles.borderRadius = borderRadius.value.trim();
   if (padding instanceof HTMLInputElement && padding.value.trim()) styles.padding = padding.value.trim();
   if (fontSize instanceof HTMLInputElement && fontSize.value.trim()) styles.fontSize = fontSize.value.trim();
+
+  if (flexGap instanceof HTMLInputElement) {
+    const gapValue = flexGap.value.trim();
+    if (gapValue) styles.gap = gapValue;
+    else delete styles.gap;
+  }
 
   if (textInput instanceof HTMLInputElement) {
     state.dynamicContentById[currentTargetDevId] = textInput.value;
@@ -377,6 +454,36 @@ function closeDevLogin() {
 function openDevLogin() {
   const modal = rootEl('devLoginModal');
   if (modal instanceof HTMLElement) modal.style.display = 'flex';
+}
+
+function syncFlexButtons(values) {
+  if (!shadowRootRef) return;
+  const buttons = shadowRootRef.querySelectorAll('.dev-seg-btn');
+  buttons.forEach((button) => {
+    if (!(button instanceof HTMLButtonElement)) return;
+    const key = button.dataset.flexKey || '';
+    const value = button.dataset.flexValue || '';
+    if (values[key] === value) button.classList.add('is-active');
+    else button.classList.remove('is-active');
+  });
+}
+
+function applyFlexOption(key, value) {
+  if (!currentTargetElement || !currentTargetDevId) {
+    showToast('Selecciona un elemento primero');
+    return;
+  }
+
+  const bucket = getNodeStyleBucket(currentTargetDevId);
+  const styles = bucket.styles;
+
+  styles.display = 'flex';
+  styles[key] = value;
+
+  saveState();
+  applyAllPersisted();
+  syncFieldsFromSelectedElement();
+  showToast(`📐 ${key}: ${value}`);
 }
 
 function setupDragPanel() {
@@ -507,6 +614,36 @@ function bindUIActions() {
       }
     });
   });
+
+  const flexGap = rootEl('devFlexGap');
+  if (flexGap instanceof HTMLInputElement) {
+    flexGap.addEventListener('change', () => {
+      if (!currentTargetDevId) return;
+      const bucket = getNodeStyleBucket(currentTargetDevId);
+      const value = flexGap.value.trim();
+      if (value) {
+        bucket.styles.display = 'flex';
+        bucket.styles.gap = value;
+      } else {
+        delete bucket.styles.gap;
+      }
+      saveState();
+      applyAllPersisted();
+      syncFieldsFromSelectedElement();
+    });
+  }
+
+  if (shadowRootRef) {
+    shadowRootRef.querySelectorAll('.dev-seg-btn').forEach((button) => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      button.addEventListener('click', () => {
+        const key = button.dataset.flexKey;
+        const value = button.dataset.flexValue;
+        if (!key || !value) return;
+        applyFlexOption(key, value);
+      });
+    });
+  }
 }
 
 function ensureAllDevIds() {
