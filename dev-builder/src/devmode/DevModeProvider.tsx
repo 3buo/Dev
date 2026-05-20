@@ -5,6 +5,8 @@ import { DevModeContext } from './DevModeContext'
 
 // Adapter facade (Single Source of Truth)
 import { initDevmodeBridge, toggleDevMode } from '../../.DEV/components/devmode/devmode-bridge'
+import { LegacyDevModeMarkup } from './LegacyDevModeMarkup'
+import './legacy-devmode.css'
 
 type DevModeProviderValue = {
   ready: boolean
@@ -58,20 +60,24 @@ export const DevModeProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, [])
 
-  // mount on first render
+  // mount on first render - only after legacy DOM nodes exist
   React.useEffect(() => {
-    try {
-      initDevmodeBridge()
-      ;(window as any).__devmode_bridge_toggle = () => {
-        try {
-          toggleDevMode()
-        } catch {
-          // no-op
+    const timer = window.setTimeout(() => {
+      try {
+        initDevmodeBridge()
+        ;(window as any).__devmode_bridge_toggle = () => {
+          try {
+            toggleDevMode()
+          } catch {
+            // no-op
+          }
         }
+      } catch {
+        // no-op
       }
-    } catch {
-      // no-op
-    }
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [])
 
   const initBridge = useCallback(() => {
@@ -89,7 +95,12 @@ export const DevModeProvider = ({ children }: { children: React.ReactNode }) => 
     [getSelectedNode, initBridge, querySerialize, ready, selectNodeById],
   )
 
-  return <DevModeContext.Provider value={value}>{children}</DevModeContext.Provider>
+  return (
+    <DevModeContext.Provider value={value}>
+      {children}
+      <LegacyDevModeMarkup />
+    </DevModeContext.Provider>
+  )
 }
 
 
