@@ -1,12 +1,10 @@
-# TODO - DevMode Modernización (Fase 1: Encapsulamiento Shadow DOM + Bridge)
+# TODO - DevMode Evolución 2026 (Micro + Base Meso)
 
-## Plan aprobado
+## Plan aprobado (iteración actual)
 
-- [x] Paso 1: Crear `components/devmode/devmode-shadow.js` con host + ShadowRoot y render encapsulado del login/panel.
-- [x] Paso 2: Migrar estilos de `components/devmode/devmode.css` al ShadowRoot (scoped, sin contaminación global).
-- [x] Paso 3: Eliminar handlers inline (`onclick`) del markup devmode y reemplazar por listeners internos.
-- [x] Paso 4: Refactor de `components/devmode/devmode.js` para desacoplar globals y exponer interfaz puente (compatibilidad temporal).
-- [x] Paso 5: Encapsular inyección dinámica de estilos del builder dentro del ShadowRoot.
-- [x] Paso 6: Mantener persistencia (`localStorage`) con capa de estado interna reactiva (sin romper formato actual).
-- [x] Paso 7: Actualizar `index.html` para iniciar devmode por bridge y retirar CSS global legacy de devmode.
-- [ ] Paso 8: Verificación manual de flujo completo: Alt+Shift+D, login, inspector, guardar, reset, factory reset, override de texto.
+- [x] Paso 1: Implementar targeting atómico con `data-dev-id` único por nodo seleccionable.
+- [x] Paso 2: Migrar persistencia a formato por ID (`dev_dynamic_styles_v2`, `dev_dynamic_content_v2`) con fallback legacy.
+- [x] Paso 3: Reescribir inyección de estilos y overrides de contenido para anclaje exclusivo por `data-dev-id`.
+- [x] Paso 4: Implementar edición inline de texto con doble clic (`contenteditable`), guardado en blur/Enter y cancelación con Escape.
+- [x] Paso 5: Integrar menú flotante contextual base (texto: color/tamaño + “Vincular Dato”) y ocultar panel lateral monolítico.
+- [x] Paso 6: Validación funcional de no-edición-masiva y persistencia por nodo.
