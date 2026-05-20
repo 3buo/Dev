@@ -1,13 +1,12 @@
-# TODO - Checklists (features solicitadas)
+# TODO - DevMode Modernización (Fase 1: Encapsulamiento Shadow DOM + Bridge)
 
-## Plan implementado en pasos
+## Plan aprobado
 
-- [ ] Paso 1: Actualizar modelo de checklist al crear: agregar `createdAt`.
-- [ ] Paso 2: Renderizar checklists agrupados por fecha con expand/collapse por clic.
-- [ ] Paso 3: Introducir categorías en `state` (`checklistCategories`) si no existen; render de secciones por categoría + “Sin clasificar”.
-- [ ] Paso 4: Implementar botón “Clasificar en...” con UI modal/menu para cambiar categoría y crear categorías nuevas.
-- [ ] Paso 5: Implementar drag & drop de checklists entre categorías.
-- [ ] Paso 6: Implementar apartado “Listas completadas” con criterio: todos items checked y items.length>0, con expand/collapse.
-- [ ] Paso 7: Asegurar que al togglear items se recalculen y re-renderice completadas/categorizadas.
-- [ ] Paso 8: Ejecutar verificación manual rápida y validar no romper edición/eliminación.
-
+- [x] Paso 1: Crear `components/devmode/devmode-shadow.js` con host + ShadowRoot y render encapsulado del login/panel.
+- [x] Paso 2: Migrar estilos de `components/devmode/devmode.css` al ShadowRoot (scoped, sin contaminación global).
+- [x] Paso 3: Eliminar handlers inline (`onclick`) del markup devmode y reemplazar por listeners internos.
+- [x] Paso 4: Refactor de `components/devmode/devmode.js` para desacoplar globals y exponer interfaz puente (compatibilidad temporal).
+- [x] Paso 5: Encapsular inyección dinámica de estilos del builder dentro del ShadowRoot.
+- [x] Paso 6: Mantener persistencia (`localStorage`) con capa de estado interna reactiva (sin romper formato actual).
+- [x] Paso 7: Actualizar `index.html` para iniciar devmode por bridge y retirar CSS global legacy de devmode.
+- [ ] Paso 8: Verificación manual de flujo completo: Alt+Shift+D, login, inspector, guardar, reset, factory reset, override de texto.
