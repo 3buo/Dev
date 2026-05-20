@@ -1111,14 +1111,16 @@ function setNoCodeUiVisible(visible) {
   }
   isNoCodeUiVisible = visible;
   updateNoCodeUiToggleButton();
+  updateSelectionLockButton();
 
   if (!visible) {
     deactivateInspector();
     isSelectionLocked = false;
     updateSelectionLockButton();
-  } else if (isDevModeActive) {
-    activateInspector();
+    return;
   }
+
+  if (isDevModeActive) activateInspector();
 }
 
 function toggleNoCodeUiVisibility() {
@@ -1255,35 +1257,47 @@ function factoryResetStyles() {
 }
 
 function bindShadowUiActions() {
-  const loginSubmit = $('devLoginSubmit');
-  const loginCancel = $('devLoginCancel');
-  const panelClose = $('devPanelClose');
-  const inspectorBtn = $('btnInspectorToggle');
-  const saveBtn = $('devBtnSave');
-  const resetBtn = $('devBtnResetTarget');
-  const factoryResetBtn = $('devBtnFactoryReset');
-  const animCheck = $('devAnimEnable');
-  const selectionLockBtn = $('devSelectionLockBtn');
-  const quickEditTextBtn = $('devQuickEditTextBtn');
-  const toggleUiBtn = $('devToggleUiBtn');
+  if (!devRoot) return;
 
-  loginSubmit?.addEventListener('click', authenticateDev);
-  loginCancel?.addEventListener('click', closeDevLogin);
-  panelClose?.addEventListener('click', closeDevPanel);
-  inspectorBtn?.addEventListener('click', toggleInspectorMode);
-  saveBtn?.addEventListener('click', applyAndSaveDevStyles);
-  resetBtn?.addEventListener('click', resetTargetStyles);
-  factoryResetBtn?.addEventListener('click', factoryResetStyles);
-  selectionLockBtn?.addEventListener('click', toggleSelectionLock);
-  quickEditTextBtn?.addEventListener('click', () => {
-    if (!currentTargetElement) return;
+  const onClick = (id, handler) => {
+    const el = $(id);
+    if (!(el instanceof HTMLElement)) return;
+    el.onclick = null;
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handler(e);
+    });
+  };
+
+  onClick('devLoginSubmit', authenticateDev);
+  onClick('devLoginCancel', closeDevLogin);
+  onClick('devPanelClose', closeDevPanel);
+  onClick('btnInspectorToggle', toggleInspectorMode);
+  onClick('devBtnSave', applyAndSaveDevStyles);
+  onClick('devBtnResetTarget', resetTargetStyles);
+  onClick('devBtnFactoryReset', factoryResetStyles);
+
+  onClick('devSelectionLockBtn', () => {
+    toggleSelectionLock();
+  });
+
+  onClick('devQuickEditTextBtn', () => {
+    if (!currentTargetElement) {
+      showToast('Selecciona un elemento para editar texto');
+      return;
+    }
     beginInlineEditing(currentTargetElement);
   });
-  toggleUiBtn?.addEventListener('click', toggleNoCodeUiVisibility);
+
+  onClick('devToggleUiBtn', () => {
+    toggleNoCodeUiVisibility();
+  });
 
   updateSelectionLockButton();
   updateNoCodeUiToggleButton();
 
+  const animCheck = $('devAnimEnable');
   animCheck?.addEventListener('change', (e) => {
     const checked = e.target instanceof HTMLInputElement ? e.target.checked : false;
     const animType = $('devAnimType');
