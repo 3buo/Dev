@@ -1,9 +1,13 @@
 import React, { useCallback, useMemo, useRef } from 'react'
 
-import type { BuilderTree } from './types'
-
+import type { BuilderTree, BuilderNode, SerializeResult } from './types'
 import { DevModeContext } from './DevModeContext'
-import type { BuilderNode, SerializeResult } from './types'
+
+// Adapter facade (Single Source of Truth)
+import { initDevmodeBridge } from '../../.DEV/components/devmode/devmode-bridge'
+
+
+
 
 type DevModeProviderValue = {
   ready: boolean
@@ -16,7 +20,6 @@ type DevModeProviderValue = {
 
 
 function createEmptyTree(): BuilderTree {
-
   return {
     rootId: 'root',
     nodes: {
@@ -32,8 +35,9 @@ function createEmptyTree(): BuilderTree {
   }
 }
 
-
 export const DevModeProvider = ({ children }: { children: React.ReactNode }) => {
+  // initialize legacy bridge on mount (currently no-op placeholder)
+
   const ready = true
 
   const treeRef = useRef<BuilderTree>(createEmptyTree())
@@ -57,11 +61,19 @@ export const DevModeProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, [])
 
+  // mount on first render
+  React.useEffect(() => {
+    try {
+      initDevmodeBridge()
+    } catch {
+      // no-op
+    }
+  }, [initDevmodeBridge])
+
   const initBridge = useCallback(() => {
-    // STEP 1 stub: later we will mount/bridge `.DEV/components/devmode`
-    // without building a custom DnD engine.
-    // For now: no-op.
+    // no-op: already mounted via useEffect
   }, [])
+
 
   const value = useMemo<DevModeProviderValue>(
     () => ({
