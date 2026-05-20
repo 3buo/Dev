@@ -65,6 +65,7 @@ function ensureDevIdForElement(el) {
   if (el.closest('#devmode-shadow-host')) return null;
   if (el.closest('#backupPanel')) return null;
   if (el.id === 'backupLauncher' || el.closest('#backupLauncher')) return null;
+  if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') return null;
   if (!el.dataset.devId) el.dataset.devId = generateDevId();
   return el.dataset.devId;
 }
@@ -141,9 +142,37 @@ function showToast(message) {
 }
 
 function updateSelectionLockButton() {
-  const btn = $('devSelectionLockBtn');
+  if (!activeToolbar) return;
+  const btn = activeToolbar.querySelector('#devSelectionLockBtn');
   if (!(btn instanceof HTMLElement)) return;
   btn.textContent = isSelectionLocked ? '🔒 Selección bloqueada' : '🔓 Selección libre';
+}
+
+function updateDetectedPanel(target) {
+  if (!activeToolbar) return;
+  const idEl = activeToolbar.querySelector('#devDetectedId');
+  const nameEl = activeToolbar.querySelector('#devDetectedName');
+  const textEl = activeToolbar.querySelector('#devDetectedText');
+
+  if (!(idEl instanceof HTMLElement) || !(nameEl instanceof HTMLElement) || !(textEl instanceof HTMLElement)) return;
+
+  if (!(target instanceof HTMLElement)) {
+    idEl.textContent = 'N/A';
+    nameEl.textContent = 'N/A';
+    textEl.textContent = 'Ninguno';
+    return;
+  }
+
+  idEl.textContent = target.dataset.devId || 'N/A';
+  nameEl.textContent = target.tagName.toLowerCase();
+  textEl.textContent = (target.textContent || '').trim() || '(sin texto)';
+}
+
+function closeInlineEditor() {
+  if (!activeInlineEditor) return;
+  activeInlineEditor.removeAttribute('contenteditable');
+  activeInlineEditor.classList.remove('dev-inline-editing');
+  activeInlineEditor = null;
 }
 
 function openLiveEditOnElement(target) {
@@ -151,10 +180,7 @@ function openLiveEditOnElement(target) {
   const devId = ensureDevIdForElement(target);
   if (!devId) return;
 
-  if (activeInlineEditor && activeInlineEditor !== target) {
-    activeInlineEditor.removeAttribute('contenteditable');
-    activeInlineEditor.classList.remove('dev-inline-editing');
-  }
+  closeInlineEditor();
 
   activeInlineEditor = target;
   currentTargetElement = target;
@@ -174,43 +200,44 @@ function openLiveEditOnElement(target) {
     if (!target.dataset.devId) return;
     state.dynamicContentById[target.dataset.devId] = (target.textContent || '').trim();
     persistState();
-    const detected = $('devDetectedText');
-    if (detected) detected.textContent = target.textContent || '(sin texto)';
+    updateDetectedPanel(target);
   };
 
-  const handleInput = () => {
+  target.oninput = () => {
     saveLiveText();
     showToast('✍️ Editando texto en vivo');
   };
 
-  const handleBlur = () => {
+  target.onblur = () => {
     saveLiveText();
-    target.removeAttribute('contenteditable');
-    target.classList.remove('dev-inline-editing');
+    closeInlineEditor();
   };
 
-  const handleKeydown = (e) => {
+  target.onkeydown = (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       target.blur();
     }
   };
 
-  target.oninput = handleInput;
-  target.onblur = handleBlur;
-  target.onkeydown = handleKeydown;
-
   showToast('✍️ Modo edición activado');
+}
+
+function isIgnoredByInspector(target) {
+  if (!(target instanceof HTMLElement)) return true;
+  if (devRoot?.contains(target)) return true;
+  if (activeToolbar?.contains(target)) return true;
+  if (target.closest('#devmode-shadow-host')) return true;
+  if (target.closest('#backupPanel')) return true;
+  if (target.id === 'backupLauncher' || target.closest('#backupLauncher')) return true;
+  return false;
 }
 
 function handleDevClick(e) {
   if (!isInspectorActive || isSelectionLocked) return;
   const target = e.target;
   if (!(target instanceof HTMLElement)) return;
-  if (devRoot?.contains(target)) return;
-  if (target.closest('#devmode-shadow-host')) return;
-  if (target.closest('#backupPanel')) return;
-  if (target.id === 'backupLauncher' || target.closest('#backupLauncher')) return;
+  if (isIgnoredByInspector(target)) return;
 
   e.preventDefault();
   e.stopPropagation();
@@ -226,14 +253,7 @@ function handleDevClick(e) {
   currentTargetDevId = devId;
   target.classList.add('dev-selected-target');
 
-  const idEl = $('devDetectedId');
-  const nameEl = $('devDetectedName');
-  const textEl = $('devDetectedText');
-
-  if (idEl) idEl.textContent = devId;
-  if (nameEl) nameEl.textContent = target.tagName.toLowerCase();
-  if (textEl) textEl.textContent = (target.textContent || '').trim() || '(sin texto)';
-
+  updateDetectedPanel(target);
   showToast('🎯 Elemento seleccionado');
 }
 
@@ -250,6 +270,7 @@ function deactivateInspector() {
 
 function closeDevPanel() {
   deactivateInspector();
+  closeInlineEditor();
   isDevModeActive = false;
   window.__devModeIsAuthenticated = false;
   if (activeToolbar) activeToolbar.style.display = 'none';
@@ -277,9 +298,62 @@ function authenticateDev() {
   showToast('✅ DevMode activo');
 }
 
-function bindToolbarActions(toolbar) {
-  const quickEdit = toolbar.querySelector('#devQuickEditTextBtn');
-  const lockBtn = toolbar.querySelector('#devSelectionLockBtn');
+function mountToolbar() {
+  if (!devRoot) return null;
+
+  let toolbar = devRoot.getElementById('devFloatingToolbar');
+  if (!toolbar) {
+    toolbar = document.createElement('div');
+    toolbar.id = 'devFloatingToolbar';
+    toolbar.className = 'dev-floating-toolbar';
+    toolbar.innerHTML = `
+      <div class="dev-toolbar-header" id="devToolbarDragHandle">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="dev-toolbar-grip">⋮⋮</span>
+          <span class="dev-toolbar-title">Context Palette</span>
+        </div>
+      </div>
+      <div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;gap:4px;background:rgba(255,255,255,0.02);">
+        <div style="font-size:10px;color:#8b949e;text-transform:uppercase;font-weight:800;letter-spacing:.4px;">Elemento detectado</div>
+        <div style="font-size:11px;color:#9ecbff;"><strong>ID:</strong> <span id="devDetectedId">N/A</span></div>
+        <div style="font-size:11px;color:#c9d1d9;"><strong>Nombre:</strong> <span id="devDetectedName">N/A</span></div>
+        <div style="font-size:11px;color:#8ba4b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Texto:</strong> <span id="devDetectedText">Ninguno</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px;">
+          <button id="devQuickEditTextBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">✍️ Editar texto</button>
+          <button id="devSelectionLockBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">🔓 Selección libre</button>
+        </div>
+      </div>
+
+      <div class="dev-toolbar-tabs">
+        <button class="dev-tab-btn active" data-tab="typo">Tipografía</button>
+        <button class="dev-tab-btn" data-tab="appearance">Apariencia</button>
+        <button class="dev-tab-btn" data-tab="layout">Layout</button>
+        <button class="dev-tab-btn" data-tab="data">Data</button>
+      </div>
+      <div class="dev-toolbar-body">
+        <section class="dev-tab-panel active" data-panel="typo">
+          <div class="dev-row">
+            <label>Tamaño</label>
+            <div class="dev-inline-row">
+              <input class="dev-input" id="devTypoSizeInput" type="text" placeholder="16px" />
+              <input class="dev-input" id="devTypoSizeRange" type="range" min="10" max="96" value="16" />
+            </div>
+          </div>
+        </section>
+      </div>
+    `;
+    devRoot.appendChild(toolbar);
+  }
+
+  activeToolbar = toolbar;
+  return toolbar;
+}
+
+function bindToolbarActions() {
+  if (!activeToolbar) return;
+
+  const quickEdit = activeToolbar.querySelector('#devQuickEditTextBtn');
+  const lockBtn = activeToolbar.querySelector('#devSelectionLockBtn');
 
   if (quickEdit instanceof HTMLElement) {
     quickEdit.onclick = null;
@@ -307,41 +381,11 @@ function bindToolbarActions(toolbar) {
     }, { capture: true });
   }
 
-  toolbar.addEventListener('click', (e) => {
+  activeToolbar.addEventListener('click', (e) => {
     e.stopPropagation();
   }, { capture: true });
-}
 
-function getOrCreateFloatingToolbar() {
-  if (!devRoot) return null;
-  if (activeToolbar) return activeToolbar;
-
-  const toolbar = document.createElement('div');
-  toolbar.id = 'devFloatingToolbar';
-  toolbar.className = 'dev-floating-toolbar';
-  toolbar.innerHTML = `
-    <div class="dev-toolbar-header" id="devToolbarDragHandle">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="dev-toolbar-grip">⋮⋮</span>
-        <span class="dev-toolbar-title">Context Palette</span>
-      </div>
-    </div>
-    <div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;gap:4px;background:rgba(255,255,255,0.02);">
-      <div style="font-size:10px;color:#8b949e;text-transform:uppercase;font-weight:800;letter-spacing:.4px;">Elemento detectado</div>
-      <div style="font-size:11px;color:#9ecbff;"><strong>ID:</strong> <span id="devDetectedId">N/A</span></div>
-      <div style="font-size:11px;color:#c9d1d9;"><strong>Nombre:</strong> <span id="devDetectedName">N/A</span></div>
-      <div style="font-size:11px;color:#8ba4b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Texto:</strong> <span id="devDetectedText">Ninguno</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px;">
-        <button id="devQuickEditTextBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">✍️ Editar texto</button>
-        <button id="devSelectionLockBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">🔓 Selección libre</button>
-      </div>
-    </div>
-  `;
-  devRoot.appendChild(toolbar);
-  activeToolbar = toolbar;
-  bindToolbarActions(toolbar);
   updateSelectionLockButton();
-  return toolbar;
 }
 
 function bindShadowUiActions() {
@@ -404,7 +448,9 @@ export function initDevMode() {
   injectStyleSheet();
   applyContentOverrides();
 
-  getOrCreateFloatingToolbar();
+  mountToolbar();
+  bindToolbarActions();
+
   if (activeToolbar) activeToolbar.style.display = 'none';
 
   bindShadowUiActions();
