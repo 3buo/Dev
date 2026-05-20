@@ -18,6 +18,7 @@ let idObserver = null;
 let activeInlineEditor = null;
 let activeToolbar = null;
 let hasGlobalBindings = false;
+let isSelectionLocked = false;
 
 const state = {
   dynamicStylesById: {},
@@ -122,6 +123,17 @@ function injectScopedUxCss() {
       outline: 2px solid #58a6ff !important;
       outline-offset: 2px !important;
       box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.15) !important;
+      transition: box-shadow 200ms ease, outline-color 200ms ease;
+    }
+    [data-dev-id].dev-selected-pulse {
+      animation: devSelectPulse 520ms ease-out;
+      outline-color: #9ecbff !important;
+      box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.24), 0 0 24px rgba(88, 166, 255, 0.32) !important;
+    }
+    @keyframes devSelectPulse {
+      0% { transform: scale(1); filter: brightness(1); }
+      30% { transform: scale(1.01); filter: brightness(1.08); }
+      100% { transform: scale(1); filter: brightness(1); }
     }
     .dev-inline-editing {
       outline: 2px solid rgba(88,166,255,0.75) !important;
@@ -314,6 +326,16 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 950);
+}
+
+function showSelectionFeedback(target) {
+  if (!(target instanceof HTMLElement)) return;
+  target.classList.add('dev-selected-pulse');
+  setTimeout(() => target.classList.remove('dev-selected-pulse'), 560);
+
+  const idShort = (target.dataset.devId || 'N/A').slice(0, 18);
+  const tag = target.tagName?.toLowerCase() || 'node';
+  showToast(`🎯 Seleccionado: ${tag} • ${idShort}`);
 }
 
 const actions = {
@@ -569,6 +591,9 @@ function getOrCreateFloatingToolbar() {
       <div style="font-size:11px;color:#9ecbff;"><strong>ID:</strong> <span id="devDetectedId">N/A</span></div>
       <div style="font-size:11px;color:#c9d1d9;"><strong>Nombre:</strong> <span id="devDetectedName">N/A</span></div>
       <div style="font-size:11px;color:#8ba4b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Texto:</strong> <span id="devDetectedText">Ninguno</span></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+        <button id="devSelectionLockBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">🔓 Selección libre</button>
+      </div>
     </div>
 
     <div class="dev-toolbar-tabs">
@@ -928,6 +953,8 @@ function handleDevMouseOut(e) {
 
 function handleDevClick(e) {
   if (!isInspectorActive) return;
+  if (isSelectionLocked) return;
+
   const target = e.target;
   if (!(target instanceof HTMLElement)) return;
   if (devRoot && devRoot.contains(target)) return;
@@ -939,7 +966,10 @@ function handleDevClick(e) {
   const devId = ensureDevIdForElement(target);
   if (!devId) return;
 
-  if (currentTargetElement) currentTargetElement.classList.remove('dev-selected-target');
+  if (currentTargetElement) {
+    currentTargetElement.classList.remove('dev-selected-target');
+    currentTargetElement.classList.remove('dev-selected-pulse');
+  }
 
   currentTargetElement = target;
   currentTargetDevId = devId;
@@ -949,11 +979,10 @@ function handleDevClick(e) {
   syncPanelFromCurrentTarget();
   positionFloatingToolbar(target);
   syncDetectedElementPanel(target);
+  showSelectionFeedback(target);
 
   const panel = $('devEditorPanel');
   if (panel instanceof HTMLElement) panel.style.display = 'none';
-
-  deactivateInspector();
 }
 
 function handleDevDoubleClick(e) {
@@ -994,6 +1023,22 @@ function deactivateInspector() {
 function toggleInspectorMode() {
   if (isInspectorActive) deactivateInspector();
   else activateInspector();
+}
+
+function updateSelectionLockButton() {
+  const btn = $('devSelectionLockBtn');
+  if (!(btn instanceof HTMLElement)) return;
+  btn.textContent = isSelectionLocked ? '🔒 Selección bloqueada' : '🔓 Selección libre';
+  btn.style.borderColor = isSelectionLocked ? 'rgba(255,122,122,0.65)' : 'rgba(88,166,255,0.65)';
+  btn.style.color = isSelectionLocked ? '#ffb4b4' : '#9ecbff';
+  btn.style.background = isSelectionLocked ? 'rgba(255,88,88,0.14)' : 'rgba(88,166,255,0.12)';
+}
+
+function toggleSelectionLock() {
+  isSelectionLocked = !isSelectionLocked;
+  updateSelectionLockButton();
+  const stateLabel = isSelectionLocked ? '🔒 Selección bloqueada' : '🔓 Selección libre';
+  showToast(stateLabel);
 }
 
 function closeDevLogin() {
@@ -1126,6 +1171,7 @@ function bindShadowUiActions() {
   const resetBtn = $('devBtnResetTarget');
   const factoryResetBtn = $('devBtnFactoryReset');
   const animCheck = $('devAnimEnable');
+  const selectionLockBtn = $('devSelectionLockBtn');
 
   loginSubmit?.addEventListener('click', authenticateDev);
   loginCancel?.addEventListener('click', closeDevLogin);
@@ -1134,6 +1180,9 @@ function bindShadowUiActions() {
   saveBtn?.addEventListener('click', applyAndSaveDevStyles);
   resetBtn?.addEventListener('click', resetTargetStyles);
   factoryResetBtn?.addEventListener('click', factoryResetStyles);
+  selectionLockBtn?.addEventListener('click', toggleSelectionLock);
+
+  updateSelectionLockButton();
 
   animCheck?.addEventListener('change', (e) => {
     const checked = e.target instanceof HTMLInputElement ? e.target.checked : false;
