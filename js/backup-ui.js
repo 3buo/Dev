@@ -223,7 +223,16 @@ function ensureBackupPanel() {
 
   // Expose global toggle
   window.toggleBackupPanel = () => {
-    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+    const current = panel.style.display;
+    const shouldOpen = current !== 'flex';
+    panel.style.display = shouldOpen ? 'flex' : 'none';
+
+    const launcher = document.getElementById('backupLauncher');
+    if (launcher) {
+      launcher.classList.toggle('backup-launcher-open', shouldOpen);
+      launcher.setAttribute('aria-pressed', shouldOpen ? 'true' : 'false');
+      launcher.setAttribute('title', shouldOpen ? 'Cerrar Backups' : 'Abrir Backups');
+    }
   };
 
   return panel;
@@ -337,18 +346,40 @@ export function initBackupUI() {
       position: fixed;
       bottom: 90px;
       right: 20px;
-      background: #111a28;
-      border: 1px solid rgba(88,166,255,0.5);
-      color: #58a6ff;
-      border-radius: 12px;
-      width: 56px;
-      height: 56px;
-      font-size: 1.1em;
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      border: 1px solid rgba(88,166,255,0.38);
+      background: linear-gradient(160deg, rgba(18,28,45,0.96), rgba(8,14,26,0.96));
+      color: #9ecbff;
+      font-size: 1.2em;
       cursor: pointer;
       z-index: 2500;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+      box-shadow: 0 10px 34px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, color 180ms ease;
     `;
     btn.textContent = '⛑️';
+    btn.setAttribute('aria-label', 'Abrir panel de backups');
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('title', 'Abrir Backups');
+
+    btn.onmouseenter = () => {
+      btn.style.transform = 'translateY(-2px) scale(1.03)';
+      btn.style.borderColor = 'rgba(88,166,255,0.75)';
+      btn.style.boxShadow = '0 14px 40px rgba(0,0,0,0.55), 0 0 20px rgba(88,166,255,0.18)';
+      btn.style.color = '#c7e2ff';
+    };
+    btn.onmouseleave = () => {
+      const isOpen = btn.classList.contains('backup-launcher-open');
+      btn.style.transform = isOpen ? 'scale(1.02)' : 'none';
+      btn.style.borderColor = isOpen ? 'rgba(88,166,255,0.9)' : 'rgba(88,166,255,0.38)';
+      btn.style.boxShadow = isOpen
+        ? '0 16px 42px rgba(0,0,0,0.6), 0 0 24px rgba(88,166,255,0.22)'
+        : '0 10px 34px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)';
+      btn.style.color = isOpen ? '#e8f3ff' : '#9ecbff';
+    };
+
     btn.onclick = () => window.toggleBackupPanel?.();
     document.body.appendChild(btn);
   }

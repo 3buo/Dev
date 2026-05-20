@@ -564,6 +564,13 @@ function getOrCreateFloatingToolbar() {
       </div>
       <button class="dev-close-btn" id="devToolbarCloseBtn">✕</button>
     </div>
+    <div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.06);display:grid;gap:4px;background:rgba(255,255,255,0.02);">
+      <div style="font-size:10px;color:#8b949e;text-transform:uppercase;font-weight:800;letter-spacing:.4px;">Elemento detectado</div>
+      <div style="font-size:11px;color:#9ecbff;"><strong>ID:</strong> <span id="devDetectedId">N/A</span></div>
+      <div style="font-size:11px;color:#c9d1d9;"><strong>Nombre:</strong> <span id="devDetectedName">N/A</span></div>
+      <div style="font-size:11px;color:#8ba4b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Texto:</strong> <span id="devDetectedText">Ninguno</span></div>
+    </div>
+
     <div class="dev-toolbar-tabs">
       <button class="dev-tab-btn active" data-tab="typo">Tipografía</button>
       <button class="dev-tab-btn" data-tab="appearance">Apariencia</button>
@@ -687,6 +694,8 @@ function positionFloatingToolbar(target) {
     toolbar.style.top = `${top}px`;
     toolbar.style.left = `${left}px`;
   }
+
+  syncDetectedElementPanel(target);
   toolbar.style.display = 'flex';
 }
 
@@ -778,9 +787,34 @@ function ensureDevIdObserver() {
   idObserver.observe(document.body, { childList: true, subtree: true });
 }
 
+function syncDetectedElementPanel(target) {
+  const idEl = $('devDetectedId');
+  const nameEl = $('devDetectedName');
+  const textEl = $('devDetectedText');
+
+  if (!idEl || !nameEl || !textEl) return;
+
+  if (!(target instanceof HTMLElement)) {
+    idEl.textContent = 'N/A';
+    nameEl.textContent = 'N/A';
+    textEl.textContent = 'Ninguno';
+    return;
+  }
+
+  const tag = target.tagName?.toLowerCase() || 'unknown';
+  const cls = (target.className && typeof target.className === 'string') ? target.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
+  const name = cls ? `${tag}.${cls}` : tag;
+  const txt = (target.textContent || '').trim().slice(0, 80);
+
+  idEl.textContent = target.dataset.devId || 'N/A';
+  nameEl.textContent = name;
+  textEl.textContent = txt || '(sin texto)';
+}
+
 function syncPanelFromCurrentTarget() {
   const selectorLabel = $('devTargetSelector');
   if (selectorLabel) selectorLabel.textContent = currentTargetDevId || 'N/A';
+  syncDetectedElementPanel(currentTargetElement);
 }
 
 function isTextLikeElement(el) {
@@ -914,6 +948,7 @@ function handleDevClick(e) {
 
   syncPanelFromCurrentTarget();
   positionFloatingToolbar(target);
+  syncDetectedElementPanel(target);
 
   const panel = $('devEditorPanel');
   if (panel instanceof HTMLElement) panel.style.display = 'none';
