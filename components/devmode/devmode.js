@@ -349,12 +349,20 @@ const actions = {
 };
 
 function setStyleForCurrentNode(property, value) {
-  if (!currentTargetDevId) return;
+  if (!currentTargetDevId || !currentTargetElement) return;
   const bucket = getNodeBucket(currentTargetDevId);
   if (!value || !String(value).trim()) delete bucket.styles[property];
   else bucket.styles[property] = String(value).trim();
+
+  if (!value || !String(value).trim()) {
+    currentTargetElement.style.removeProperty(property);
+  } else {
+    currentTargetElement.style.setProperty(property, String(value).trim(), 'important');
+  }
+
   persistV2State();
   injectDynamicStyleSheet();
+  showToast(`✨ ${property} aplicado`);
 }
 
 function setMetaForCurrentNode(key, value) {
@@ -571,6 +579,54 @@ function bindToolbarActions(toolbar) {
   });
 }
 
+function syncToolbarFromSelectedNode() {
+  if (!currentTargetElement || !currentTargetDevId || !activeToolbar) return;
+  const computed = window.getComputedStyle(currentTargetElement);
+  const bucket = getNodeBucket(currentTargetDevId);
+  const styles = bucket.styles || {};
+
+  const pick = (prop, fallback = '') => styles[prop] || computed.getPropertyValue(prop) || fallback;
+
+  const typoSizeInput = activeToolbar.querySelector('#devTypoSizeInput');
+  const typoSizeRange = activeToolbar.querySelector('#devTypoSizeRange');
+  const typoColor = activeToolbar.querySelector('#devTypoColor');
+  const radiusInput = activeToolbar.querySelector('#devRadiusInput');
+
+  if (typoSizeInput instanceof HTMLInputElement) {
+    const fs = pick('font-size', '16px').trim();
+    typoSizeInput.value = fs;
+    if (typoSizeRange instanceof HTMLInputElement) {
+      const parsed = parseInt(fs, 10);
+      if (!Number.isNaN(parsed)) typoSizeRange.value = String(parsed);
+    }
+  }
+
+  if (typoColor instanceof HTMLInputElement) {
+    const color = pick('color').trim();
+    const hex = rgbStringToHex(color);
+    if (hex) typoColor.value = hex;
+  }
+
+  if (radiusInput instanceof HTMLInputElement) {
+    radiusInput.value = pick('border-radius', '').trim();
+  }
+
+  const detectedText = $('devDetectedText');
+  if (detectedText && currentTargetElement) {
+    const txt = (currentTargetElement.textContent || '').trim();
+    detectedText.textContent = txt || '(sin texto)';
+  }
+}
+
+function rgbStringToHex(rgb) {
+  const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (!match) return '';
+  const r = Number(match[1]).toString(16).padStart(2, '0');
+  const g = Number(match[2]).toString(16).padStart(2, '0');
+  const b = Number(match[3]).toString(16).padStart(2, '0');
+  return `#${r}${g}${b}`;
+}
+
 function getOrCreateFloatingToolbar() {
   if (!devRoot) return null;
   if (activeToolbar) return activeToolbar;
@@ -591,7 +647,8 @@ function getOrCreateFloatingToolbar() {
       <div style="font-size:11px;color:#9ecbff;"><strong>ID:</strong> <span id="devDetectedId">N/A</span></div>
       <div style="font-size:11px;color:#c9d1d9;"><strong>Nombre:</strong> <span id="devDetectedName">N/A</span></div>
       <div style="font-size:11px;color:#8ba4b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Texto:</strong> <span id="devDetectedText">Ninguno</span></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px;">
+        <button id="devQuickEditTextBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">✍️ Editar texto</button>
         <button id="devSelectionLockBtn" class="dev-pill" style="font-size:10px;padding:5px 10px;">🔓 Selección libre</button>
       </div>
     </div>
@@ -979,6 +1036,7 @@ function handleDevClick(e) {
   syncPanelFromCurrentTarget();
   positionFloatingToolbar(target);
   syncDetectedElementPanel(target);
+  syncToolbarFromSelectedNode();
   showSelectionFeedback(target);
 
   const panel = $('devEditorPanel');
@@ -1172,6 +1230,7 @@ function bindShadowUiActions() {
   const factoryResetBtn = $('devBtnFactoryReset');
   const animCheck = $('devAnimEnable');
   const selectionLockBtn = $('devSelectionLockBtn');
+  const quickEditTextBtn = $('devQuickEditTextBtn');
 
   loginSubmit?.addEventListener('click', authenticateDev);
   loginCancel?.addEventListener('click', closeDevLogin);
@@ -1181,6 +1240,10 @@ function bindShadowUiActions() {
   resetBtn?.addEventListener('click', resetTargetStyles);
   factoryResetBtn?.addEventListener('click', factoryResetStyles);
   selectionLockBtn?.addEventListener('click', toggleSelectionLock);
+  quickEditTextBtn?.addEventListener('click', () => {
+    if (!currentTargetElement) return;
+    beginInlineEditing(currentTargetElement);
+  });
 
   updateSelectionLockButton();
 
