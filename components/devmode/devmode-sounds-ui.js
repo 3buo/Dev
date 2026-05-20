@@ -1,4 +1,7 @@
-import { } from '';
+export function injectDevNoCodeCss() {}
 
-export function noop() {}
+export function bindGlobalButtonSounds() {}
 
+export function bindInspectorHotkeys() {}
+
+export function ensureDevSoundPanel() {}
