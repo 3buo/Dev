@@ -4,10 +4,7 @@ import type { BuilderTree, BuilderNode, SerializeResult } from './types'
 import { DevModeContext } from './DevModeContext'
 
 // Adapter facade (Single Source of Truth)
-import { initDevmodeBridge } from '../../.DEV/components/devmode/devmode-bridge'
-
-
-
+import { initDevmodeBridge, toggleDevMode } from '../../.DEV/components/devmode/devmode-bridge'
 
 type DevModeProviderValue = {
   ready: boolean
@@ -65,15 +62,9 @@ export const DevModeProvider = ({ children }: { children: React.ReactNode }) => 
   React.useEffect(() => {
     try {
       initDevmodeBridge()
-
-      // expose bridge toggle through a stable, app-level symbol
-      // so App.tsx remains agnostic about legacy details.
       ;(window as any).__devmode_bridge_toggle = () => {
         try {
-          // bridge.toggleDevMode must be resolved without CommonJS require.
-          // We fallback to dynamic global call if needed.
-          ;(window as any).__devmode_bridge_toggle_internal?.()
-
+          toggleDevMode()
         } catch {
           // no-op
         }
@@ -81,8 +72,7 @@ export const DevModeProvider = ({ children }: { children: React.ReactNode }) => 
     } catch {
       // no-op
     }
-  }, [initDevmodeBridge])
-
+  }, [])
 
   const initBridge = useCallback(() => {
     // no-op: already mounted via useEffect
