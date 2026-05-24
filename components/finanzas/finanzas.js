@@ -573,10 +573,13 @@ function updatePreviewDisplay() {
     const previewEl = document.getElementById('bulkPreview');
     if(!previewEl) return;
     
+    const btnPreview = document.getElementById('btnPreview');
+    const btnConfirm = document.getElementById('btnBulkConfirm');
+    
     if(parsedBulkRecords.length === 0) {
         previewEl.innerHTML = '<span style="color:#8ba4b5; font-size:0.9em;">Escribe algo para ver la previsualización...</span>';
-        document.getElementById('btnPreview').disabled = false;
-        document.getElementById('btnConfirm').disabled = true;
+        if(btnPreview) { btnPreview.disabled = false; btnPreview.style.opacity = '0.5'; }
+        if(btnConfirm) { btnConfirm.disabled = true; btnConfirm.style.opacity = '0.5'; }
     } else {
         previewEl.innerHTML = parsedBulkRecords.map((r, i) => `
             <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px; font-size:0.9em;">
@@ -584,8 +587,8 @@ function updatePreviewDisplay() {
                 <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
             </div>`).join('');
         
-        document.getElementById('btnPreview').disabled = true;
-        document.getElementById('btnConfirm').disabled = false;
+        if(btnPreview) { btnPreview.disabled = true; btnPreview.style.opacity = '0.5'; }
+        if(btnConfirm) { btnConfirm.disabled = false; btnConfirm.style.opacity = '1'; }
     }
 };
 
@@ -644,16 +647,27 @@ window.executeBulkAdd = (walletId) => {
         }
     }
     
-    // Clear textarea and reset
-    const textarea = document.getElementById('bulkTextarea');
+    // Clear textarea and reset (support both bulkTextarea and bulkDataInput)
+    const textarea = document.getElementById('bulkTextarea') || document.getElementById('bulkDataInput');
     if(textarea) textarea.value = '';
     parsedBulkRecords = [];
     
-    // Update preview to show empty state (this will disable buttons)
-    updatePreviewDisplay();
+    // Update preview to show empty state (call appropriate update function)
+    const previewEl = document.getElementById('bulkPreview');
+    if(previewEl) {
+        // For bulk-input.html style
+        previewEl.innerHTML = '<span style="color:#8ba4b5; font-size:0.9em;">Escribe en formato: monto - descripcion</span>';
+        const countEl = document.getElementById('bulkCount');
+        if(countEl) countEl.innerText = '0 registros listos para agregar';
+        const btnConfirm = document.getElementById('btnBulkConfirm');
+        if(btnConfirm) { btnConfirm.disabled = true; btnConfirm.style.opacity = '0.5'; }
+    } else {
+        // For inline panel style
+        updatePreviewDisplay();
+    }
     
     // Then re-enable confirm button for more entries
-    const btnConfirm = document.getElementById('btnConfirm');
+    const btnConfirm = document.getElementById('btnBulkConfirm') || document.getElementById('btnConfirm');
     const btnPreview = document.getElementById('btnPreview');
     if(btnConfirm) btnConfirm.disabled = false;
     if(btnPreview) btnPreview.disabled = false;
