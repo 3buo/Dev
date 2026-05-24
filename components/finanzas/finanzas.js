@@ -74,7 +74,7 @@ window.renderWallets = () => {
         container.appendChild(card);
     });
 
-    const expAcc = document.getElementById('expAccount'), filtAcc = document.getElementById('filterAccount');
+const expAcc = document.getElementById('expAccount'), filtAcc = document.getElementById('filterAccount'), bulkW = document.getElementById('bulkWalletSelect');
     if(expAcc) {
         const currentVal = expAcc.value; expAcc.innerHTML = '<option value="" disabled selected>-- Elige cuenta --</option>';
         state.wallets.forEach(w => expAcc.innerHTML += `<option value="${w.id}">${w.name}</option>`);
@@ -84,6 +84,11 @@ window.renderWallets = () => {
         const currentFilt = filtAcc.value; filtAcc.innerHTML = '<option value="all">Todas</option>';
         state.wallets.forEach(w => filtAcc.innerHTML += `<option value="${w.id}">${w.name}</option>`);
         filtAcc.value = currentFilt || 'all';
+    }
+    if(bulkW) {
+        const currentBulk = bulkW.value; bulkW.innerHTML = '';
+        state.wallets.forEach(w => bulkW.innerHTML += `<option value="${w.id}">${w.name}</option>`);
+        bulkW.value = currentBulk || state.wallets[0]?.id;
     }
 };
 
@@ -519,57 +524,14 @@ window.closeBulkConfirmModal = () => {
 };
 
 window.toggleBulkInput = () => {
-    if(!bulkPanel) {
-        // Create bulk panel container
-        const container = document.createElement('div');
-        container.id = 'bulkPanel';
-        container.style.cssText = `
-            position: fixed; top: 20px; right: 20px;
-            width: 350px; max-height: 400px;
-            background: #1a273a; border: 2px solid #ff4d4d;
-            border-radius: 12px; padding: 15px;
-            box-shadow: 0 8px 32px rgba(255, 77, 77, 0.3);
-            z-index: 1000; display: flex; flex-direction: column;
-        `;
-        
-        container.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="color:#ff4d4d; margin:0; font-size:1.2em;">📥 Entrada Masiva</h3>
-                <button onclick="toggleBulkInput()" style="background:none; border:none; color:#8ba4b5; cursor:pointer; font-size:1.5em;">×</button>
-            </div>
-            
-            <textarea id="bulkTextarea" placeholder="Ingresa datos en formato: monto - descripcion&#10;&#10;Ejemplo:&#10;15 - Netflix&#10;30 - Spotify&#10;50 - Amazon"
-                style="flex:1; min-height:200px; background:#111a28; border:1px solid #2d3446; color:#fff; padding:10px; font-size:0.9em; resize:none; font-family:inherit;"
-                oninput="updateBulkPreview()"></textarea>
-            
-            <div style="margin-top:10px;">
-                <label style="color:#8ba4b5; font-size:0.85em; display:block; margin-bottom:5px;">Cartera:</label>
-                <select id="bulkWalletSelect" style="width:100%; background:#111a28; border:1px solid #2d3446; color:#fff; padding:8px; font-size:0.9em; border-radius:4px;">
-                    ${state.wallets.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
-                </select>
-            </div>
-            
-            <div style="margin-top:auto; display:flex; gap:10px;">
-                <button onclick="processBulkInput()" id="btnPreview"
-                    style="flex:1; background:#2d3446; color:#8ba4b5; border:none; padding:10px; font-size:0.9em; cursor:pointer; border-radius:4px;">
-                    👁️ Previsualizar
-                </button>
-                <button onclick="confirmBulkAdd()" id="btnConfirm"
-                    style="flex:1; background:#ff4d4d; color:#fff; border:none; padding:10px; font-size:0.9em; cursor:pointer; border-radius:4px;">
-                    ✅ Confirmar
-                </button>
-            </div>
-        `;
-        
-        bulkPanel = container;
-        document.body.appendChild(bulkPanel);
+    const panel = document.getElementById('bulkPanel');
+    if(!panel) return;
+    
+    // Toggle visibility
+    if(panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
     } else {
-        // Toggle visibility
-        if(bulkPanel.style.display === 'none' || bulkPanel.style.display === '') {
-            bulkPanel.style.display = 'flex';
-        } else {
-            bulkPanel.style.display = 'none';
-        }
+        panel.style.display = 'none';
     }
 };
 
