@@ -464,6 +464,60 @@ window.addEventListener('stateChanged', () => {
 let bulkPanel = null;
 let parsedBulkRecords = [];
 
+// Function for bulk-input.html - handles IDs: bulkDataInput, bulkPreview, bulkCount, bulkWalletSelect
+window.updateBulkInput = () => {
+    const textarea = document.getElementById('bulkDataInput');
+    const previewEl = document.getElementById('bulkPreview');
+    const countEl = document.getElementById('bulkCount');
+    
+    if(!textarea || !previewEl) return;
+    
+    const rawText = textarea.value.trim();
+    parsedBulkRecords = [];
+    
+    if(rawText) {
+        const lines = rawText.split('\n').filter(l => l.trim());
+        
+        for(const line of lines) {
+            // Support both regular dash and em-dash
+            const match = line.match(/^([\d,]+(\.\d+)?)\s*[-–—]\s*(.+)$/);
+            
+            if(match) {
+                let amount = parseFloat(match[1].replace(/,/g, ''));
+                let desc = match[3].trim();
+                
+                if(desc && desc.length > 0) {
+                    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+                } else {
+                    desc = "Gasto sin descripción";
+                }
+                
+                if(!isNaN(amount) && amount > 0) {
+                    parsedBulkRecords.push({ amount, desc });
+                }
+            }
+        }
+    }
+    
+    // Update the preview display
+    if(parsedBulkRecords.length === 0) {
+        previewEl.innerHTML = '<span style="color:#8ba4b5; font-size:0.9em;">Escribe en formato: monto - descripcion</span>';
+        if(countEl) countEl.innerText = '0 registros listos para agregar';
+    } else {
+        previewEl.innerHTML = parsedBulkRecords.map((r, i) => `
+            <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px; font-size:0.9em;">
+                <span style="color:#fff;"><strong>${i+1}.</strong> ${r.desc}</span>
+                <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
+            </div>`).join('');
+        if(countEl) countEl.innerText = `${parsedBulkRecords.length} registro(s) listo(s) para agregar`;
+    }
+};
+
+window.closeBulkConfirmModal = () => {
+    const modal = document.getElementById('bulkConfirmModal');
+    if(modal) modal.style.display = 'none';
+};
+
 window.toggleBulkInput = () => {
     if(!bulkPanel) {
         // Create bulk panel container

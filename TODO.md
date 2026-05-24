@@ -24,3 +24,11 @@
 - [x] Implementar autosave con debounce (1500ms).
 - [x] Estado visual premium de guardado (gris/pulsante/verde).
 - [x] Mantener compatibilidad con flujo manual existente.
+
+## Correcciones solicitadas (post-fases)
+- [x] Diagnóstico del bug de guardado de texto.
+- [ ] Corregir persistencia de texto manual en `Guardar cambios`.
+- [ ] Implementar drag de elemento seleccionado con snap a grilla.
+- [ ] Persistir `position/left/top` en estilos dinámicos.
+- [ ] Añadir controles UI para mover + tamaño de grilla.
+- [ ] Verificación final por usuario (sin testing automático, por instrucción).
