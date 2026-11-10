@@ -6,63 +6,72 @@
         --fin-expense: #ff4d4d;
         --fin-glass: rgba(17, 26, 40, 0.7);
     }
-
+ 
     .fin-wrapper { background: radial-gradient(circle at top left, #122138 0%, var(--fin-bg) 60%); min-height: 100vh; padding: 20px; box-sizing: border-box; border-radius: 12px; position: relative; overflow: hidden; }
     .fin-vault { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; background: rgba(10, 15, 24, 0.85); backdrop-filter: blur(10px); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; transition: opacity 0.4s ease; }
     .fin-panel { background: var(--fin-card); border: 1px solid rgba(0, 210, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-
+ 
     .voice-btn-container { display: flex; justify-content: center; margin: 25px 0; }
-    .btn-voice { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: white; border: none; border-radius: 50px; padding: 15px 30px; font-size: 1.1em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3); transition: all 0.3s ease; }
+    .btn-voice { background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); color: #0a0f18; border: none; border-radius: 50px; padding: 15px 30px; font-size: 1.1em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3); transition: all 0.3s ease; }
     .btn-voice:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5); }
     .btn-voice.listening { background: linear-gradient(135deg, #ff4d4d 0%, #c0392b 100%); animation: pulse-voice 1.5s infinite; box-shadow: 0 0 20px rgba(255, 77, 77, 0.6); }
     @keyframes pulse-voice { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-
+ 
     .chart-toolbar { display: flex; gap: 10px; background: #0d141f; padding: 10px; border-radius: 8px; border: 1px solid #1a273a; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
     .chart-tool { background: transparent; color: #8ba4b5; border: 1px solid #2d3446; padding: 6px 12px; border-radius: 4px; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
     .chart-tool:hover { background: rgba(0, 210, 255, 0.1); color: var(--fin-trust); border-color: var(--fin-trust); }
     .chart-tool select { background: transparent; color: inherit; border: none; outline: none; cursor: pointer; }
-
-    /* ==========================================================================
-       NUEVO: ESTILOS DEL FILTRO INTELIGENTE (Acordeón)
-       ========================================================================== */
+ 
     .smart-filter-btn { background: rgba(0, 210, 255, 0.1); color: var(--fin-trust); border: 1px solid var(--fin-trust); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
     .smart-filter-btn:hover { background: var(--fin-trust); color: #000; }
-    
+ 
     .sf-panel { background: #111a28; border: 1px solid var(--fin-trust); border-radius: 8px; position: absolute; z-index: 100; width: calc(100% - 40px); max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-top: 10px; display: none; flex-direction: column; max-height: 400px; overflow-y: auto; }
     .sf-panel.active { display: flex; }
-    
+ 
     .sf-month-group { border-bottom: 1px solid #2d3446; }
     .sf-month-group:last-child { border-bottom: none; }
-    
+ 
     .sf-month-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #162235; transition: 0.2s; }
     .sf-month-header:hover { background: #1c2b42; }
     .sf-month-header span { color: white; font-weight: bold; font-size: 1.1em; display: flex; align-items: center; gap: 8px; }
-    .sf-month-header span::after { content: '▼'; font-size: 0.6em; color: #8ba4b5; transition: 0.3s; }
+    .sf-month-header span::after { content: 'â–¼'; font-size: 0.6em; color: #8ba4b5; transition: 0.3s; }
     .sf-month-header.open span::after { transform: rotate(180deg); }
-    
+ 
     .sf-apply-month-btn { background: #2d3446; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; cursor: pointer; transition: 0.2s; }
     .sf-apply-month-btn:hover { background: var(--fin-trust); color: black; }
-
+ 
     .sf-weeks-container { display: none; background: #0d141f; padding: 5px 0; }
     .sf-weeks-container.open { display: block; }
-    
+ 
     .sf-week-item { padding: 12px 20px 12px 35px; color: #8ba4b5; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; border-bottom: 1px dashed #1a273a; }
     .sf-week-item:last-child { border-bottom: none; }
     .sf-week-item:hover { background: rgba(0, 210, 255, 0.05); color: var(--fin-trust); padding-left: 40px; }
-
+ 
     .active-filter-badge { background: rgba(0, 210, 255, 0.2); color: var(--fin-trust); padding: 5px 12px; border-radius: 20px; font-size: 0.85em; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--fin-trust); margin-top: 10px; }
     .active-filter-badge button { background: transparent; border: none; color: var(--fin-trust); cursor: pointer; font-weight: bold; padding: 0 5px; }
-</style>
+ 
+    .responsive-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
 
+    @media (max-width: 600px) {
+        .fin-wrapper { padding: 10px; }
+        .fin-panel { padding: 15px; }
+        .rate-card { width: 100%; }
+    }
+</style>
+ 
 <div class="fin-wrapper" id="view-finanzas">
     
     <div id="vaultOverlay" class="fin-vault">
         <div style="text-align: center; background: var(--fin-card); padding: 40px; border-radius: 16px; border: 1px solid rgba(0,210,255,0.2);">
             <div style="font-size: 3em; margin-bottom: 10px;">🛡️</div>
             <h1 style="color: white; margin-top: 0;">Bóveda Financiera</h1>
-            <p style="color: #8ba4b5; margin-bottom: 20px;">Ingresa tu PIN Maestro para desencriptar tus datos.</p>
+            <p style="color: #8ba4b5; margin-bottom: 20px;">Ingresa tu PIN para desbloquear tus datos.</p>
             <div style="display: flex; justify-content: center; gap: 10px;">
-                <input type="tel" id="pinInput" placeholder="****" style="-webkit-text-security: disc; text-align: center; width: 120px; font-size: 1.5em; letter-spacing: 5px; background: #0a0f18; border: 1px solid #2d3446; color: white; border-radius: 8px;" maxlength="10" autocomplete="off" onkeypress="if(event.key === 'Enter') unlockVault()">
+                <input type="tel" id="pinInput" placeholder="****" style="-webkit-text-security: disc; text-align: center; width: 120px; font-size: 1.5em; letter-spacing: 5px; background: #0a0f18; border: 1px solid #2d3446; color: white; border-radius: 8px;" aria-label="PIN de la bóveda" maxlength="10" autocomplete="off" onkeypress="if(event.key === 'Enter') unlockVault()">
                 <button onclick="unlockVault()" style="background: var(--fin-trust); color: #000; font-weight: bold; border-radius: 8px;">Entrar</button>
             </div>
         </div>
@@ -77,12 +86,12 @@
                 <button type="button" onclick="changePin()" style="background: #1a273a; color: #8ba4b5; border: 1px solid #2d3446; font-size: 0.8em; padding: 6px 12px; border-radius: 6px;">🔑 Cambiar PIN</button>
             </div>
         </div>
-
+        
         <div id="walletsContainer" class="dashboard" style="margin-bottom: 20px;"></div>
-
+        
         <div class="fin-panel" style="border-color: rgba(0, 210, 255, 0.3); background: linear-gradient(180deg, rgba(0, 210, 255, 0.05) 0%, rgba(10, 15, 24, 0) 100%);">
         <h3 style="margin-top: 0; color: white; text-align: center;">Registro Inteligente</h3>
-<button type="button" onclick="toggleBulkInput()" id="btnBulkToggle" style="background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid #ff4d4d; font-size: 0.8em; padding: 6px 12px; border-radius: 6px; font-weight: bold; margin-top: 10px;">📥 Entrada Masiva</button>
+        <button type="button" onclick="toggleBulkInput()" id="btnBulkToggle" style="background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid #ff4d4d; font-size: 0.8em; padding: 6px 12px; border-radius: 6px; font-weight: bold; margin-top: 10px;">📥 Entrada Masiva</button>
         
         <!-- Bulk Input Panel (initially hidden) -->
         <div id="bulkPanel" style="display: none; margin-top: 15px; padding: 15px; background: #111a28; border: 1px solid #ff4d4d; border-radius: 8px;">
@@ -112,14 +121,14 @@
             
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; border-top: 1px solid #1a273a; padding-top: 20px;">
                 <input type="text" id="expDesc" placeholder="Detalle del gasto manual..." style="flex-grow: 1; min-width: 200px;">
-                <input type="number" id="expAmount" placeholder="Monto" step="0.01" min="0.01" style="width: 100px;">
+                <input type="number" id="expAmount" placeholder="Monto" step="0.01" min="0.01" inputmode="decimal" style="width: 100px;">
                 <select id="expAccount" style="width: 150px;"></select>
                 <button onclick="addExpense()" style="background: var(--fin-expense); color: white; font-weight: bold;">Descontar</button>
             </div>
             
-
+            
         </div>
-
+        
         <div class="fin-panel">
             <h3 style="margin-top: 0; display: flex; justify-content: space-between; align-items: center;">
                 Análisis de Gastos
@@ -159,20 +168,20 @@
                     ⏳ Periodos...
                 </button>
             </div>
-
+            
             <div id="smartFilterPanel" class="sf-panel"></div>
-
+            
             <div id="activeSmartFilterLabel" style="display: none;">
                 <span class="active-filter-badge">
                     <span id="sfLabelText">Mes de Enero</span>
                     <button onclick="clearSmartFilter()">✖</button>
                 </span>
             </div>
-
+            
             <ul id="expenseList" style="margin-top: 15px;"></ul>
         </div>
     </div>
-
+    
     <div id="walletModal" class="vault-hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
         <div class="fin-panel" style="width: 350px; max-width: 90%;">
             <h2 style="color: var(--fin-trust); margin-top: 0; text-align: center;">Nueva Cartera</h2>
@@ -186,7 +195,7 @@
             <button onclick="closeWalletModal()" style="width: 100%; background: transparent; color: #8ba4b5; border: 1px solid #2d3446;">Cancelar</button>
         </div>
     </div>
-
+    
     <div id="voiceConfirmModal" class="vault-hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
         <div class="fin-panel" style="width: 350px; max-width: 90%; text-align: center;">
             <div style="font-size: 3em; margin-bottom: 10px;">🤖</div>
@@ -206,4 +215,20 @@
             </div>
         </div>
     </div>
+    
+    <div id="pinChangeModal" class="vault-hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div class="fin-panel" style="width: 350px; max-width: 90%; text-align: center;">
+            <h2 style="color: white; margin-top: 0;">🔑 Cambiar PIN</h2>
+            <label class="sr-only" for="pinCurrent">PIN actual</label>
+            <input type="password" id="pinCurrent" placeholder="PIN actual (omitir si es la primera vez)" inputmode="numeric" style="width: 100%; box-sizing: border-box; margin-bottom: 10px; background: #0d141f; border: 1px solid #2d3446; color: white; border-radius: 6px; padding: 10px;">
+            <label class="sr-only" for="pinNew">Nuevo PIN</label>
+            <input type="password" id="pinNew" placeholder="Nuevo PIN (4-10 dígitos)" inputmode="numeric" maxlength="10" style="width: 100%; box-sizing: border-box; margin-bottom: 15px; background: #0d141f; border: 1px solid #2d3446; color: white; border-radius: 6px; padding: 10px;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="confirmPinChange()" style="flex: 1; background: var(--fin-trust); color: black; font-weight: bold;">Guardar PIN</button>
+                <button onclick="closePinChange()" style="flex: 1; background: transparent; color: #8ba4b5; border: 1px solid #2d3446;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    
+    
 </div>

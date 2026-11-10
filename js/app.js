@@ -1,6 +1,7 @@
 import { auth } from './firebase-config.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { state, initCloudData, clearLocalData, unsubSnapshot, saveDataToCloud, recordActivity } from './store.js';
+import { toast } from './feedback.js';
 
 const loadedModules = new Set();
 const loadedCSS = new Set(); 
@@ -9,9 +10,13 @@ let currentTab = null;
 // --- SISTEMA DE PESTAÑAS ---
 window.switchTab = async (tabName) => {
     currentTab = tabName;
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    document.body.setAttribute('data-theme', tabName);
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('role') === 'tab') btn.setAttribute('aria-selected', 'false');
+    });
+    const tabBtn = document.getElementById(`tab-${tabName}`);
+    tabBtn.classList.add('active');
+    if (tabBtn.getAttribute('role') === 'tab') tabBtn.setAttribute('aria-selected', 'true');
     
     const container = document.getElementById('tab-content-container');
     container.innerHTML = '<div style="text-align:center; padding: 40px; color: #aaa;">Cargando interfaz...</div>';
@@ -34,7 +39,7 @@ window.switchTab = async (tabName) => {
             window.dispatchEvent(new Event('stateChanged'));
         }
     } catch (e) {
-        container.innerHTML = `<div style="color:var(--warning)">Error cargando el módulo ${tabName}.</div>`;
+        container.innerHTML = `<div style="color:var(--warning); padding:20px;">Error cargando el módulo ${tabName}. <button onclick="switchTab('${tabName}')" style="margin-left:10px;">Reintentar</button></div>`;
     }
 };
 
@@ -66,7 +71,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('mainApp').style.display = 'none'; 
         if (unsubSnapshot) unsubSnapshot(); 
         clearLocalData(); 
-        document.body.removeAttribute('data-theme'); 
     } 
 });
 
@@ -94,17 +98,27 @@ window.addEventListener('online', async () => {
     }
 });
 
+const AUTH_ERRORS = {
+    'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+    'auth/user-not-found': 'No existe una cuenta con este correo.',
+    'auth/wrong-password': 'Contraseña incorrecta.',
+    'auth/email-already-in-use': 'Este correo ya está registrado.',
+    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.',
+    'auth/invalid-email': 'El correo no es válido.'
+};
+const authError = (err) => AUTH_ERRORS[err?.code] || 'No se pudo completar la operación. Inténtalo de nuevo.';
 window.appLogin = () => { 
     const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value; 
-    if(!e || !p) return alert("Campos vacíos"); 
-    signInWithEmailAndPassword(auth, e, p).catch(err => alert("Error: " + err.message)); 
+    if(!e || !p) return toast('Escribe tu correo y contraseña.'); 
+    signInWithEmailAndPassword(auth, e, p).catch(err => toast(authError(err))); 
 };
 window.appRegister = () => { 
     const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value; 
-    if(p.length < 6) return alert("Min 6 chars"); 
-    createUserWithEmailAndPassword(auth, e, p).then(() => alert("Cuenta creada.")).catch(err => alert(err.message)); 
+    if(p.length < 6) return toast('La contraseña debe tener al menos 6 caracteres.'); 
+    createUserWithEmailAndPassword(auth, e, p).then(() => toast('Cuenta creada. Ya puedes empezar.')).catch(err => toast(authError(err))); 
 };
-window.appResetPassword = () => { const e = prompt("Correo:"); if(e) sendPasswordResetEmail(auth, e).then(() => alert("Enviado!")).catch(err=>alert(err.message)); };
+window.appResetPassword = () => { const e = prompt("Correo:"); if(e) sendPasswordResetEmail(auth, e).then(() => toast("Enviado. Revisa tu bandeja de correo.")).catch(err=>toast(authError(err))); };
 window.appLogout = () => { if(confirm("¿Cerrar sesión?")) signOut(auth); };
 
 // --- PALETA DE COMANDOS ---
@@ -135,12 +149,14 @@ setInterval(() => {
     
     // 1. Revisar Recordatorios (De la pestaña Recordatorios)
     state.reminders?.forEach((rem) => {
-        if (!rem.completed && !rem.notified && now >= new Date(rem.datetime)) {
+        const snoozed = rem.snoozeUntil ? now < new Date(rem.snoozeUntil) : false;
+        if (!rem.completed && !snoozed && now >= new Date(rem.datetime)) {
             // Marcamos como notificado
             rem.notified = true;
             saveDataToCloud(); 
 
             if(window.triggerSystemAlarm) {
+                window.__activeAlarmTarget = rem;
                 window.triggerSystemAlarm(
                     "Recordatorio", 
                     rem.text, 
@@ -173,6 +189,7 @@ setInterval(() => {
             saveDataToCloud();
 
             if(window.triggerSystemAlarm) {
+                window.__activeAlarmTarget = rec;
                 window.triggerSystemAlarm(
                     "Hábito / Rutina", 
                     rec.text, 

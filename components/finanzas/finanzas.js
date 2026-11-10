@@ -1,4 +1,7 @@
 import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
+import { esc } from '../../js/escape.js';
+import { hashPin, verifyPin } from '../../js/pin.js';
+import { toast } from '../../js/feedback.js';
 
 // --- CORE ---
 window.rateBcvVal = window.rateBcvVal || 0; 
@@ -8,9 +11,10 @@ let financeChartInstance = null;
 let isUnlocked = false;
 window.currentSmartFilter = null; // Guarda el estado del filtro de fechas avanzado
 
-window.unlockVault = () => { 
+window.unlockVault = async () => { 
     const input = document.getElementById('pinInput').value; 
-    if (input === state.masterPin) { 
+    const ok = state.pinHash ? await verifyPin(input, state.pinHash) : false; 
+    if (ok) { 
         document.getElementById('vaultOverlay').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('vaultOverlay').classList.add('vault-hidden'); 
@@ -21,15 +25,29 @@ window.unlockVault = () => {
         init();
         if(window.rateBcvVal === 0) window.fetchExchangeRates(true);
     } else { 
-        alert("PIN Incorrecto."); 
+        toast('PIN Incorrecto.'); 
         document.getElementById('pinInput').value = ''; 
         if(navigator.vibrate) navigator.vibrate(200); 
     } 
 };
 
 window.changePin = () => {
-    const newPin = prompt("🔑 Ingresa tu nuevo PIN de seguridad:");
-    if(newPin && newPin.trim().length > 0) { state.masterPin = newPin.trim(); saveDataToCloud(); alert("✅ PIN actualizado."); }
+    document.getElementById('pinCurrent').value = '';
+    document.getElementById('pinNew').value = '';
+    document.getElementById('pinChangeModal').classList.remove('vault-hidden');
+};
+window.closePinChange = () => { document.getElementById('pinChangeModal').classList.add('vault-hidden'); };
+window.confirmPinChange = async () => {
+    const current = document.getElementById('pinCurrent').value;
+    const next = document.getElementById('pinNew').value.trim();
+    const isFirstSetup = !state.pinHash;
+    if (!isFirstSetup && (!current || !(await verifyPin(current, state.pinHash)))) { toast('PIN actual incorrecto.'); return; }
+    if (!/^\d{4,10}$/.test(next)) { toast('PIN inválido: usa 4 a 10 dígitos.'); return; }
+    state.pinHash = await hashPin(next);
+    delete state.masterPin;
+    saveDataToCloud();
+    closePinChange();
+    toast('✅ PIN actualizado.');
 };
 
 // --- WALLET MANAGER ---
@@ -41,7 +59,7 @@ window.closeWalletModal = () => { document.getElementById('walletModal').classLi
 
 window.saveNewWallet = () => {
     const name = document.getElementById('newWalletName').value.trim(), symbol = document.getElementById('newWalletSymbol').value.trim(), color = document.getElementById('newWalletColor').value;
-    if(!name || !symbol) return alert("Llena el nombre y el símbolo.");
+    if(!name || !symbol) return toast("Llena el nombre y el símbolo.");
     const id = name.toLowerCase().replace(/[^a-z0-9]/g, '') + Date.now().toString().slice(-4);
     state.wallets.push({ id, name, symbol, color });
     state.balances[id] = 0; 
@@ -49,7 +67,7 @@ window.saveNewWallet = () => {
 };
 
 window.deleteWallet = (id) => {
-    if(id === 'bs') return alert("⚠️ La cartera base de Bolívares no puede ser eliminada.");
+    if(id === 'bs') return toast("⚠️ La cartera base de Bolívares no puede ser eliminada.");
     if(confirm("¿Seguro? Los gastos mantendrán su historial.")) {
         state.wallets = state.wallets.filter(w => w.id !== id);
         saveDataToCloud(); window.renderWallets(); window.renderExpenses(); 
@@ -123,7 +141,7 @@ function processVoiceNLP(text) {
     text = text.toLowerCase();
     let amountMatch = text.match(/\d+([.,]\d+)?/);
     let amount = amountMatch ? parseFloat(amountMatch[0].replace(',', '.')) : 0;
-    if(amount <= 0) return alert("No pude identificar un monto válido.");
+    if(amount <= 0) return toast("No pude identificar un monto válido.");
 
     let matchedWalletId = null, matchedWalletName = '';
     for (let w of state.wallets) { if (text.includes(w.name.toLowerCase())) { matchedWalletId = w.id; matchedWalletName = w.name; break; } }
@@ -295,7 +313,7 @@ window.renderExpenses = () => {
         } 
         
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
-        contentDiv.innerHTML = `<strong style="color:white;">${exp.desc}</strong><br><span class="task-date" style="color:#8ba4b5;">📅 ${exp.date} | 🏦 ${walletInfo.name.toUpperCase()}</span>${equivHtml}`; 
+        contentDiv.innerHTML = `<strong style="color:white;">${esc(exp.desc)}</strong><br><span class="task-date" style="color:#8ba4b5;">📅 ${exp.date} | 🏦 ${esc(walletInfo.name.toUpperCase())}</span>${equivHtml}`; 
         
         const amountSpan = document.createElement('span'); amountSpan.className = 'expense-amount'; 
         amountSpan.innerText = `-${walletInfo.symbol}${parseFloat(exp.amount).toFixed(2)}`; amountSpan.style.color = '#ff4d4d';
@@ -386,7 +404,7 @@ function executeExpense(desc, amount, account) {
 
 window.addExpense = () => { 
     const desc = document.getElementById('expDesc').value, amount = document.getElementById('expAmount').value, account = document.getElementById('expAccount').value; 
-    if (desc.trim() === '' || amount === '' || parseFloat(amount) <= 0 || account === '') return alert("Llena todos los campos."); 
+    if (desc.trim() === '' || amount === '' || parseFloat(amount) <= 0 || account === '') return toast("Llena todos los campos."); 
     executeExpense(desc, amount, account);
     document.getElementById('expDesc').value = ''; document.getElementById('expAmount').value = ''; document.getElementById('expAccount').selectedIndex = 0; 
 };
@@ -410,7 +428,7 @@ window.fetchExchangeRates = async (isAutoCall = false) => {
     const isManualClick = (isAutoCall !== true); const btn = document.getElementById('btnSyncRates'); if(btn) btn.innerText = '📡 Sync...'; 
     try { 
         let bcvVal = 0, binanceVal = 0, euroVal = 0; 
-        const fetchWithFallback = async (url) => { try { let res = await fetch(url); if (res.ok) return await res.json(); } catch(e) {} return null; }; 
+        const fetchWithFallback = async (url) => { try { let res = await fetch(url, { signal: AbortSignal.timeout(8000) }); if (res.ok) return await res.json(); } catch(e) {} return null; }; 
         const dataBcv = await fetchWithFallback('https://ve.dolarapi.com/v1/dolares/oficial'); if (dataBcv) bcvVal = dataBcv.promedio || dataBcv.venta || 0; 
         const dataEur = await fetchWithFallback('https://ve.dolarapi.com/v1/euros/oficial'); if (dataEur) euroVal = dataEur.promedio || dataEur.venta || 0; 
         
@@ -441,10 +459,11 @@ window.fetchExchangeRates = async (isAutoCall = false) => {
 };
 
 window.exportToCSV = () => { 
-    if(state.expenses.length === 0) return alert("Vacio."); 
+    if(state.expenses.length === 0) return toast("Vacío."); 
     let csvContent = "Fecha,Descripcion,Metodo,Monto (Original),Equiv USD (BCV),Equiv USDT (Binance),Equiv EUR\n"; 
     const sorted = [...state.expenses].sort((a,b) => parseVeDate(a.date) - parseVeDate(b.date)); 
-    sorted.forEach(e => { csvContent += `"${e.date}","${e.desc}","${e.account}","${e.amount}","${(e.eqUsd||0).toFixed(2)}","${(e.eqUsdt||0).toFixed(2)}","${(e.eqEur||0).toFixed(2)}"\n`; }); 
+    const csvSafe = (v) => /^[=+\-@\t\r]/.test(String(v)) ? "'" + v : v; // F26: anti inyección de fórmulas
+    sorted.forEach(e => { csvContent += `"${e.date}","${csvSafe(e.desc)}","${e.account}","${e.amount}","${(e.eqUsd||0).toFixed(2)}","${(e.eqUsdt||0).toFixed(2)}","${(e.eqEur||0).toFixed(2)}"\n`; }); 
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); 
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Reporte_Finanzas.csv"; link.click(); 
 };
@@ -675,9 +694,9 @@ window.executeBulkAdd = (walletId) => {
     console.log(`executeBulkAdd: Cleared ${parsedBulkRecords.length} records, buttons enabled`);
     
     if(totalAdded > 0) {
-        alert(`✅ Se agregaron ${totalAdded} gasto(s) correctamente.`);
+        toast(`✅ Se agregaron ${totalAdded} gasto(s) correctamente.`);
     } else {
-        alert('⚠️ Algunos gastos no se pudieron agregar.');
+        toast('⚠️ Algunos gastos no se pudieron agregar.');
     }
     
     // Keep panel open for more entries

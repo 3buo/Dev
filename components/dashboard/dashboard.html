@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Taskify</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="components/dashboard/dashboard.css">
+</head>
+<body>
+    <div id="mainApp">
+        <nav class="dashboard-nav">
+            <h1 class="dashboard-title">Panel de Control</h1>
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <span class="stat-label">Tareas Pendientes</span>
+                    <span id="stat-tasks" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Recordatorios</span>
+                    <span id="stat-reminders" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Saldo Total</span>
+                    <span id="stat-balance" class="stat-value">0</span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-grid">
+            <section class="dashboard-card">
+                <h3>Resumen de Finanzas</h3>
+                <div class="finance-summary">
+                    <div class="finance-item">
+                        <span class="item-label">Facebank</span>
+                        <span id="dash-facebank" class="item-value">0</span>
+                    </div>
+                    <div class="finance-item">
+                        <span class="item-label">Binance</span>
+                        <span id="dash-binance" class="item-value">0</span>
+                    </div>
+                    <div class="finance-item">
+                        <span class="item-label">BS</span>
+                        <span id="dash-bs" class="item-value">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard-card">
+                <h3>Actividad Reciente</h3>
+                <ul id="dash-activity-list" class="activity-list">
+                    <!-- Se llena dinámicamente -->
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <script type="module" src="components/dashboard/dashboard.js"></script>
+</body>
+</html>

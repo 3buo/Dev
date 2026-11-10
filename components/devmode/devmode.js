@@ -1,4 +1,5 @@
 import { ensureDevModeShadowRoot } from './devmode-shadow.js';
+import { auth } from '../../js/firebase-config.js';
 import {
   injectDevNoCodeCss,
   bindGlobalButtonSounds,
@@ -6,7 +7,8 @@ import {
   ensureDevSoundPanel
 } from './devmode-sounds-ui.js';
 
-const DEV_CREDS = { user: 'admin_neo', pass: 'dev_77Xq' };
+// Sin credenciales en el bundle. DevMode se habilita solo por allowlist o claim de servidor.
+const DEV_ALLOWED_EMAILS = []; // vacío = deshabilitado en producción
 const KEY_STYLES = 'dev_dynamic_styles_v2';
 const KEY_CONTENT = 'dev_dynamic_content_v2';
 const KEY_PANEL_POS = 'dev_panel_position_v2';
@@ -411,6 +413,7 @@ function closeDevPanel() {
   isDevModeActive = false;
   isInspectorActive = false;
   closeInlineEdit();
+  if (mutationObserver) { mutationObserver.disconnect(); mutationObserver = null; }
   window.__devModeIsAuthenticated = false;
 
   const panel = rootEl('devEditorPanel');
@@ -422,12 +425,10 @@ function closeDevPanel() {
 }
 
 function authenticateDev() {
-  const user = rootEl('devUser');
-  const pass = rootEl('devPass');
-  if (!(user instanceof HTMLInputElement) || !(pass instanceof HTMLInputElement)) return;
-
-  if (user.value !== DEV_CREDS.user || pass.value !== DEV_CREDS.pass) {
-    showToast('❌ Credenciales inválidas');
+  const current = auth?.currentUser;
+  if (!current) { showToast('❌ Requiere sesión'); return; }
+  if (!DEV_ALLOWED_EMAILS.includes(current.email)) {
+    showToast('❌ Acceso denegado (sin autorización dev)');
     return;
   }
 
@@ -443,6 +444,7 @@ function authenticateDev() {
   const btn = rootEl('btnInspectorToggle');
   if (btn instanceof HTMLButtonElement) btn.textContent = 'Inspeccionar: ON';
 
+  startMutationObserver();
   showToast('✅ DevMode autenticado');
 }
 
@@ -704,7 +706,6 @@ export function initDevMode() {
   bindUIActions();
   setupDragPanel();
   bindGlobalEvents();
-  startMutationObserver();
 
   const panel = rootEl('devEditorPanel');
   if (panel instanceof HTMLElement) panel.style.display = 'none';

@@ -7,7 +7,7 @@
 body[data-theme="actividades"] {
     background-color: #303135; /* Un fondo súper oscuro casi negro */
     /* Un degradado radial azul oscuro en la parte superior para dar profundidad */
-    background-image: radial-gradient(circle at top center, #919191 15%, #ffffff 60%);
+    background-image: radial-gradient(circle at top center, #1e2733 15%, #303135 60%);
     background-attachment: fixed; /* Evita que el gradiente se mueva al hacer scroll */
 }
 
@@ -72,7 +72,7 @@ body[data-theme="actividades"] {
 /* 6. BOTONES GLOBALES DEL MÓDULO */
 #view-actividades button {
     background-color: #00a8ff;
-    color: #fff;
+    color: #0a0f18;
     text-transform: uppercase;
     letter-spacing: 1px;
     border-radius: 6px;

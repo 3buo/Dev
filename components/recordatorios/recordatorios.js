@@ -1,11 +1,13 @@
 import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
+import { esc } from '../../js/escape.js';
+import { toast } from '../../js/feedback.js';
 
 window.addReminder = () => { 
     const input = document.getElementById('remInput');
     const datetimeInput = document.getElementById('remDatetime');
     const snoozeInput = document.getElementById('snoozeInput'); 
     
-    if (input.value.trim() === '' || datetimeInput.value === '') return alert('Escribe y selecciona una fecha.'); 
+    if (input.value.trim() === '' || datetimeInput.value === '') return toast('Escribe y selecciona una fecha.'); 
     
     state.reminders.push({ 
         text: input.value, 
@@ -47,14 +49,14 @@ window.renderReminders = () => {
             window.renderReminders(); 
         }; 
         
-        const dateString = new Date(rem.datetime).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); 
+        const dateString = new Date(rem.datetime).toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }); 
         const contentDiv = document.createElement('div'); 
         contentDiv.className = 'task-content'; 
-        contentDiv.innerHTML = `<strong>${rem.text}</strong><br><span class="task-date">⏰ ${dateString}</span>`; 
+        contentDiv.innerHTML = `<strong>${esc(rem.text)}</strong><br><span class="task-date">⏰ ${dateString}</span>`; 
         
         const badge = document.createElement('span'); 
         badge.className = 'badge snooze-badge'; 
-        badge.innerText = `Snooze: ${rem.snoozeMins}m`; 
+        badge.innerText = `Posponer: ${rem.snoozeMins} min`; 
         
         const deleteBtn = document.createElement('button'); 
         deleteBtn.innerText = 'X'; 

@@ -1,6 +1,7 @@
 // ==========================================================================
 // MÓDULO DE ALARMAS Y NOTIFICACIONES (INDEPENDIENTE)
 // ==========================================================================
+import { saveDataToCloud } from '../../js/store.js';
 
 const SOUNDS = {
     digital: 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg',
@@ -88,14 +89,11 @@ window.completeSystemAlarm = () => {
 
 window.snoozeSystemAlarm = () => {
     stopAudioAndClose();
-    const savedTitle = document.getElementById('sysAlarmTitle').innerText;
-    const savedDesc = document.getElementById('sysAlarmDesc').innerText;
-    const savedCallback = activeCallback;
-    
-    // Re-disparar en 5 minutos
-    setTimeout(() => {
-        window.triggerSystemAlarm(`(Pospuesto) ${savedTitle}`, savedDesc, savedCallback);
-    }, 300000); 
+    const target = window.__activeAlarmTarget;
+    if (target) {
+        target.snoozeUntil = Date.now() + 300000; // persistido con el estado (F16)
+        saveDataToCloud();
+    }
 };
 
 function stopAudioAndClose() {

@@ -186,6 +186,11 @@ function ensureBackupPanel() {
   };
 
   panel.querySelector('#btnImport').onclick = () => {
+    if (!window.__devModeIsAuthenticated) {
+      panel.querySelector('#backupErr').textContent = 'Importar requiere modo developer.';
+      panel.querySelector('#backupErr').style.display = 'block';
+      return;
+    }
     panel.querySelector('#backupImportFile').click();
   };
 
@@ -308,12 +313,9 @@ async function refreshBackupList() {
 }
 
 export function initBackupUI() {
-  // DEV-MODE BLINDING: only activate once developer mode is authenticated.
-  // (Avoid exposing backup controls to normal users.)
-  if (!window.__devModeIsAuthenticated) {
-    // Para depuración: aseguramos que el módulo sí cargó
-    // eslint-disable-next-line no-console
-    console.log('[backup-ui] devmode not authenticated yet; UI hidden');
+  // F10: export/restauración disponible para cualquier usuario autenticado (GDPR Art.20).
+  if (!state.currentUid) {
+    console.log('[backup-ui] sin sesión; UI oculta');
     return;
   }
 

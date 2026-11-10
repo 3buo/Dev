@@ -1,4 +1,6 @@
 import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
+import { esc } from '../../js/escape.js';
+import { toast } from '../../js/feedback.js';
 
 const ensureChecklistDefaults = () => {
     if (!Array.isArray(state.checklists)) state.checklists = [];
@@ -67,7 +69,7 @@ const getNotCompletedLists = () => {
 
 window.createChecklist = () => {
     const title = document.getElementById('clTitle').value;
-    if (!title) return alert('Escribe un título para la lista');
+    if (!title) return toast('Escribe un título para la lista');
 
     ensureChecklistDefaults();
 
@@ -98,6 +100,9 @@ window.addClItem = (clIndex) => {
     recordActivity();
     saveDataToCloud();
     window.renderChecklists();
+    // F30: preservar el foco tras el re-render completo
+    const refocused = document.getElementById(`clItemInput-${clIndex}`);
+    if (refocused) refocused.focus();
 };
 
 window.toggleClItem = (clIndex, itemIndex) => {
@@ -154,7 +159,7 @@ window.renderEditClItems = () => {
 
         div.innerHTML = `
             <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleEditClItem(${i})" style="transform: scale(1.3); margin-right: 5px;">
-            <input type="text" value="${item.text}" oninput="updateEditClItemText(${i}, this.value)" style="flex-grow: 1; padding: 8px; background: #2c2c2c; border: 1px solid #444; color: white; border-radius: 4px;">
+            <input type="text" value="${esc(item.text)}" oninput="updateEditClItemText(${i}, this.value)" style="flex-grow: 1; padding: 8px; background: #2c2c2c; border: 1px solid #444; color: white; border-radius: 4px;">
             <button onclick="removeEditClItem(${i})" style="background: #cf6679; padding: 8px 12px; font-weight: bold; border-radius: 4px;">X</button>
         `;
 
@@ -192,7 +197,7 @@ window.saveEditChecklist = () => {
 
     const clIndex = Number(document.getElementById('editClIndex').value);
     const newTitle = document.getElementById('editClTitle').value.trim();
-    if (!newTitle) return alert('La lista debe tener un título.');
+    if (!newTitle) return toast('La lista debe tener un título.');
 
     const cleanItems = currentEditItems.filter((item) => item.text.trim() !== '');
 
@@ -215,7 +220,7 @@ const renderChecklistCard = ({ cl, clIndex }) => {
             (item, i) => `
         <div class="checklist-item" style="flex-direction: row; align-items: center; background: #222; margin-bottom: 5px; padding: 10px; border-radius: 6px;">
             <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleClItem(${clIndex}, ${i})" style="transform: scale(1.3); margin-right: 10px;">
-            <span style="${item.checked ? 'text-decoration: line-through; color: #666;' : 'color: white;'} flex-grow: 1; font-size: 1.1em;">${item.text}</span>
+            <span style="${item.checked ? 'text-decoration: line-through; color: #666;' : 'color: white;'} flex-grow: 1; font-size: 1.1em;">${esc(item.text)}</span>
         </div>
     `,
         )
@@ -304,7 +309,7 @@ window.__openClassifyMenu = (clIndex, ev) => {
         <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
             <div>
                 <div style="color: var(--secondary); font-weight: bold;">Clasificar</div>
-                <div style="color:#ddd; font-size:0.95em; margin-top:6px;">${cl.title}</div>
+                <div style="color:#ddd; font-size:0.95em; margin-top:6px;">${esc(cl.title)}</div>
             </div>
             <button id="clClassifyClose" style="background: transparent; color:#aaa; border:1px solid #444; padding:6px 10px; border-radius:8px; cursor:pointer;">✕</button>
         </div>
@@ -315,7 +320,7 @@ window.__openClassifyMenu = (clIndex, ev) => {
             <button onclick="window.__classifyChecklist(${clIndex}, null)" style="background:${currentCatId===null ? 'rgba(3, 218, 198, 0.25)' : '#2b2b2b'}; color: var(--secondary); border: 1px solid var(--secondary); padding:10px; border-radius:10px; cursor:pointer; text-align:left;">⬚ Sin clasificar</button>
             ${cats.map((c) => `
                 <button onclick="window.__classifyChecklist(${clIndex}, '${c.id}')" style="background:${currentCatId===c.id ? 'rgba(3, 218, 198, 0.25)' : '#2b2b2b'}; color: var(--secondary); border: 1px solid var(--secondary); padding:10px; border-radius:10px; cursor:pointer; text-align:left;">
-                    🗂️ ${c.name}
+                    🗂️ ${esc(c.name)}
                 </button>
             `).join('')}
         </div>
@@ -363,7 +368,7 @@ window.__createChecklistCategoryFromMenu = (clIndex) => {
     const name = input?.value;
 
     if (!name || !String(name).trim()) {
-        alert('Escribe un nombre para la clasificación');
+        toast('Escribe un nombre para la clasificación');
         return;
     }
 
@@ -371,7 +376,7 @@ window.__createChecklistCategoryFromMenu = (clIndex) => {
         const newId = createCategory(name);
         window.__classifyChecklist(clIndex, newId);
     } catch (e) {
-        alert('No se pudo crear la categoría');
+        toast('No se pudo crear la categoría');
     }
 };
 

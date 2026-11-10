@@ -1,4 +1,6 @@
 import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
+import { esc } from '../../js/escape.js';
+import { toast } from '../../js/feedback.js';
 
 // --- SISTEMA SEMÁNTICO ---
 const semanticTags = [
@@ -35,7 +37,8 @@ window.insertMD = (prefix, suffix, targetId) => {
 
 function parseMarkdown(text) {
     if(!text) return '';
-    let html = text
+    const e = esc(text); // 1) escapar TODO el HTML del usuario, 2) recién entonces aplicar markdown
+    let html = e
         .replace(/```([\s\S]*?)```/g, '<div class="md-code-block">$1</div>')
         .replace(/`([^`]+)`/g, '<span class="md-code-inline">$1</span>')
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -142,8 +145,8 @@ function buildReadOnlyTablesHTML(tablesArray) {
         matrix.forEach((row, rIndex) => {
             html += `<tr>`;
             row.forEach(cell => {
-                if(rIndex === 0) html += `<th>${cell}</th>`;
-                else html += `<td><div style="padding: 10px; font-size:0.95em;">${cell}</div></td>`;
+                if(rIndex === 0) html += `<th>${esc(cell)}</th>`;
+                else html += `<td><div style="padding: 10px; font-size:0.95em;">${esc(cell)}</div></td>`;
             });
             html += `</tr>`;
         });
@@ -165,7 +168,7 @@ window.saveNote = () => {
     const title = document.getElementById('noteTitle').value.trim();
     const content = document.getElementById('noteContent').value.trim();
     
-    if (!title && !content && tempMainTables.length === 0) return alert('La nota está vacía.');
+    if (!title && !content && tempMainTables.length === 0) return toast('La nota está vacía.');
     if (!state.notes) state.notes = [];
     
     state.notes.unshift({
@@ -200,7 +203,7 @@ window.renderNotes = () => {
         card.onclick = () => openNoteModal(index);
 
         const header = document.createElement('div'); header.className = 'card-header';
-        header.innerHTML = `<div style="font-weight:bold; color:white; font-size:1.1em; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${note.title}</div><div style="font-size:0.75em; color:#8b949e;">${note.date}</div>`;
+        header.innerHTML = `<div style="font-weight:bold; color:white; font-size:1.1em; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(note.title)}</div><div style="font-size:0.75em; color:#8b949e;">${note.date}</div>`;
 
         const body = document.createElement('div'); body.className = 'card-body';
         let htmlContent = parseMarkdown(note.content);
@@ -255,7 +258,7 @@ function handleTimeCapsule() {
     if(Math.random() > 0.6) {
         capsule.style.display = 'block'; const randIndex = Math.floor(Math.random() * (state.notes.length - 2)) + 2;
         let preview = (state.notes[randIndex].content || state.notes[randIndex].title).substring(0, 100).replace(/\n/g, ' ');
-        document.getElementById('tcContent').innerHTML = `<strong>${state.notes[randIndex].title}</strong>: "${preview}..."`;
+        document.getElementById('tcContent').innerHTML = `<strong>${esc(state.notes[randIndex].title)}</strong>: "${esc(preview)}..."`;
         capsule.onclick = () => window.openNoteModal(randIndex);
     } else { capsule.style.display = 'none'; }
 }
@@ -264,7 +267,7 @@ let graphAnimFrame, isGraphActive = false;
 function updateMindGraph() {
     const canvas = document.getElementById('mindGraph'); if (!canvas) return; const ctx = canvas.getContext('2d');
     canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
-    document.getElementById('graphStats').innerText = `${state.notes ? state.notes.length : 0} conexiones neuronales`;
+    document.getElementById('graphStats').innerText = `${state.notes ? state.notes.length : 0} notas en tu red`;
     let particles = [];
     for(let i=0; i < Math.min((state.notes?.length||5), 40); i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, size: Math.random() * 2 + 1 });
     function animate() {

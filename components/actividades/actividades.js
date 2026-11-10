@@ -1,12 +1,15 @@
 import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
+import { esc } from '../../js/escape.js';
+import { toast, saveAndRender } from '../../js/feedback.js';
 
 // --- GESTIÓN DE TAREAS SIMPLES ---
-window.addTask = () => { 
+window.addTask = async () => { 
     const input = document.getElementById('taskInput'), dateInput = document.getElementById('dateInput'), pri = document.getElementById('priorityInput'); 
-    if (input.value.trim() === '') return alert('Escribe la actividad.'); 
+    if (input.value.trim() === '') return toast('Escribe la actividad.'); 
     state.tasks.push({ text: input.value, date: dateInput.value, priority: pri.value, completed: false }); 
     input.value = ''; dateInput.value = ''; 
-    recordActivity(); saveDataToCloud(); window.renderTasks(); 
+    recordActivity(); window.renderTasks(); 
+    await saveAndRender(document.getElementById('btnAddTask'), () => saveDataToCloud()); 
 };
 
 window.renderTasks = () => { 
@@ -25,7 +28,7 @@ window.renderTasks = () => {
         }; 
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
         let completedInfo = (task.completed && task.completedAt) ? `<br><span style="font-size: 0.8em; color: var(--secondary);">✅ Completada: ${task.completedAt}</span>` : '';
-        contentDiv.innerHTML = `<strong>${task.text}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>${completedInfo}`; 
+        contentDiv.innerHTML = `<strong>${esc(task.text)}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>${completedInfo}`; 
         const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; 
         const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
         deleteBtn.onclick = () => { state.tasks.splice(index, 1); saveDataToCloud(); window.renderTasks(); }; 
@@ -46,7 +49,7 @@ window.addRecurringTask = () => {
     const selectedDays = Array.from(dayCheckboxes).map(cb => parseInt(cb.value));
 
     if (input.value.trim() === '' || !timeInput) {
-        return alert('⚠️ Escribe el nombre del hábito y elige una hora.'); 
+        return toast('⚠️ Escribe el nombre del hábito y elige una hora.'); 
     }
     
     let baseDate = new Date();
@@ -66,7 +69,7 @@ window.addRecurringTask = () => {
         notified: false 
     };
 
-    newTask.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
+    newTask.nextTrigger = baseDate.toISOString();
     
     if (baseDate <= new Date()) window.rescheduleRecurring(newTask, false); 
     else window.rescheduleRecurring(newTask, true); 
@@ -114,7 +117,7 @@ window.rescheduleRecurring = (task, isInitialSetup = false) => {
         }
     }
     
-    task.nextTrigger = (new Date(date.getTime() - (date.getTimezoneOffset() * 60000))).toISOString().slice(0, 16); 
+    task.nextTrigger = date.toISOString(); 
     task.notified = false; 
 };
 
@@ -139,7 +142,7 @@ window.saveEditHabit = () => {
     const dateInput = document.getElementById('editHabitDate').value;
     const timeInput = document.getElementById('editHabitTime').value;
 
-    if (!text || !timeInput || !dateInput) return alert("Completa todos los campos");
+    if (!text || !timeInput || !dateInput) return toast("Completa todos los campos");
 
     const task = state.recurringTasks[index];
     task.text = text;
@@ -150,7 +153,7 @@ window.saveEditHabit = () => {
     const [hours, mins] = timeInput.split(':');
     baseDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
 
-    task.nextTrigger = (new Date(baseDate.getTime() - (baseDate.getTimezoneOffset() * 60000))).toISOString().slice(0, 16);
+    task.nextTrigger = baseDate.toISOString();
 
     if (baseDate <= new Date()) window.rescheduleRecurring(task, false); 
     else window.rescheduleRecurring(task, true); 
@@ -178,7 +181,7 @@ window.renderRecurringTasks = () => {
         let patternStr = rec.days ? `Días: ${rec.days.map(d => dayMap[d]).join(', ')}` : `Cada ${rec.interval} ${rec.freq}`;
 
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
-        contentDiv.innerHTML = `<strong>${rec.text}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; 
+        contentDiv.innerHTML = `<strong>${esc(rec.text)}</strong><br><span class="task-date">Próximo: ⏰ ${dateString}</span>`; 
         const badge = document.createElement('span'); badge.className = 'badge rec-badge'; badge.innerText = patternStr; 
         
         const btnBox = document.createElement('div');
@@ -263,7 +266,7 @@ window.renderCalendar = () => {
         if (state.tasks) {
             state.tasks.forEach(t => {
                 if(!t.completed && t.date === currentDateStr) {
-                    dayActivities.push(`📌 ${t.text}`);
+                    dayActivities.push(`📌 ${esc(t.text)}`);
                 }
             });
         }
@@ -271,9 +274,13 @@ window.renderCalendar = () => {
         // Buscar Próximos Hábitos (El primer gatillo visible de cada hábito)
         if (state.recurringTasks) {
             state.recurringTasks.forEach(r => {
-                if(r.nextTrigger && r.nextTrigger.startsWith(currentDateStr)) {
-                    let time = new Date(r.nextTrigger).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
-                    dayActivities.push(`🔄 ${r.text} (${time})`);
+                if (r.nextTrigger) {
+                    const d = new Date(r.nextTrigger);
+                    const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    if (dStr === currentDateStr) {
+                        const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                        dayActivities.push(`🔄 ${esc(r.text)} (${time})`);
+                    }
                 }
             });
         }
