@@ -12,19 +12,23 @@ const SECONDARY_TABS = ['checklists', 'recordatorios'];
 const PRIMARY_TAB_IDS = ['tab-dashboard', 'tab-actividades', 'tab-finanzas', 'tab-notas'];
 
 // --- TEMA CLARO/OSCURO (DESIGN_SPEC.md §2) ---
+const syncThemeButtons = () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+        btn.innerHTML = isLight ? '☀️ Tema: Claro' : '🌙 Tema: Oscuro';
+    });
+};
 window.toggleTheme = () => {
     const root = document.documentElement;
     const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
     root.setAttribute('data-theme', next);
     try { localStorage.setItem('taskify-theme', next); } catch (e) {}
-    const btn = document.getElementById('btnThemeToggle');
-    if (btn) btn.innerHTML = next === 'light' ? '☀️ Tema: Claro' : '🌙 Tema: Oscuro';
+    syncThemeButtons();
 };
 const savedTheme = (() => { try { return localStorage.getItem('taskify-theme'); } catch (e) { return null; } })();
 if (savedTheme === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
-    const btn = document.getElementById('btnThemeToggle');
-    if (btn) btn.innerHTML = '☀️ Tema: Claro';
+    syncThemeButtons();
 }
 
 // --- MENÚ "MÁS" ---
@@ -61,11 +65,11 @@ window.switchTab = async (tabName) => {
         tabBtn.classList.add('active');
         if (tabBtn.getAttribute('role') === 'tab') tabBtn.setAttribute('aria-selected', 'true');
     }
-    // Estado activo en el menú "Más"
+    // Estado activo en el menú "Más" (móvil) y en el sidebar (desktop)
     const moreBtn = document.getElementById('btnNavMore');
     if (moreBtn) moreBtn.classList.toggle('active', SECONDARY_TABS.includes(tabName));
-    document.querySelectorAll('.more-item[id^="tab-"]').forEach(item => {
-        item.classList.toggle('active', item.id === `tab-${tabName}`);
+    document.querySelectorAll('.more-item[data-tab]').forEach(item => {
+        item.classList.toggle('active', item.getAttribute('data-tab') === tabName);
     });
     const navMenu = document.getElementById('navMoreMenu');
     if (navMenu && !navMenu.hidden) window.toggleNavMore();
@@ -204,13 +208,12 @@ setInterval(() => {
     // 1. Revisar Recordatorios (De la pestaña Recordatorios)
     state.reminders?.forEach((rem) => {
         const snoozed = rem.snoozeUntil ? now < new Date(rem.snoozeUntil) : false;
-        if (!rem.completed && !snoozed && now >= new Date(rem.datetime)) {
-            // Marcamos como notificado
-            rem.notified = true;
+        // _ringing evita re-disparar la misma alarma cada tick mientras suena (cola en alarm.js)
+        if (!rem.completed && !snoozed && !rem._ringing && now >= new Date(rem.datetime)) {
+            rem._ringing = true;
             saveDataToCloud(); 
 
             if(window.triggerSystemAlarm) {
-                window.__activeAlarmTarget = rem;
                 window.triggerSystemAlarm(
                     "Recordatorio", 
                     rem.text, 
@@ -219,9 +222,12 @@ setInterval(() => {
                         const actualRem = state.reminders.find(r => r.text === rem.text && r.datetime === rem.datetime);
                         if (actualRem) {
                             actualRem.completed = true; 
+                            actualRem.snoozeUntil = null;
                         } else {
                             rem.completed = true; // Fallback
+                            rem.snoozeUntil = null;
                         }
+                        rem._ringing = false;
                         
                         // Añade puntos a tus estadísticas
                         recordActivity(); 
@@ -230,7 +236,8 @@ setInterval(() => {
                         // Forzamos al HTML de recordatorios a repintarse instantáneamente
                         if(window.renderReminders) window.renderReminders();
                         window.dispatchEvent(new Event('stateChanged')); 
-                    }
+                    },
+                    rem // target para que el snooze respete rem.snoozeMins
                 );
             }
         }
@@ -238,22 +245,25 @@ setInterval(() => {
 
     // 2. Revisar Hábitos (De la pestaña Actividades)
     state.recurringTasks?.forEach((rec) => {
-        if (!rec.notified && now >= new Date(rec.nextTrigger)) {
-            rec.notified = true;
+        const snoozed = rec.snoozeUntil ? now < new Date(rec.snoozeUntil) : false;
+        if (!rec.notified && !snoozed && !rec._ringing && now >= new Date(rec.nextTrigger)) {
+            rec._ringing = true;
             saveDataToCloud();
 
             if(window.triggerSystemAlarm) {
-                window.__activeAlarmTarget = rec;
                 window.triggerSystemAlarm(
                     "Hábito / Rutina", 
                     rec.text, 
                     () => { 
+                        rec._ringing = false;
+                        rec.snoozeUntil = null;
                         if(window.rescheduleRecurring) window.rescheduleRecurring(rec);
                         recordActivity(); 
                         saveDataToCloud(); 
                         if(window.renderRecurringTasks) window.renderRecurringTasks();
                         window.dispatchEvent(new Event('stateChanged'));
-                    }
+                    },
+                    rec // target: snooze de hábitos usa 5 min por defecto
                 );
             }
         }

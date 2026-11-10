@@ -52,20 +52,31 @@
         </div>
         
         <nav class="app-nav" aria-label="Navegación principal">
-            <div class="tabs nav-items" id="tabContainer" role="tablist" aria-label="Módulos de Taskify">
+            <div class="tabs nav-items" id="tabContainer" role="tablist" aria-label="Módulos principales">
                 <button class="tab-btn" id="tab-dashboard" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('dashboard')"><span class="tab-ico">🏠</span><span class="tab-label">Inicio</span></button>
                 <button class="tab-btn active" id="tab-actividades" role="tab" aria-selected="true" aria-controls="tab-content-container" onclick="switchTab('actividades')"><span class="tab-ico">📝</span><span class="tab-label">Tareas</span></button>
                 <button class="tab-btn" id="tab-finanzas" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('finanzas')"><span class="tab-ico">🔒</span><span class="tab-label">Finanzas</span></button>
                 <button class="tab-btn" id="tab-notas" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('notas')"><span class="tab-ico">📓</span><span class="tab-label">Notas</span></button>
+            </div>
+            <div class="nav-secondary" id="navSecondary">
+                <span class="nav-section-label">Más módulos</span>
+                <div class="nav-items" role="tablist" aria-label="Módulos secundarios">
+                    <button class="tab-btn" id="tab-checklists" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('checklists')"><span class="tab-ico">☑️</span><span class="tab-label">Checklists</span></button>
+                    <button class="tab-btn" id="tab-recordatorios" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('recordatorios')"><span class="tab-ico">🔔</span><span class="tab-label">Recordatorios</span></button>
+                </div>
+            </div>
+            <div class="nav-footer">
+                <button class="more-item theme-toggle-btn" id="btnThemeToggleDesktop" onclick="toggleTheme()">🌙 Tema: Oscuro</button>
+                <button class="more-item more-danger" onclick="appLogout()">🚪 Cerrar sesión</button>
             </div>
             <div class="nav-more-wrap">
                 <button class="tab-btn nav-more-btn" id="btnNavMore" aria-haspopup="true" aria-expanded="false" aria-controls="navMoreMenu" onclick="toggleNavMore(event)">
                     <span class="tab-ico">⋯</span><span class="tab-label">Más</span>
                 </button>
                 <div class="nav-more-menu" id="navMoreMenu" role="menu" hidden>
-                    <button class="more-item" id="tab-checklists" role="menuitem" onclick="switchTab('checklists')">☑️ Checklists</button>
-                    <button class="more-item" id="tab-recordatorios" role="menuitem" onclick="switchTab('recordatorios')">🔔 Recordatorios</button>
-                    <button class="more-item" id="btnThemeToggle" role="menuitem" onclick="toggleTheme()">🌙 Tema: Oscuro</button>
+                    <button class="more-item" data-tab="checklists" role="menuitem" onclick="switchTab('checklists')">☑️ Checklists</button>
+                    <button class="more-item" data-tab="recordatorios" role="menuitem" onclick="switchTab('recordatorios')">🔔 Recordatorios</button>
+                    <button class="more-item theme-toggle-btn" id="btnThemeToggle" role="menuitem" onclick="toggleTheme()">🌙 Tema: Oscuro</button>
                     <button class="more-item more-danger" role="menuitem" onclick="appLogout()">🚪 Cerrar sesión</button>
                 </div>
             </div>
@@ -100,15 +111,15 @@
             <button onclick="window.toggleAlarmConfig()" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-primary); padding: var(--space-2); border-radius: var(--radius-sm); cursor: pointer; margin-top: var(--space-1);">Cerrar</button>
         </div>
         
-        <div id="sysAlarmModal" class="alarm-overlay" style="display: none;">
+        <div id="sysAlarmModal" class="alarm-overlay" style="display: none;" role="alertdialog" aria-modal="true" aria-labelledby="sysAlarmTitle" aria-describedby="sysAlarmDesc" aria-live="assertive">
             <div class="alarm-content">
                 <h1 style="color: var(--accent-primary); margin-top: 0;">⏰ ¡Es Hora!</h1>
                 <h2 id="sysAlarmTitle" style="color: var(--text-primary); font-size: 1.5em; margin: 15px 0;">Recordatorio</h2>
                 <div id="sysAlarmDesc" style="font-size: 1em; color: var(--text-secondary); margin-bottom: var(--space-6);"></div>
                 
                 <div class="alarm-buttons">
-                    <button class="alarm-btn alarm-btn-outline" onclick="window.snoozeSystemAlarm()">Posponer 5 min</button>
-                    <button class="alarm-btn alarm-btn-solid" onclick="window.completeSystemAlarm()">¡Entendido!</button>
+                    <button class="alarm-btn alarm-btn-outline" id="sysAlarmSnoozeBtn" onclick="window.snoozeSystemAlarm()">Posponer</button>
+                    <button class="alarm-btn alarm-btn-solid" id="sysAlarmDoneBtn" onclick="window.completeSystemAlarm()">¡Entendido!</button>
                 </div>
             </div>
         </div>

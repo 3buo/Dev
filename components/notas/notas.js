@@ -315,7 +315,7 @@ function updateMindGraph() {
     const canvas = document.getElementById('mindGraph'); if (!canvas) return; const ctx = canvas.getContext('2d');
     canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
     document.getElementById('graphStats').innerText = `${state.notes ? state.notes.length : 0} notas en tu red`;
-    const skyColor = cssToken('--accent-sky', '#4cc3ff');
+    const skyColor = cssToken('--accent-sky', '#5eb0f0');
     let particles = [];
     for(let i=0; i < Math.min((state.notes?.length||5), 40); i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, size: Math.random() * 2 + 1 });
     function animate() {

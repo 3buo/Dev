@@ -1,4 +1,4 @@
-# DESIGN_SPEC.md — Taskify Design System "Cero Fricción" (v1.0)
+# DESIGN_SPEC.md — Taskify Design System "Cero Fricción" (v1.1)
 
 > Especificación de diseño, psicología, color y tipografía para el refactor SaaS de Taskify.
 > Creada a partir del brief del Product Owner. Cada fase del refactor cita las secciones de este documento.
@@ -20,29 +20,31 @@
 Nomenclatura obligatoria: `--bg-canvas`, `--bg-surface`, `--text-primary`, `--accent-primary`, etc.
 Todos los pares texto/fondo cumplen WCAG AA (≥4.5:1 texto normal, ≥3:1 texto grande).
 
-### 2.1 Dark (default)
+### 2.1 Dark (default) — neutros cálidos tipo Notion
+
+Estética: superficies gris-cálido (`#191919`/`#202020`/`#2f3437`, como Notion), texto hueso (`#ededed`) y un único acento azul suave. Sin violetas eléctricos ni neones "AI slop".
 
 | Token | Valor | Uso |
 |---|---|---|
-| `--bg-canvas` | `#0d1017` | fondo de la app |
-| `--bg-inset` | `#0a0d13` | inputs, código, paneles empotrados |
-| `--bg-surface` | `#151a24` | tarjetas y contenedores |
-| `--bg-surface-raised` | `#1c2330` | elementos elevados (chips, filas, hover) |
-| `--border-subtle` | `#272f40` | bordes de tarjetas |
-| `--border-strong` | `#3d4a61` | bordes de inputs |
-| `--text-primary` | `#f2f5fa` | texto principal (15.7:1 sobre canvas) |
-| `--text-secondary` | `#a9b3c8` | texto de apoyo (9.4:1) |
-| `--text-tertiary` | `#8b97ad` | metadatos/labels (6.7:1) |
-| `--text-on-accent` | `#0d1017` | texto sobre `--accent-primary` (4.9:1) |
-| `--accent-primary` | `#7c6cf0` | acción principal, selección, foco |
-| `--accent-primary-hover` | `#8d80f4` | hover del primario |
-| `--accent-secondary` | `#2dd4bf` | acento teal de apoyo |
-| `--accent-sky` | `#4cc3ff` | acento informativo (Notas, voz) |
-| `--status-success` | `#34d399` | éxito / completado |
-| `--status-warning` | `#fbbf24` | advertencia |
-| `--status-error` | `#f87171` | error / gasto / eliminar |
-| `--brand-amber` | `#f5c344` | Binance / ámbar |
-| `--brand-blue` | `#4d9fff` | Facebank / azul marca |
+| `--bg-canvas` | `#191919` | fondo de la app |
+| `--bg-inset` | `#131313` | inputs, código, paneles empotrados |
+| `--bg-surface` | `#202020` | tarjetas y contenedores |
+| `--bg-surface-raised` | `#2f3437` | elementos elevados (chips, filas, hover) |
+| `--border-subtle` | `#333333` | bordes de tarjetas |
+| `--border-strong` | `#4d4d4d` | bordes de inputs |
+| `--text-primary` | `#ededed` | texto principal (15.0:1 sobre canvas) |
+| `--text-secondary` | `#b0b0b0` | texto de apoyo (8.1:1) |
+| `--text-tertiary` | `#8a8a8a` | metadatos/labels (5.1:1) |
+| `--text-on-accent` | `#0f1115` | texto sobre `--accent-primary` (6.7:1) |
+| `--accent-primary` | `#4a9df5` | acción principal, selección, foco (6.2:1 sobre canvas y surface) |
+| `--accent-primary-hover` | `#63abf7` | hover del primario |
+| `--accent-secondary` | `#53c8a3` | acento teal de apoyo (8.3:1) |
+| `--accent-sky` | `#5eb0f0` | acento informativo (Notas, voz) |
+| `--status-success` | `#4aa877` | éxito / completado (6.0:1) |
+| `--status-warning` | `#e6a23c` | advertencia (8.0:1) |
+| `--status-error` | `#e56a6a` | error / gasto / eliminar (5.5:1) |
+| `--brand-amber` | `#e0a64c` | Binance / ámbar |
+| `--brand-blue` | `#4a9df5` | Facebank / azul marca |
 
 Tints (fondos translúcidos para chips/badges/hover) y efectos: `--tint-accent`, `--tint-sky`, `--tint-teal`, `--tint-success`, `--tint-warning`, `--tint-error`, `--tint-amber`, `--tint-neutral`, `--overlay`, `--overlay-strong`, `--shadow-color`, `--glow-color`, `--glow-sky`, `--ring-color`, `--chart-1..6`, `--chart-pastel-1..6`, `--chart-mono-1..6`, `--chart-fade`.
 
@@ -59,14 +61,15 @@ Tints (fondos translúcidos para chips/badges/hover) y efectos: `--tint-accent`,
 | `--text-secondary` | `#4a5468` (7.7:1) |
 | `--text-tertiary` | `#5d6779` (5.3:1) |
 | `--text-on-accent` | `#ffffff` (5.2:1 sobre accent) |
-| `--accent-primary` | `#6357e8` |
-| `--accent-secondary` | `#0d9488` |
-| `--accent-sky` | `#0284c7` |
+| `--accent-primary` | `#1f6fba` (azul accesible, coherente con el dark) |
+| `--accent-primary-hover` | `#1a5fa0` |
+| `--accent-secondary` | `#0c7a62` (5.3:1) |
+| `--accent-sky` | `#0b6ab8` (5.6:1) |
 | `--status-success` | `#15803d` |
 | `--status-warning` | `#b45309` |
 | `--status-error` | `#dc2626` |
 | `--brand-amber` | `#b45309` |
-| `--brand-blue` | `#1d6fd6` |
+| `--brand-blue` | `#1f6fba` |
 
 **Reglas de uso**
 - Prohibido usar hex/rgb/rgba directos fuera de `tokens.css`.
@@ -100,9 +103,9 @@ Tints (fondos translúcidos para chips/badges/hover) y efectos: `--tint-accent`,
 
 1. **Espaciado 8pt**: `--space-1: 4px · --space-2: 8px · --space-3: 12px · --space-4: 16px · --space-5: 20px · --space-6: 24px · --space-8: 32px · --space-10: 40px · --space-12: 48px · --space-16: 64px`. Paddings/margins/gaps usan solo esta escala.
 2. **Contenedores**: el `body` usa `--bg-canvas`; las tarjetas usan `--bg-surface` con `border: 1px solid var(--border-subtle)` y sombra sutil (`--shadow-1`). Radio `--radius-md` (10px) para tarjetas.
-3. **Navegación (máximo 4 destinos primarios)**:
+3. **Navegación**:
    - Móvil (`≤900px`): **Bottom Bar** fija con 4 ítems primarios (Inicio, Tareas, Finanzas, Notas) + botón de desbordamiento "Más" (Checklists, Recordatorios, tema, cerrar sesión). Respeta `env(safe-area-inset-bottom)`.
-   - Desktop (`>900px`): **Sidebar** fija a la izquierda con los mismos 4 ítems + "Más"; el contenido fluye a la derecha.
+   - Desktop (`>900px`): **Sidebar** fija a la izquierda con los **6 módulos visibles** — 4 primarios + sección "Más módulos" (Checklists, Recordatorios) — y en el pie las acciones fijas (tema, cerrar sesión). El contenido fluye a la derecha.
    - Orden persistente (drag & drop conservado solo para los 4 ítems primarios).
 4. **Botones primarios**: fondo `--accent-primary`, texto `--text-on-accent`, `hover: --accent-primary-hover` + `transform: translateY(-1px)`, `focus-visible: --focus-ring` (anillo 3px `--ring-color`).
 
@@ -112,8 +115,9 @@ Tints (fondos translúcidos para chips/badges/hover) y efectos: `--tint-accent`,
 
 1. **Notas — Captura Rápida**: input de captura en la parte superior del módulo (textarea de 1 línea auto-expandible + botón). Enter crea la nota al instante (misma función de guardado existente; cero lógica nueva de persistencia).
 2. **Finanzas — Saldo**: las cifras de las tarjetas de saldo usan `--text-2xl` (28px, `tabular-nums`). Se añade un contenedor **Insights** con: gasto del mes vs. mes anterior, top 3 conceptos recurrentes y alertas de suscripciones probables (mismo concepto en ≥2 meses distintos). Render puro (no cambia el modelo de datos).
-3. **Alarmas**: botones Posponer/Entendido con área táctil mínima **48×48px** y máximo contraste (`--text-on-accent` sobre `--accent-primary`; outline con `--accent-secondary`). El botón flotante 🔊 mide 48×48px.
-4. **Microinteracciones**: transiciones de **150–200ms** en `transform` y `opacity` (botones, tarjetas, cambio de pestaña con fade+slide sutil). `prefers-reduced-motion` desactiva todo.
+3. **Alarmas**: cola de alarmas (una alarma nunca sobrescribe a otra; suenan en orden al resolver la actual). El snooze respeta los minutos configurados en el recordatorio (`snoozeMins`, 5/10/15/30). Sonido en bucle con **beep WebAudio de respaldo** si el navegador bloquea el autoplay o no hay red; vibración al disparar. Botones Posponer/Entendido con área táctil mínima **48×48px** y máximo contraste (`--text-on-accent` sobre `--accent-primary`; outline con `--accent-secondary`). El botón flotante 🔊 mide 48×48px. Modal con `role="alertdialog"`, `aria-live="assertive"` y foco inicial en la acción principal.
+4. **Finanzas — Recuperación de PIN**: enlace "¿Olvidaste el PIN?" en la bóveda (y en el modal de cambio). Flujo de 3 pasos sin backend: (1) correo de la sesión → (2) `sendPasswordResetEmail` envía el código de Firebase al Gmail, `checkActionCode` lo valida sin consumirlo y verifica que corresponda a la cuenta → (3) nuevo PIN + confirmación (4-10 dígitos, PBKDF2, nunca en claro). La contraseña de login no se modifica; solo se reemplaza el PIN de la bóveda. Primera configuración (sin PIN previo) va directo al paso 3.
+5. **Microinteracciones**: transiciones de **150–200ms** en `transform` y `opacity` (botones, tarjetas, cambio de pestaña con fade+slide sutil). `prefers-reduced-motion` desactiva todo.
 
 ---
 
@@ -133,6 +137,6 @@ Tints (fondos translúcidos para chips/badges/hover) y efectos: `--tint-accent`,
 1. **Tokens**: 0 hexadecimales/rgba hardcodeados en `components/**`, `js/**` (excepto colores de datos de usuario y resolución de canvas vía tokens), `index.html` y `global.css`. Única fuente: `tokens.css`.
 2. **Contraste**: todos los pares texto/fondo ≥ AA en Light y Dark (verificados con cálculo de luminancia relativa).
 3. **Tipografía**: Inter cargada y aplicada globalmente; ningún texto < 12px (grep de `font-size` < 12px vacío).
-4. **Navegación**: máximo 4 destinos primarios; Bottom Bar en móvil y Sidebar en desktop; todos los módulos siguen accesibles (Checklists/Recordatorios vía "Más").
+4. **Navegación**: 4 destinos primarios + Bottom Bar en móvil y Sidebar en desktop; **Checklists y Recordatorios visibles como sección propia del panel izquierdo en desktop** y accesibles vía "Más" en móvil; tema y cerrar sesión en el pie del sidebar (desktop) o en "Más" (móvil).
 5. **Táctil y feedback**: targets ≥44px (48px en alarmas); hover/focus visibles en primarios; microinteracciones 150–200ms; `prefers-reduced-motion` respetado.
 6. **Cero regresiones**: `node --check` OK en todos los `.js`; imports intactos; funciones de guardado/fetch/auth sin cambios de lógica; todos los módulos cargan.

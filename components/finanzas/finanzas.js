@@ -2,6 +2,8 @@ import { state, saveDataToCloud, recordActivity } from '../../js/store.js';
 import { esc } from '../../js/escape.js';
 import { hashPin, verifyPin } from '../../js/pin.js';
 import { toast } from '../../js/feedback.js';
+import { auth } from '../../js/firebase-config.js';
+import { sendPasswordResetEmail, checkActionCode } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 // --- TOKENS CSS EN CANVAS (única fuente de color: tokens.css) ---
 const cssVar = (name, fallback) => {
@@ -54,6 +56,96 @@ window.confirmPinChange = async () => {
     saveDataToCloud();
     closePinChange();
     toast('✅ PIN actualizado.');
+};
+
+// --- RECUPERACIÓN DE PIN (¿Olvidaste el PIN?) ---
+// Flujo 0-costo sin backend: el código de recuperación lo envía Firebase Auth
+// al correo de la cuenta; checkActionCode valida que el código corresponde a
+// PASSWORD_RESET y a la sesión actual. La contraseña de login NO se modifica:
+// solo se reemplaza el PIN de la bóveda (PBKDF2, nunca en claro).
+let pinResetVerifiedEmail = null;
+let pinResetBusy = false;
+
+window.openPinReset = () => {
+    const step1 = document.getElementById('pinResetStep1');
+    const step2 = document.getElementById('pinResetStep2');
+    const step3 = document.getElementById('pinResetStep3');
+    const emailInput = document.getElementById('pinResetEmail');
+    const firstSetup = !state.pinHash;   // sin PIN previo: ir directo a definir uno
+    emailInput.value = auth.currentUser?.email || '';
+    document.getElementById('pinResetNew').value = '';
+    document.getElementById('pinResetConfirm').value = '';
+    document.getElementById('pinResetCode').value = '';
+    pinResetVerifiedEmail = null;
+    step1.style.display = firstSetup ? 'none' : 'block';
+    step2.style.display = 'none';
+    step3.style.display = firstSetup ? 'block' : 'none';
+    if (firstSetup) toast('Primera configuración: define tu PIN.');
+    document.getElementById('pinResetModal').classList.remove('vault-hidden');
+};
+
+window.closePinReset = () => {
+    if (pinResetBusy) return;
+    document.getElementById('pinResetModal').classList.add('vault-hidden');
+};
+
+window.sendPinResetCode = async () => {
+    const email = document.getElementById('pinResetEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Introduce un correo válido.');
+    if (!auth.currentUser || auth.currentUser.email.toLowerCase() !== email.toLowerCase()) {
+        return toast('El correo debe coincidir con el de tu sesión actual.');
+    }
+    pinResetBusy = true;
+    try {
+        await sendPasswordResetEmail(auth, email, {
+            url: window.location.origin + window.location.pathname,
+            handleCodeInApp: true
+        });
+        toast('📧 Código enviado a ' + email + '. Revisa tu bandeja y spam.');
+        document.getElementById('pinResetStep1').style.display = 'none';
+        document.getElementById('pinResetStep2').style.display = 'block';
+    } catch (e) {
+        toast('No se pudo enviar el código (' + (e.code || 'error de red') + '). Intenta de nuevo.');
+    } finally {
+        pinResetBusy = false;
+    }
+};
+
+window.verifyPinResetCode = async () => {
+    const code = document.getElementById('pinResetCode').value.trim();
+    if (!code) return toast('Pega el código recibido por correo.');
+    pinResetBusy = true;
+    try {
+        const info = await checkActionCode(auth, code);
+        if (info.operation !== 'PASSWORD_RESET') throw new Error('wrong-operation');
+        pinResetVerifiedEmail = (info.data?.email || '').toLowerCase();
+        if (pinResetVerifiedEmail !== auth.currentUser.email.toLowerCase()) {
+            throw new Error('email-mismatch');
+        }
+        toast('✅ Código verificado. Define tu nuevo PIN.');
+        document.getElementById('pinResetStep2').style.display = 'none';
+        document.getElementById('pinResetStep3').style.display = 'block';
+    } catch (e) {
+        pinResetVerifiedEmail = null;
+        toast('Código inválido o expirado. Usa el enlace del correo o solicita otro.');
+    } finally {
+        pinResetBusy = false;
+    }
+};
+
+window.saveResetPin = async () => {
+    const next = document.getElementById('pinResetNew').value.trim();
+    const confirm = document.getElementById('pinResetConfirm').value.trim();
+    if (!/^\d{4,10}$/.test(next)) return toast('PIN inválido: usa 4 a 10 dígitos.');
+    if (next !== confirm) return toast('Los PIN no coinciden.');
+    // Caso "primera configuración": permitido sin código (no había PIN que recuperar)
+    if (state.pinHash && !pinResetVerifiedEmail) return toast('Verifica primero tu correo para continuar.');
+    state.pinHash = await hashPin(next);
+    delete state.masterPin;
+    saveDataToCloud();
+    pinResetVerifiedEmail = null;
+    document.getElementById('pinResetModal').classList.add('vault-hidden');
+    toast('🔐 PIN guardado. Entra con tu nuevo PIN: no necesitarás repetir este proceso.');
 };
 
 // --- WALLET MANAGER ---
@@ -413,15 +505,15 @@ window.updateFinanceChart = (chartSums) => {
     // Paletas definidas como tokens en tokens.css (DESIGN_SPEC.md §2)
     const paletteNames = { neon: '--chart', pastel: '--chart-pastel', monochrome: '--chart-mono' };
     const base = paletteNames[theme] || '--chart';
-    const currentPalette = [1, 2, 3, 4, 5, 6].map(i => cssVar(`${base}-${i}`, '#7c6cf0'));
+    const currentPalette = [1, 2, 3, 4, 5, 6].map(i => cssVar(`${base}-${i}`, '#4a9df5'));
 
-    const textSecondary = cssVar('--text-secondary', '#a9b3c8');
-    const surfaceRaised = cssVar('--bg-surface-raised', '#1c2330');
-    const borderStrong = cssVar('--border-strong', '#3d4a61');
-    const borderSubtle = cssVar('--border-subtle', '#272f40');
-    const bgInset = cssVar('--bg-inset', '#0a0d13');
-    const accentSky = cssVar('--accent-sky', '#4cc3ff');
-    const chartFade = cssVar('--chart-fade', 'rgba(4,8,18,0.35)');
+    const textSecondary = cssVar('--text-secondary', '#b0b0b0');
+    const surfaceRaised = cssVar('--bg-surface-raised', '#2f3437');
+    const borderStrong = cssVar('--border-strong', '#4d4d4d');
+    const borderSubtle = cssVar('--border-subtle', '#333333');
+    const bgInset = cssVar('--bg-inset', '#131313');
+    const accentSky = cssVar('--accent-sky', '#5eb0f0');
+    const chartFade = cssVar('--chart-fade', 'rgba(0,0,0,0.35)');
 
     state.wallets.forEach((w, index) => {
         labels.push(`${w.name} (${w.symbol})`);
@@ -550,14 +642,14 @@ export function init() {
     if(!isUnlocked) return;
     if(!state.wallets) {
         // Colores por defecto resueltos desde los tokens CSS (--chart-*)
-        const [cSky, cAmber, cGreen] = ['--chart-2', '--chart-4', '--chart-3'].map(n => cssVar(n, '#7c6cf0'));
+        const [cSky, cAmber, cGreen] = ['--chart-2', '--chart-4', '--chart-3'].map(n => cssVar(n, '#4a9df5'));
         state.wallets = [ { id: 'facebank', name: 'Facebank', symbol: '$', color: cSky }, { id: 'binance', name: 'Binance', symbol: '₮', color: cAmber }, { id: 'bs', name: 'Bolívares', symbol: 'Bs.', color: cGreen } ];
         if(!state.balances) state.balances = { facebank: 0, binance: 0, bs: 0 };
         saveDataToCloud();
     }
     // El selector de color de "Nueva Cartera" usa el token de acento como valor por defecto
     const colorPicker = document.getElementById('newWalletColor');
-    if (colorPicker) colorPicker.value = cssVar('--accent-sky', '#4cc3ff');
+    if (colorPicker) colorPicker.value = cssVar('--accent-sky', '#5eb0f0');
     initVoiceEngine(); window.renderWallets(); window.renderBalances(); window.renderExpenses(); window.renderInsights();
     if(window.rateBcvVal === 0 || window.rateBinanceVal === 0) window.fetchExchangeRates(true); 
 }

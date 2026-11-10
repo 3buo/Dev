@@ -2,15 +2,15 @@
 
 ## Design System "Cero Fricción" (DESIGN_SPEC.md, 2026-11-10)
 - [x] `DESIGN_SPEC.md` creado (filosofía, tokens, tipografía Inter, layout, componentes, QA).
-- [x] `tokens.css` v3: tokens day/night completos (--bg-canvas, --text-primary, --accent-primary…), tints, paletas de gráficos, aliases legacy, reduced-motion.
+- [x] `tokens.css` v4: paleta oscura rediseñada a neutros cálidos tipo Notion (#191919/#202020/#2f3437, texto #ededed, acento azul #4a9df5) — sin violeta/neón "AI slop"; light armonizado a azul #1f6fba. Contrastes verificados por script (todos AA).
 - [x] Tipografía Inter (Google Fonts) global; eliminado Poppins; nada < 12px.
-- [x] Navegación ≤4 destinos primarios: Bottom Bar móvil / Sidebar desktop + menú "Más" (Checklists, Recordatorios, tema, logout).
-- [x] Modo claro operativo: toggle "Más → Tema" persiste en localStorage, aplica `[data-theme]` en <html>.
-- [x] ~300 colores hardcodeados migrados a tokens (0 hex/rgba fuera de tokens.css, salvo fallbacks defensivos de canvas documentados).
+- [x] Navegación: 4 primarios + **Checklists y Recordatorios en el panel izquierdo (sección "Más módulos")** en desktop; tema y logout en el pie del sidebar; Bottom Bar móvil mantiene 4 + menú "Más".
+- [x] Modo claro operativo: toggle persiste en localStorage, aplica `[data-theme]` en <html>.
+- [x] ~300 colores hardcodeados migrados a tokens (0 hex/rgba fuera de tokens.css, salvo fallbacks defensivos de canvas documentados, actualizados a paleta v4).
 - [x] Notas: input de Captura Rápida (Enter crea la nota, misma persistencia).
-- [x] Finanzas: saldos en `--text-2xl`; contenedor Insights (gasto del mes, top conceptos, suscripciones probables).
-- [x] Alarmas: botones Posponer/Entendido ≥48×48px; microinteracciones 150–200ms en transform/opacity.
-- [x] QA: node --check OK (18 .js), 0 mojibake, contraste AA verificado en ambos temas, 0 texto <12px.
+- [x] Finanzas: saldos en `--text-2xl`; contenedor Insights; **recuperación de PIN "¿Olvidaste el PIN?"** (código Firebase al correo → nuevo PIN + confirmación, sin backend, funciona para cualquier usuario; primera configuración va directo a definir PIN).
+- [x] Alarmas: **cola de alarmas** (sin sobrescritura), snooze según `snoozeMins` configurado (5/10/15/30), snooze también para hábitos (bug corregido), beep WebAudio de respaldo sin red/autoplay, vibración, `role=alertdialog` + foco inicial, botones ≥48×48px, recordatorios ordenados cronológicamente.
+- [x] QA: node --check OK (18 .js), 0 mojibake, contraste AA verificado en ambos temas, 0 texto <12px, 0 IDs duplicados.
 
 ## Correcciones aplicadas (auditoría Fase 2, 2026-11-10)
 - [x] Boot: `js/store.js` reescrito vanilla sin zustand (Proxy vivo, exports para backup-ui, fecha local en actividad).

@@ -1,70 +1,72 @@
 /* ==========================================================================
-   tokens.css v3 — Taskify Design System "Cero Fricción" (DESIGN_SPEC.md §2-3)
+   tokens.css v4 — Taskify Design System "Cero Fricción" (DESIGN_SPEC.md §2-3)
    Única fuente de color, tipografía, espaciado y movimiento.
    Dark por defecto; `data-theme='light'` en <html> activa el tema claro.
-   Pares de contraste verificados WCAG AA (ver DESIGN_SPEC.md §2).
+   Modo oscuro: neutros cálidos (familia Notion #191919/#202020/#2f3437)
+   con acento azul suave — sin violetas/neones "AI slop".
+   Pares de contraste verificados WCAG AA (script de verificación).
    ========================================================================== */
 
 :root {
-  /* ---------- Superficies y fondo ---------- */
-  --bg-canvas: #0d1017;
-  --bg-inset: #0a0d13;          /* inputs, código, paneles empotrados */
-  --bg-surface: #151a24;        /* tarjetas y contenedores */
-  --bg-surface-raised: #1c2330; /* chips, filas, hover */
-  --bg-glow-top: #1d2433;       /* inicio de gradientes decorativos */
-  --border-subtle: #272f40;
-  --border-strong: #3d4a61;
+  /* ---------- Superficies y fondo (neutros cálidos) ---------- */
+  --bg-canvas: #191919;
+  --bg-inset: #131313;          /* inputs, código, paneles empotrados */
+  --bg-surface: #202020;        /* tarjetas y contenedores */
+  --bg-surface-raised: #2f3437; /* chips, filas, hover */
+  --bg-glow-top: #232323;       /* inicio de gradientes decorativos */
+  --border-subtle: #333333;
+  --border-strong: #4d4d4d;
 
-  /* ---------- Texto ---------- */
-  --text-primary: #f2f5fa;      /* 15.7:1 sobre canvas */
-  --text-secondary: #a9b3c8;    /* 9.4:1 */
-  --text-tertiary: #8b97ad;     /* 6.7:1 — mínimo AA */
-  --text-on-accent: #0d1017;    /* 4.9:1 sobre accent-primary */
+  /* ---------- Texto (grises cálidos) ---------- */
+  --text-primary: #ededed;      /* 15.0:1 sobre canvas */
+  --text-secondary: #b0b0b0;    /* 8.1:1 */
+  --text-tertiary: #8a8a8a;     /* 5.1:1 — AA */
+  --text-on-accent: #0f1115;    /* 6.7:1 sobre accent-primary (botones rellenos) */
 
-  /* ---------- Acentos ---------- */
-  --accent-primary: #7c6cf0;
-  --accent-primary-hover: #8d80f4;
-  --accent-secondary: #2dd4bf;
-  --accent-sky: #4cc3ff;
-  --accent-sky-border: rgba(76, 195, 255, 0.35);
-  --brand-amber: #f5c344;
-  --brand-blue: #4d9fff;
+  /* ---------- Acentos (azul suave tipo Notion, accesible) ---------- */
+  --accent-primary: #4a9df5;    /* 6.2:1 sobre canvas / 6.2:1 sobre surface */
+  --accent-primary-hover: #63abf7;
+  --accent-secondary: #53c8a3;  /* teal suave: 8.3:1 */
+  --accent-sky: #5eb0f0;
+  --accent-sky-border: rgba(94, 176, 240, 0.35);
+  --brand-amber: #e0a64c;
+  --brand-blue: #4a9df5;
 
-  /* ---------- Estados ---------- */
-  --status-success: #34d399;
-  --status-warning: #fbbf24;
-  --status-error: #f87171;
+  /* ---------- Estados (tonos apagados y amables) ---------- */
+  --status-success: #4aa877;    /* 6.0:1 */
+  --status-warning: #e6a23c;    /* 8.0:1 */
+  --status-error: #e56a6a;      /* 5.5:1 */
 
   /* ---------- Tints (fondos translúcidos para chips/badges/hover) ---------- */
-  --tint-accent: rgba(124, 108, 240, 0.14);
-  --tint-sky: rgba(76, 195, 255, 0.12);
-  --tint-teal: rgba(45, 212, 191, 0.16);
-  --tint-success: rgba(52, 211, 153, 0.14);
-  --tint-warning: rgba(251, 191, 36, 0.14);
-  --tint-error: rgba(248, 113, 113, 0.14);
-  --tint-amber: rgba(245, 195, 68, 0.12);
-  --tint-neutral: rgba(148, 163, 184, 0.10);
+  --tint-accent: rgba(74, 157, 245, 0.14);
+  --tint-sky: rgba(94, 176, 240, 0.12);
+  --tint-teal: rgba(83, 200, 163, 0.14);
+  --tint-success: rgba(74, 168, 119, 0.14);
+  --tint-warning: rgba(230, 162, 60, 0.14);
+  --tint-error: rgba(229, 106, 106, 0.14);
+  --tint-amber: rgba(224, 166, 76, 0.12);
+  --tint-neutral: rgba(176, 176, 176, 0.10);
 
   /* ---------- Overlays, sombras y brillos ---------- */
-  --overlay: rgba(4, 8, 18, 0.6);
-  --overlay-strong: rgba(4, 8, 18, 0.85);
-  --shadow-color: rgba(4, 8, 18, 0.45);
-  --glow-color: rgba(124, 108, 240, 0.45);
-  --glow-sky: rgba(76, 195, 255, 0.4);
-  --glow-teal: rgba(45, 212, 191, 0.45);
-  --glow-error: rgba(248, 113, 113, 0.5);
-  --glow-success: rgba(52, 211, 153, 0.5);
-  --ring-color: rgba(124, 108, 240, 0.55);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --overlay-strong: rgba(0, 0, 0, 0.85);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --glow-color: rgba(74, 157, 245, 0.4);
+  --glow-sky: rgba(94, 176, 240, 0.35);
+  --glow-teal: rgba(83, 200, 163, 0.35);
+  --glow-error: rgba(229, 106, 106, 0.45);
+  --glow-success: rgba(74, 168, 119, 0.4);
+  --ring-color: rgba(74, 157, 245, 0.55);
   --focus-ring: 0 0 0 3px var(--ring-color);
 
-  /* ---------- Paletas de gráficos (resueltas en JS vía getComputedStyle) ---------- */
-  --chart-1: #7c6cf0; --chart-2: #4cc3ff; --chart-3: #34d399;
-  --chart-4: #f5c344; --chart-5: #f87171; --chart-6: #c084fc;
-  --chart-pastel-1: #6d5fd4; --chart-pastel-2: #3f9fd4; --chart-pastel-3: #2bb38d;
-  --chart-pastel-4: #d4a62e; --chart-pastel-5: #d45f5f; --chart-pastel-6: #a06cd4;
-  --chart-mono-1: #5d6779; --chart-mono-2: #718096; --chart-mono-3: #8b97ad;
-  --chart-mono-4: #a9b3c8; --chart-mono-5: #c3cbda; --chart-mono-6: #dde3ee;
-  --chart-fade: rgba(4, 8, 18, 0.35);
+  /* ---------- Paletas de gráficos (armonía azul/teal/ámbar/lila) ---------- */
+  --chart-1: #4a9df5; --chart-2: #53c8a3; --chart-3: #e0a64c;
+  --chart-4: #b28ad6; --chart-5: #e56a6a; --chart-6: #7db8ec;
+  --chart-pastel-1: #3b7fc9; --chart-pastel-2: #42a987; --chart-pastel-3: #c08a3d;
+  --chart-pastel-4: #9370b8; --chart-pastel-5: #c25555; --chart-pastel-6: #5f96c9;
+  --chart-mono-1: #3a3a3a; --chart-mono-2: #5a5a5a; --chart-mono-3: #7d7d7d;
+  --chart-mono-4: #9b9b9b; --chart-mono-5: #b0b0b0; --chart-mono-6: #d1d1d1;
+  --chart-fade: rgba(0, 0, 0, 0.35);
 
   /* ---------- Tipografía (DESIGN_SPEC.md §3) ---------- */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -111,7 +113,7 @@
 }
 
 /* ==========================================================================
-   TEMA CLARO
+   TEMA CLARO (papel cálido + acento azul coherente con el oscuro)
    ========================================================================== */
 [data-theme='light'] {
   --bg-canvas: #f5f7fb;
@@ -125,23 +127,23 @@
   --text-primary: #141a26;      /* 15.9:1 sobre canvas */
   --text-secondary: #4a5468;    /* 7.7:1 */
   --text-tertiary: #5d6779;     /* 5.3:1 — AA */
-  --text-on-accent: #ffffff;    /* 5.2:1 sobre accent */
+  --text-on-accent: #ffffff;    /* 5.2:1 sobre accent-primary */
 
-  --accent-primary: #6357e8;
-  --accent-primary-hover: #5749dd;
-  --accent-secondary: #0d9488;
-  --accent-sky: #0284c7;
-  --accent-sky-border: rgba(2, 132, 199, 0.35);
+  --accent-primary: #1f6fba;    /* azul accesible: 5.2:1 con texto blanco */
+  --accent-primary-hover: #1a5fa0;
+  --accent-secondary: #0c7a62;  /* teal: 5.3:1 sobre blanco */
+  --accent-sky: #0b6ab8;        /* 5.6:1 */
+  --accent-sky-border: rgba(11, 106, 184, 0.35);
   --brand-amber: #b45309;
-  --brand-blue: #1d6fd6;
+  --brand-blue: #1f6fba;
 
   --status-success: #15803d;
   --status-warning: #b45309;
   --status-error: #dc2626;
 
-  --tint-accent: rgba(99, 87, 232, 0.10);
-  --tint-sky: rgba(2, 132, 199, 0.10);
-  --tint-teal: rgba(13, 148, 136, 0.12);
+  --tint-accent: rgba(31, 111, 186, 0.10);
+  --tint-sky: rgba(11, 106, 184, 0.10);
+  --tint-teal: rgba(12, 122, 98, 0.12);
   --tint-success: rgba(21, 128, 61, 0.12);
   --tint-warning: rgba(180, 83, 9, 0.12);
   --tint-error: rgba(220, 38, 38, 0.10);
@@ -151,17 +153,17 @@
   --overlay: rgba(10, 15, 30, 0.5);
   --overlay-strong: rgba(10, 15, 30, 0.75);
   --shadow-color: rgba(13, 20, 40, 0.18);
-  --glow-color: rgba(99, 87, 232, 0.3);
-  --glow-sky: rgba(2, 132, 199, 0.3);
-  --glow-teal: rgba(13, 148, 136, 0.3);
+  --glow-color: rgba(31, 111, 186, 0.3);
+  --glow-sky: rgba(11, 106, 184, 0.3);
+  --glow-teal: rgba(12, 122, 98, 0.3);
   --glow-error: rgba(220, 38, 38, 0.35);
   --glow-success: rgba(21, 128, 61, 0.3);
-  --ring-color: rgba(99, 87, 232, 0.5);
+  --ring-color: rgba(31, 111, 186, 0.5);
 
-  --chart-1: #6357e8; --chart-2: #0284c7; --chart-3: #059669;
-  --chart-4: #d97706; --chart-5: #dc2626; --chart-6: #9333ea;
-  --chart-pastel-1: #8b83ec; --chart-pastel-2: #5ab0e0; --chart-pastel-3: #4fc3a1;
-  --chart-pastel-4: #e8b95c; --chart-pastel-5: #e88a8a; --chart-pastel-6: #b58cec;
+  --chart-1: #1f6fba; --chart-2: #0c7a62; --chart-3: #d97706;
+  --chart-4: #9333ea; --chart-5: #dc2626; --chart-6: #0b6ab8;
+  --chart-pastel-1: #6aa4d8; --chart-pastel-2: #5cb8a0; --chart-pastel-3: #e8b95c;
+  --chart-pastel-4: #b58cec; --chart-pastel-5: #e88a8a; --chart-pastel-6: #7db8ec;
   --chart-mono-1: #5d6779; --chart-mono-2: #718096; --chart-mono-3: #8b97ad;
   --chart-mono-4: #a9b3c8; --chart-mono-5: #c3cbda; --chart-mono-6: #e2e8f2;
   --chart-fade: rgba(255, 255, 255, 0.35);

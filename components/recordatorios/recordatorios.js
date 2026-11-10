@@ -32,17 +32,25 @@ window.renderReminders = () => {
     pendingList.innerHTML = ''; 
     completedList.innerHTML = ''; 
     
-    state.reminders.forEach((rem, index) => { 
+    // Orden cronológico estable: los más próximos primero (se conserva el índice original)
+    const ordered = (state.reminders || [])
+        .map((rem, index) => ({ rem, index }))
+        .sort((a, b) => new Date(a.rem.datetime) - new Date(b.rem.datetime));
+    
+    ordered.forEach(({ rem, index }) => { 
         const li = document.createElement('li'); 
         const checkbox = document.createElement('input'); 
         checkbox.type = 'checkbox'; 
-        checkbox.checked = rem.completed; 
+        checkbox.checked = rem.completed;
+        checkbox.setAttribute('aria-label', `Marcar "${rem.text}" como ${rem.completed ? 'pendiente' : 'completado'}`);
         
         checkbox.onchange = () => { 
             state.reminders[index].completed = !state.reminders[index].completed; 
             if(!state.reminders[index].completed) {
                 state.reminders[index].notified = false; 
             } else {
+                state.reminders[index].snoozeUntil = null;
+                state.reminders[index]._ringing = false;
                 recordActivity(); 
             }
             saveDataToCloud(); 
@@ -60,6 +68,8 @@ window.renderReminders = () => {
         
         const deleteBtn = document.createElement('button'); 
         deleteBtn.innerText = 'X'; 
+        deleteBtn.setAttribute('aria-label', `Eliminar recordatorio "${rem.text}"`);
+        deleteBtn.title = 'Eliminar recordatorio';
         deleteBtn.style.background = 'var(--status-error)'; 
         deleteBtn.style.padding = '5px 10px'; 
         deleteBtn.style.marginLeft = '10px'; 
