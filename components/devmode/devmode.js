@@ -1,5 +1,9 @@
 import { ensureDevModeShadowRoot } from './devmode-shadow.js';
 import { auth } from '../../js/firebase-config.js';
+import { state, saveDataToCloud } from '../../js/store.js';
+import { hashPin, verifyPin } from '../../js/pin.js';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, checkActionCode } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { initAppearance, openAppearanceModal, applyAppearance } from './appearance.js';
 import {
   injectDevNoCodeCss,
   bindGlobalButtonSounds,
@@ -7,8 +11,11 @@ import {
   ensureDevSoundPanel
 } from './devmode-sounds-ui.js';
 
-// Sin credenciales en el bundle. DevMode se habilita solo por allowlist o claim de servidor.
-const DEV_ALLOWED_EMAILS = []; // vacío = deshabilitado en producción
+// Sin credenciales hardcodeadas en el bundle (fix F04). DevMode ahora usa
+// credenciales POR USUARIO: cada cuenta crea su propio usuario/contraseña dev
+// (PBKDF2, guardado en su doc de Firestore) y puede recuperarlas re-autenticando
+// con su contraseña de Taskify o con un código enviado a su correo.
+const DEV_ALLOWED_EMAILS = []; // vacío: el gate es la credencial por usuario
 const KEY_STYLES = 'dev_dynamic_styles_v2';
 const KEY_CONTENT = 'dev_dynamic_content_v2';
 const KEY_PANEL_POS = 'dev_panel_position_v2';
@@ -25,7 +32,7 @@ let activeInlineEditor = null;
 let mutationObserver = null;
 let globalBindingsReady = false;
 
-const state = {
+const devLocalState = {
   dynamicStylesById: {},
   dynamicContentById: {},
   dynamicBindingsById: {}
@@ -57,53 +64,59 @@ function getElementByDevId(devId) {
 
 function loadState() {
   try {
-    state.dynamicStylesById = JSON.parse(localStorage.getItem(KEY_STYLES) || '{}');
+    devLocalState.dynamicStylesById = JSON.parse(localStorage.getItem(KEY_STYLES) || '{}');
   } catch {
-    state.dynamicStylesById = {};
+    devLocalState.dynamicStylesById = {};
     localStorage.removeItem(KEY_STYLES);
   }
 
   try {
-    state.dynamicContentById = JSON.parse(localStorage.getItem(KEY_CONTENT) || '{}');
+    devLocalState.dynamicContentById = JSON.parse(localStorage.getItem(KEY_CONTENT) || '{}');
   } catch {
-    state.dynamicContentById = {};
+    devLocalState.dynamicContentById = {};
     localStorage.removeItem(KEY_CONTENT);
   }
 
   try {
-    state.dynamicBindingsById = JSON.parse(localStorage.getItem(KEY_BINDINGS) || '{}');
+    devLocalState.dynamicBindingsById = JSON.parse(localStorage.getItem(KEY_BINDINGS) || '{}');
   } catch {
-    state.dynamicBindingsById = {};
+    devLocalState.dynamicBindingsById = {};
     localStorage.removeItem(KEY_BINDINGS);
   }
 }
 
 function saveState() {
-  localStorage.setItem(KEY_STYLES, JSON.stringify(state.dynamicStylesById));
-  localStorage.setItem(KEY_CONTENT, JSON.stringify(state.dynamicContentById));
-  localStorage.setItem(KEY_BINDINGS, JSON.stringify(state.dynamicBindingsById));
+  localStorage.setItem(KEY_STYLES, JSON.stringify(devLocalState.dynamicStylesById));
+  localStorage.setItem(KEY_CONTENT, JSON.stringify(devLocalState.dynamicContentById));
+  localStorage.setItem(KEY_BINDINGS, JSON.stringify(devLocalState.dynamicBindingsById));
 }
 
 function getNodeStyleBucket(devId) {
-  if (!state.dynamicStylesById[devId]) {
-    state.dynamicStylesById[devId] = { styles: {} };
+  if (!devLocalState.dynamicStylesById[devId]) {
+    devLocalState.dynamicStylesById[devId] = { styles: {} };
   }
-  return state.dynamicStylesById[devId];
+  return devLocalState.dynamicStylesById[devId];
 }
 
-function injectDynamicStyleSheet() {
-  if (!shadowRootRef) return;
-  let styleTag = shadowRootRef.getElementById('dev-dynamic-stylesheet');
-  if (!styleTag) {
-    styleTag = document.createElement('style');
-    styleTag.id = 'dev-dynamic-stylesheet';
-    shadowRootRef.appendChild(styleTag);
+function ensureLightStyleTag(id) {
+  let tag = document.getElementById(id);
+  if (!tag) {
+    tag = document.createElement('style');
+    tag.id = id;
+    document.head.appendChild(tag);
   }
+  return tag;
+}
 
-  let cssText = '/* DEV MODE V2 - SHADOW SCOPED GENERATOR */\n';
-  for (const devId in state.dynamicStylesById) {
+// Fix F-dev-01: los estilos por-elemento DEBEN vivir en el DOM light.
+// Antes se inyectaban dentro del shadow root y nunca alcanzaban a los
+// elementos de la app (scoping de Shadow DOM) → la edición visual no se veía.
+function injectDynamicStyleSheet() {
+  const styleTag = ensureLightStyleTag('dev-dynamic-stylesheet');
+  let cssText = '/* DEV MODE V2 - LIGHT DOM STYLES */\n';
+  for (const devId in devLocalState.dynamicStylesById) {
     const selector = `[data-dev-id="${cssEscape(devId)}"]`;
-    const styles = state.dynamicStylesById[devId]?.styles || {};
+    const styles = devLocalState.dynamicStylesById[devId]?.styles || {};
     const keys = Object.keys(styles);
     if (!keys.length) continue;
     cssText += `${selector}{\n`;
@@ -113,6 +126,21 @@ function injectDynamicStyleSheet() {
     cssText += '}\n';
   }
   styleTag.textContent = cssText;
+}
+
+// Outline de selección/hover y keyframes de animación por-elemento (DOM light)
+const DEV_LIGHT_UI_CSS = `
+.dev-hover-target { outline: 2px dashed var(--accent-sky) !important; outline-offset: 2px !important; cursor: crosshair !important; }
+.dev-selected-target { outline: 3px solid var(--status-error) !important; outline-offset: 2px !important; }
+.dev-inline-editing { outline: 2px solid var(--accent-primary) !important; outline-offset: 2px !important; }
+@keyframes devAnimScaleDown { 0% { transform: scale(1); } 40% { transform: scale(0.94); } 100% { transform: scale(1); } }
+@keyframes devAnimScaleUp { 0% { transform: scale(1); } 40% { transform: scale(1.06) translateY(-2px); } 100% { transform: scale(1); } }
+@keyframes devAnimPulseGlow { 0%, 100% { box-shadow: 0 0 0 rgba(0,0,0,0); } 50% { box-shadow: 0 0 14px var(--glow-sky); } }
+`;
+
+function ensureLightUICss() {
+  const tag = ensureLightStyleTag('dev-light-ui-css');
+  tag.textContent = DEV_LIGHT_UI_CSS;
 }
 
 function getBindingContext() {
@@ -149,18 +177,18 @@ function resolveDynamicExpression(expression) {
 }
 
 function applyContentOverrides() {
-  for (const devId in state.dynamicContentById) {
+  for (const devId in devLocalState.dynamicContentById) {
     const el = getElementByDevId(devId);
     if (!el) continue;
 
-    const binding = state.dynamicBindingsById[devId];
+    const binding = devLocalState.dynamicBindingsById[devId];
     if (binding) {
       const resolved = resolveDynamicExpression(binding);
       if (el.textContent !== resolved) el.textContent = resolved;
       continue;
     }
 
-    const next = (state.dynamicContentById[devId] || '').trim();
+    const next = (devLocalState.dynamicContentById[devId] || '').trim();
     if (next && el.textContent !== next) el.textContent = next;
   }
 }
@@ -202,10 +230,10 @@ function syncFieldsFromSelectedElement() {
   if (flexGroup instanceof HTMLElement) flexGroup.style.display = 'flex';
 
   const computed = getComputedStyle(currentTargetElement);
-  const nodeStyles = state.dynamicStylesById[currentTargetDevId]?.styles || {};
+  const nodeStyles = devLocalState.dynamicStylesById[currentTargetDevId]?.styles || {};
 
   if (textInput instanceof HTMLInputElement) {
-    textInput.value = state.dynamicContentById[currentTargetDevId] || currentTargetElement.textContent?.trim() || '';
+    textInput.value = devLocalState.dynamicContentById[currentTargetDevId] || currentTargetElement.textContent?.trim() || '';
   }
   if (bgColor instanceof HTMLInputElement) bgColor.value = normalizeHex(nodeStyles.background || computed.backgroundColor);
   if (bgText instanceof HTMLInputElement) bgText.value = nodeStyles.background || computed.backgroundColor || '';
@@ -308,7 +336,7 @@ function openInlineEdit() {
 
   const saveLive = () => {
     if (!currentTargetDevId || !activeInlineEditor) return;
-    state.dynamicContentById[currentTargetDevId] = activeInlineEditor.textContent?.trim() || '';
+    devLocalState.dynamicContentById[currentTargetDevId] = activeInlineEditor.textContent?.trim() || '';
     saveState();
     syncFieldsFromSelectedElement();
   };
@@ -367,7 +395,19 @@ function applyAndSaveDevStyles() {
   }
 
   if (textInput instanceof HTMLInputElement) {
-    state.dynamicContentById[currentTargetDevId] = textInput.value;
+    devLocalState.dynamicContentById[currentTargetDevId] = textInput.value;
+  }
+
+  // Animación al hacer clic (por-elemento): interruptor + tipo de efecto
+  const animEnable = rootEl('devAnimEnable');
+  const animType = rootEl('devAnimType');
+  if (animEnable instanceof HTMLInputElement && animType instanceof HTMLSelectElement) {
+    if (animEnable.checked) {
+      const camel = animType.value.replace(/-([a-z])/g, (m, c) => c.toUpperCase());
+      styles.animation = `devAnim${camel[0].toUpperCase() + camel.slice(1)} var(--duration-base) var(--ease-standard)`;
+    } else {
+      delete styles.animation;
+    }
   }
 
   saveState();
@@ -382,8 +422,8 @@ function resetTargetStyles() {
     return;
   }
 
-  delete state.dynamicStylesById[currentTargetDevId];
-  delete state.dynamicContentById[currentTargetDevId];
+  delete devLocalState.dynamicStylesById[currentTargetDevId];
+  delete devLocalState.dynamicContentById[currentTargetDevId];
   saveState();
   applyAllPersisted();
   syncFieldsFromSelectedElement();
@@ -392,8 +432,8 @@ function resetTargetStyles() {
 
 function factoryResetStyles() {
   if (!confirm('⚠️ ¿Borrar TODOS los estilos y textos personalizados?')) return;
-  state.dynamicStylesById = {};
-  state.dynamicContentById = {};
+  devLocalState.dynamicStylesById = {};
+  devLocalState.dynamicContentById = {};
   localStorage.removeItem(KEY_STYLES);
   localStorage.removeItem(KEY_CONTENT);
   applyAllPersisted();
@@ -424,14 +464,7 @@ function closeDevPanel() {
   currentTargetDevId = null;
 }
 
-function authenticateDev() {
-  const current = auth?.currentUser;
-  if (!current) { showToast('❌ Requiere sesión'); return; }
-  if (!DEV_ALLOWED_EMAILS.includes(current.email)) {
-    showToast('❌ Acceso denegado (sin autorización dev)');
-    return;
-  }
-
+function enterDevPanel() {
   window.__devModeIsAuthenticated = true;
   isDevModeActive = true;
   isInspectorActive = true;
@@ -448,14 +481,189 @@ function authenticateDev() {
   showToast('✅ DevMode autenticado');
 }
 
+// --- CREDENCIALES DEV POR USUARIO (crear / entrar / recuperar) ---
+const devCred = () => (state.devAuth && typeof state.devAuth === 'object' && state.devAuth.hash) ? state.devAuth : null;
+
+async function authenticateDev() {
+  const current = auth?.currentUser;
+  if (!current) { showToast('❌ Requiere sesión'); return; }
+  if (DEV_ALLOWED_EMAILS.length && !DEV_ALLOWED_EMAILS.includes(current.email)) {
+    showToast('❌ Acceso denegado (sin autorización dev)');
+    return;
+  }
+  const cred = devCred();
+  if (!cred) { showToast('🆕 Primero crea tus credenciales dev.'); return; }
+
+  const userInput = (rootEl('devUser')?.value || '').trim();
+  const passInput = rootEl('devPass')?.value || '';
+  if (!userInput || !passInput) { showToast('✍️ Escribe tu usuario y contraseña dev.'); return; }
+  if (userInput !== cred.user) { showToast('❌ Usuario dev incorrecto.'); return; }
+
+  const ok = await verifyPin(passInput, cred).catch(() => false);
+  if (!ok) { showToast('❌ Contraseña dev incorrecta.'); return; }
+  enterDevPanel();
+}
+
+async function createDevCredentials() {
+  const current = auth?.currentUser;
+  if (!current) { showToast('❌ Requiere sesión'); return; }
+  const userInput = (rootEl('devUser')?.value || '').trim();
+  const passInput = rootEl('devPass')?.value || '';
+  const passInput2 = rootEl('devPass2')?.value || '';
+  if (!/^[a-zA-Z0-9_.-]{3,20}$/.test(userInput)) { showToast('✍️ Usuario dev: 3-20 caracteres (letras, números, . _ -).'); return; }
+  if (passInput.length < 4 || passInput.length > 20) { showToast('🔑 Contraseña dev: 4-20 caracteres.'); return; }
+  if (passInput !== passInput2) { showToast('🔑 Las contraseñas no coinciden.'); return; }
+
+  state.devAuth = { user: userInput, ...(await hashPin(passInput)) };
+  try { await saveDataToCloud('dev-credentials'); } catch (e) { console.warn('dev cred save', e); }
+  enterDevPanel();
+  showToast('🔐 Credenciales dev creadas para tu usuario');
+}
+
 function closeDevLogin() {
   const modal = rootEl('devLoginModal');
   if (modal instanceof HTMLElement) modal.style.display = 'none';
 }
 
 function openDevLogin() {
+  const cred = devCred();
+  const title = rootEl('devLoginTitle');
+  const hint = rootEl('devLoginHint');
+  const pass2 = rootEl('devPass2');
+  const forgot = rootEl('devForgotLink');
+  const submit = rootEl('devLoginSubmit');
+  const userInput = rootEl('devUser');
+  const passInput = rootEl('devPass');
+
+  if (userInput instanceof HTMLInputElement) userInput.value = '';
+  if (passInput instanceof HTMLInputElement) passInput.value = '';
+  if (pass2 instanceof HTMLInputElement) pass2.value = '';
+
+  if (title instanceof HTMLElement) title.textContent = cred ? '⚡ Modo Developer' : '🔐 Crea tus credenciales dev';
+  if (hint instanceof HTMLElement) {
+    hint.textContent = cred
+      ? 'Ingresa tus credenciales de desarrollador.'
+      : 'Es tu primera vez: elige un usuario y una contraseña dev. Son tuyos, de tu cuenta.';
+  }
+  if (pass2 instanceof HTMLElement) pass2.style.display = cred ? 'none' : 'block';
+  if (forgot instanceof HTMLElement) forgot.style.display = cred ? 'block' : 'none';
+  if (submit instanceof HTMLButtonElement) submit.textContent = cred ? 'Ingresar' : 'Crear y entrar';
+  if (userInput instanceof HTMLInputElement) userInput.placeholder = cred ? 'Usuario dev' : 'Elige tu usuario dev';
+  if (passInput instanceof HTMLInputElement) passInput.placeholder = cred ? 'Contraseña dev' : 'Elige tu contraseña dev';
+
   const modal = rootEl('devLoginModal');
   if (modal instanceof HTMLElement) modal.style.display = 'flex';
+}
+
+// --- RECUPERACIÓN: contraseña de Taskify o código al correo ---
+let devRecoveryVerified = false;
+
+function openDevRecovery() {
+  devRecoveryVerified = false;
+  const modal = rootEl('devRecoveryModal');
+  if (modal instanceof HTMLElement) modal.style.display = 'flex';
+  rootEl('devRecoveryPathPassword').style.display = 'block';
+  rootEl('devRecoveryPathEmail').style.display = 'none';
+  rootEl('devRecoveryResult').style.display = 'none';
+  const passEl = rootEl('devRecoveryAppPass');
+  if (passEl instanceof HTMLInputElement) passEl.value = '';
+  const codeEl = rootEl('devRecoveryCode');
+  if (codeEl instanceof HTMLInputElement) codeEl.value = '';
+  rootEl('devLoginModal').style.display = 'none';
+  syncRecoveryPathButtons('password');
+}
+
+function closeDevRecovery() {
+  const modal = rootEl('devRecoveryModal');
+  if (modal instanceof HTMLElement) modal.style.display = 'none';
+}
+
+function syncRecoveryPathButtons(activePath) {
+  rootEl('devRecoveryPaths')?.querySelectorAll('.dev-recovery-path').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.path === activePath);
+  });
+}
+
+function selectRecoveryPath(path) {
+  rootEl('devRecoveryPathPassword').style.display = path === 'password' ? 'block' : 'none';
+  rootEl('devRecoveryPathEmail').style.display = path === 'email' ? 'block' : 'none';
+  syncRecoveryPathButtons(path);
+}
+
+function showRecoveryResult() {
+  devRecoveryVerified = true;
+  rootEl('devRecoveryPathPassword').style.display = 'none';
+  rootEl('devRecoveryPathEmail').style.display = 'none';
+  rootEl('devRecoveryResult').style.display = 'block';
+  const userEl = rootEl('devRecoveryUser');
+  if (userEl instanceof HTMLInputElement) {
+    const current = devCred();
+    userEl.value = current?.user || `dev_${(auth.currentUser?.uid || 'user').slice(0, 6)}`;
+  }
+  const p1 = rootEl('devRecoveryNewPass');
+  const p2 = rootEl('devRecoveryNewPass2');
+  if (p1 instanceof HTMLInputElement) p1.value = '';
+  if (p2 instanceof HTMLInputElement) p2.value = '';
+}
+
+async function verifyDevRecoveryByPassword() {
+  const current = auth?.currentUser;
+  if (!current) { showToast('❌ Requiere sesión'); return; }
+  const pass = rootEl('devRecoveryAppPass')?.value || '';
+  if (!pass) { showToast('✍️ Escribe tu contraseña de Taskify.'); return; }
+  try {
+    await signInWithEmailAndPassword(auth, current.email, pass);
+    showRecoveryResult();
+    showToast('✅ Identidad verificada con tu contraseña');
+  } catch (e) {
+    showToast('❌ Contraseña de Taskify incorrecta.');
+  }
+}
+
+async function sendDevRecoveryCode() {
+  const current = auth?.currentUser;
+  if (!current) { showToast('❌ Requiere sesión'); return; }
+  try {
+    await sendPasswordResetEmail(auth, current.email, {
+      url: window.location.origin + window.location.pathname,
+      handleCodeInApp: true
+    });
+    showToast('📧 Código enviado a ' + current.email + '. Revisa tu bandeja y spam.');
+  } catch (e) {
+    showToast('❌ No se pudo enviar el código (' + (e?.code || 'red') + ').');
+  }
+}
+
+async function verifyDevRecoveryCode() {
+  const current = auth?.currentUser;
+  if (!current) { showToast('❌ Requiere sesión'); return; }
+  const code = (rootEl('devRecoveryCode')?.value || '').trim();
+  if (!code) { showToast('✍️ Pega el código recibido por correo.'); return; }
+  try {
+    const info = await checkActionCode(auth, code);
+    if (info.operation !== 'PASSWORD_RESET') throw new Error('wrong-operation');
+    const codeEmail = (info.data?.email || '').toLowerCase();
+    if (codeEmail !== current.email.toLowerCase()) throw new Error('email-mismatch');
+    showRecoveryResult();
+    showToast('✅ Código verificado. Recupera tus credenciales.');
+  } catch (e) {
+    showToast('❌ Código inválido o expirado. Usa el enlace del correo o pide otro.');
+  }
+}
+
+async function saveDevRecoveryCredentials() {
+  if (!devRecoveryVerified) { showToast('❌ Verifica primero tu identidad.'); return; }
+  const userInput = (rootEl('devRecoveryUser')?.value || '').trim();
+  const passInput = rootEl('devRecoveryNewPass')?.value || '';
+  const passInput2 = rootEl('devRecoveryNewPass2')?.value || '';
+  if (!/^[a-zA-Z0-9_.-]{3,20}$/.test(userInput)) { showToast('✍️ Usuario dev: 3-20 caracteres (letras, números, . _ -).'); return; }
+  if (passInput.length < 4 || passInput.length > 20) { showToast('🔑 Contraseña dev: 4-20 caracteres.'); return; }
+  if (passInput !== passInput2) { showToast('🔑 Las contraseñas no coinciden.'); return; }
+
+  state.devAuth = { user: userInput, ...(await hashPin(passInput)) };
+  try { await saveDataToCloud('dev-credentials'); } catch (e) { console.warn('dev cred save', e); }
+  closeDevRecovery();
+  showToast('🔐 Credenciales dev recuperadas y guardadas. ¡Ya puedes entrar!');
 }
 
 function syncFlexButtons(values) {
@@ -550,6 +758,7 @@ function bindUIActions() {
   const loginCancel = rootEl('devLoginCancel');
   const panelClose = rootEl('devPanelClose');
   const inspector = rootEl('btnInspectorToggle');
+  const appearanceBtn = rootEl('btnAppearanceOpen');
   const saveBtn = rootEl('devBtnSave');
   const resetBtn = rootEl('devBtnResetTarget');
   const factoryBtn = rootEl('devBtnFactoryReset');
@@ -557,7 +766,8 @@ function bindUIActions() {
 
   loginSubmit?.addEventListener('click', (e) => {
     e.preventDefault();
-    authenticateDev();
+    if (devCred()) authenticateDev();
+    else createDevCredentials();
   });
 
   loginCancel?.addEventListener('click', (e) => {
@@ -565,9 +775,29 @@ function bindUIActions() {
     closeDevLogin();
   });
 
+  rootEl('devForgotLink')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openDevRecovery();
+  });
+
+  rootEl('devRecoveryPaths')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.dev-recovery-path');
+    if (btn) selectRecoveryPath(btn.dataset.path);
+  });
+  rootEl('devRecoveryVerifyPass')?.addEventListener('click', () => verifyDevRecoveryByPassword());
+  rootEl('devRecoverySendCode')?.addEventListener('click', () => sendDevRecoveryCode());
+  rootEl('devRecoveryVerifyCode')?.addEventListener('click', () => verifyDevRecoveryCode());
+  rootEl('devRecoverySave')?.addEventListener('click', () => saveDevRecoveryCredentials());
+  rootEl('devRecoveryCancel')?.addEventListener('click', () => closeDevRecovery());
+
   panelClose?.addEventListener('click', (e) => {
     e.preventDefault();
     closeDevPanel();
+  });
+
+  appearanceBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openAppearanceModal();
   });
 
   inspector?.addEventListener('click', (e) => {
@@ -594,6 +824,15 @@ function bindUIActions() {
     e.preventDefault();
     openInlineEdit();
   });
+
+  // Animación por-elemento: mostrar el selector solo si el interruptor está activo
+  const animEnable = rootEl('devAnimEnable');
+  const animType = rootEl('devAnimType');
+  if (animEnable instanceof HTMLInputElement && animType instanceof HTMLElement) {
+    animEnable.addEventListener('change', () => {
+      animType.style.display = animEnable.checked ? 'block' : 'none';
+    });
+  }
 
   const colorPairs = [
     ['devBgColor', 'devBgText'],
@@ -700,12 +939,19 @@ export function initDevMode() {
     ensureDevSoundPanel();
   } catch {}
 
+  ensureLightUICss();
   ensureAllDevIds();
   applyAllPersisted();
 
   bindUIActions();
   setupDragPanel();
   bindGlobalEvents();
+
+  // Estudio visual "Mi Estilo" (fondo/fuente/animaciones por usuario)
+  try {
+    initAppearance(shadowRootRef);
+    applyAppearance();
+  } catch (e) { console.warn('appearance init', e); }
 
   const panel = rootEl('devEditorPanel');
   if (panel instanceof HTMLElement) panel.style.display = 'none';

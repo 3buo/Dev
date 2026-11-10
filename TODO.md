@@ -10,7 +10,9 @@
 - [x] Notas: input de Captura Rápida (Enter crea la nota, misma persistencia).
 - [x] Finanzas: saldos en `--text-2xl`; contenedor Insights; **recuperación de PIN "¿Olvidaste el PIN?"** (código Firebase al correo → nuevo PIN + confirmación, sin backend, funciona para cualquier usuario; primera configuración va directo a definir PIN).
 - [x] Alarmas: **cola de alarmas** (sin sobrescritura), snooze según `snoozeMins` configurado (5/10/15/30), snooze también para hábitos (bug corregido), beep WebAudio de respaldo sin red/autoplay, vibración, `role=alertdialog` + foco inicial, botones ≥48×48px, recordatorios ordenados cronológicamente.
-- [x] QA: node --check OK (18 .js), 0 mojibake, contraste AA verificado en ambos temas, 0 texto <12px, 0 IDs duplicados.
+- [x] DevMode: **credenciales por usuario** (PBKDF2 en state.devAuth; crear al primer uso, recuperar con contraseña de Taskify o código al correo, sin credenciales en el bundle).
+- [x] DevMode: **"Mi Estilo"** — asistente no-code de 3 pasos (fondo color/imagen del dispositivo ≤260KB optimizada, fuente global, animaciones clásicas/divertidas/silencio) persistido por usuario en Firestore; fix del bug de shadow-scoping (estilos por-elemento ahora en DOM light, antes nunca se aplicaban); grupo de animación por-elemento conectado.
+- [x] QA: node --check OK (19 .js), 0 mojibake, contraste AA verificado en ambos temas, 0 texto <12px, 0 IDs duplicados.
 
 ## Correcciones aplicadas (auditoría Fase 2, 2026-11-10)
 - [x] Boot: `js/store.js` reescrito vanilla sin zustand (Proxy vivo, exports para backup-ui, fecha local en actividad).

@@ -2,14 +2,58 @@ const DEV_SHADOW_HOST_ID = 'devmode-shadow-host';
 
 const LEGACY_MARKUP = `
 <div id="devLoginModal" style="display: none; position: fixed; inset: 0; z-index: 9999999; background: var(--overlay-strong); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-  <div style="background: var(--bg-surface); padding: 30px; border-radius: var(--radius-lg); border: 1px solid var(--accent-sky); width: 300px; box-shadow: 0 0 50px var(--tint-sky);">
-      <h2 style="color: var(--accent-sky); margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
-      <input type="text" id="devUser" placeholder="Usuario" style="width: 100%; margin-bottom: var(--space-4); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
-      <input type="password" id="devPass" placeholder="Contraseña" style="width: 100%; margin-bottom: var(--space-5); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+  <div style="background: var(--bg-surface); padding: 30px; border-radius: var(--radius-lg); border: 1px solid var(--accent-sky); width: 320px; box-shadow: 0 0 50px var(--tint-sky);">
+      <h2 id="devLoginTitle" style="color: var(--accent-sky); margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
+      <p id="devLoginHint" style="color: var(--text-secondary); font-size: var(--text-xs); text-align: center; margin: -8px 0 var(--space-4);">Ingresa tus credenciales de desarrollador.</p>
+      <input type="text" id="devUser" placeholder="Usuario dev" style="width: 100%; margin-bottom: var(--space-3); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+      <input type="password" id="devPass" placeholder="Contraseña dev" style="width: 100%; margin-bottom: var(--space-3); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+      <input type="password" id="devPass2" placeholder="Repite tu contraseña dev" style="display: none; width: 100%; margin-bottom: var(--space-4); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
       <div style="display: flex; gap: var(--space-3);">
-          <button id="devLoginSubmit" style="flex: 1; background: var(--accent-sky); color: var(--text-on-accent); border: none; padding: var(--space-3); border-radius: var(--radius-sm); font-weight: bold; cursor: pointer;">Ingresar</button>
-          <button id="devLoginCancel" style="flex: 1; background: transparent; color: var(--text-tertiary); border: 1px solid var(--border-subtle); padding: var(--space-3); border-radius: var(--radius-sm); cursor: pointer;">Cancelar</button>
+          <button id="devLoginSubmit" style="flex: 1; background: var(--accent-sky); color: var(--text-on-accent); border: none; padding: var(--space-3); border-radius: var(--radius-sm); font-weight: bold; cursor: pointer; min-height: var(--target-min);">Ingresar</button>
+          <button id="devLoginCancel" style="flex: 1; background: transparent; color: var(--text-tertiary); border: 1px solid var(--border-subtle); padding: var(--space-3); border-radius: var(--radius-sm); cursor: pointer; min-height: var(--target-min);">Cancelar</button>
       </div>
+      <button id="devForgotLink" style="display: block; margin: var(--space-4) auto 0; background: transparent; border: none; color: var(--accent-primary); text-decoration: underline; cursor: pointer; font-size: var(--text-xs);">🆘 ¿Olvidaste tus credenciales dev?</button>
+  </div>
+</div>
+
+<div id="devRecoveryModal" style="display: none; position: fixed; inset: 0; z-index: 9999998; background: var(--overlay-strong); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+  <div style="background: var(--bg-surface); padding: 28px; border-radius: var(--radius-lg); border: 1px solid var(--glow-sky); width: 380px; max-height: 88vh; overflow-y: auto; box-shadow: 0 0 50px var(--tint-sky);">
+      <h2 style="color: var(--accent-sky); margin-top: 0; text-align: center;">🆘 Recuperar credenciales dev</h2>
+      <p style="color: var(--text-secondary); font-size: var(--text-xs); text-align: center;">Tus credenciales dev son tuyas y de tu cuenta. Elige cómo demostrar que eres tú:</p>
+
+      <div id="devRecoveryPaths" style="display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4);">
+          <button class="dev-recovery-path is-active" data-path="password" style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start;">
+              <span style="font-size: 1.2em;">🔑 Con mi contraseña de Taskify</span>
+              <span style="font-size: var(--text-xs); color: var(--text-tertiary); font-weight: 400;">Escribe la contraseña con la que entras a la app.</span>
+          </button>
+          <button class="dev-recovery-path" data-path="email" style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start;">
+              <span style="font-size: 1.2em;">📧 Con un código a mi correo</span>
+              <span style="font-size: var(--text-xs); color: var(--text-tertiary); font-weight: 400;">Te enviamos un código de recuperación a tu Gmail.</span>
+          </button>
+      </div>
+
+      <div id="devRecoveryPathPassword">
+          <input type="password" id="devRecoveryAppPass" placeholder="Contraseña de Taskify" style="width: 100%; margin-bottom: var(--space-3); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+          <button id="devRecoveryVerifyPass" style="width: 100%; background: var(--accent-sky); color: var(--text-on-accent); border: none; padding: var(--space-3); border-radius: var(--radius-sm); font-weight: bold; cursor: pointer; min-height: var(--target-min);">🔑 Verificar y recuperar</button>
+      </div>
+
+      <div id="devRecoveryPathEmail" style="display: none;">
+          <button id="devRecoverySendCode" style="width: 100%; background: var(--accent-sky); color: var(--text-on-accent); border: none; padding: var(--space-3); border-radius: var(--radius-sm); font-weight: bold; cursor: pointer; min-height: var(--target-min);">📧 Enviar código a mi correo</button>
+          <input type="text" id="devRecoveryCode" placeholder="Pega aquí el código recibido" style="width: 100%; margin-top: var(--space-3); margin-bottom: var(--space-3); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+          <button id="devRecoveryVerifyCode" style="width: 100%; background: var(--accent-sky); color: var(--text-on-accent); border: none; padding: var(--space-3); border-radius: var(--radius-sm); font-weight: bold; cursor: pointer; min-height: var(--target-min);">🔑 Verificar código</button>
+      </div>
+
+      <div id="devRecoveryResult" style="display: none; margin-top: var(--space-4); border-top: 1px solid var(--border-subtle); padding-top: var(--space-4);">
+          <p style="color: var(--status-success); font-weight: bold; text-align: center; margin-top: 0;">✅ ¡Eres tú!</p>
+          <label style="font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Tu usuario dev (recuperado)</label>
+          <input type="text" id="devRecoveryUser" style="width: 100%; margin-top: 4px; margin-bottom: var(--space-3); padding: var(--space-3); background: var(--tint-sky); border: 1px solid var(--accent-sky); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box; font-weight: bold;">
+          <label style="font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Tu nueva contraseña dev</label>
+          <input type="password" id="devRecoveryNewPass" placeholder="Nueva contraseña dev (4-20 caracteres)" style="width: 100%; margin-top: 4px; margin-bottom: var(--space-3); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+          <input type="password" id="devRecoveryNewPass2" placeholder="Repite la nueva contraseña" style="width: 100%; margin-bottom: var(--space-4); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+          <button id="devRecoverySave" style="width: 100%; background: var(--status-success); color: var(--text-on-accent); border: none; padding: var(--space-3); border-radius: var(--radius-sm); font-weight: bold; cursor: pointer; min-height: var(--target-min);">🔐 Guardar mis credenciales</button>
+      </div>
+
+      <button id="devRecoveryCancel" style="display: block; margin: var(--space-4) auto 0; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-tertiary); padding: var(--space-2) var(--space-5); border-radius: var(--radius-sm); cursor: pointer; font-size: var(--text-xs);">Cancelar</button>
   </div>
 </div>
 
@@ -24,6 +68,7 @@ const LEGACY_MARKUP = `
 <div id="devEditorPanel" class="dev-panel" role="dialog" aria-label="DevMode UI Builder">
   <div class="dev-panel-header">
       <span>🛠️ UI Builder</span>
+      <button id="btnAppearanceOpen" title="Personalizar mi app (fondo, letra, animaciones)" style="background: transparent; border: 1px solid var(--accent-sky); color: var(--accent-sky); border-radius: var(--radius-sm); cursor: pointer; padding: 4px 8px; font-size: var(--text-xs);">🎨 Mi Estilo</button>
       <button id="btnInspectorToggle" style="background: transparent; border: 1px solid var(--accent-sky); color: var(--accent-sky); border-radius: var(--radius-sm); cursor: pointer; padding: 4px 8px; font-size: var(--text-xs);">Inspeccionar: ON</button>
       <button id="devPanelClose" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 1.2em;">✖</button>
   </div>
@@ -402,6 +447,16 @@ const SHADOW_SCOPED_CSS = `
 .dev-btn-success { background: var(--status-success) !important; color: var(--text-on-accent) !important; box-shadow: 0 0 15px var(--glow-success); }
 .dev-btn-danger { background: transparent; border: 1px solid var(--status-error); color: var(--status-error); margin-top: 0; }
 .dev-btn-danger:hover { background: var(--status-error); color: var(--text-primary); }
+.dev-recovery-path {
+  width: 100%; text-align: left; background: var(--bg-canvas); border: 1px solid var(--border-subtle);
+  color: var(--text-primary); border-radius: var(--radius-md); padding: var(--space-3);
+  cursor: pointer; font-weight: 700; transition: 0.2s; min-height: var(--target-min);
+}
+.dev-recovery-path:hover { border-color: var(--accent-sky); }
+.dev-recovery-path.is-active {
+  background: var(--tint-sky); border-color: var(--accent-sky); color: var(--accent-sky);
+  box-shadow: inset 0 0 0 1px var(--accent-sky-border);
+}
 `;
 
 export function ensureDevModeShadowRoot() {

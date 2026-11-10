@@ -310,3 +310,40 @@ body {
 
 /* D-6: clase para labels solo-lectores */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ==========================================================================
+   PERSONALIZACIÓN VISUAL (DevMode "Mi Estilo") — animaciones globales
+   Niveles: default (microinteracciones base) / playful / none.
+   ========================================================================== */
+@keyframes userPopIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes userFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+@keyframes userWiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-2deg); }
+    75% { transform: rotate(2deg); }
+}
+
+/* --- Nivel "Divertidas": toda la interfaz cobra vida --- */
+html.app-anim-playful .tab-btn { transition: transform var(--duration-base) var(--ease-spring), background var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard); }
+html.app-anim-playful .tab-btn:hover { transform: translateY(-3px) scale(1.05); }
+html.app-anim-playful .tab-btn.active { transform: translateY(-1px); }
+html.app-anim-playful .container { transition: transform var(--duration-base) var(--ease-spring), box-shadow var(--duration-base) var(--ease-standard); }
+html.app-anim-playful .container:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); }
+html.app-anim-playful button:active { transform: scale(0.95); }
+html.app-anim-playful #tab-content-container > * { animation: userPopIn var(--duration-slow) var(--ease-spring); }
+html.app-anim-playful h2 { animation: userPopIn var(--duration-slow) var(--ease-standard); }
+html.app-anim-playful .alarm-floating-btn { animation: userFloat 2.6s var(--ease-standard) infinite; }
+html.app-anim-playful .cloud-status { animation: userWiggle 3s var(--ease-standard) infinite; }
+
+/* --- Nivel "Sin animaciones": respeto total al usuario --- */
+html.app-anim-none *, html.app-anim-none *::before, html.app-anim-none *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
