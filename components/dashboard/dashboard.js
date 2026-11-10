@@ -52,7 +52,7 @@ function renderDashboard() {
         } else {
             const li = document.createElement('li');
             li.innerText = 'No hay actividad registrada hoy.';
-            li.style.color = 'var(--text-faint, #8f8f8f)';
+            li.style.color = 'var(--text-faint, var(--text-tertiary))';
             activityList.appendChild(li);
         }
     }

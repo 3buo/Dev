@@ -7,6 +7,48 @@ const loadedModules = new Set();
 const loadedCSS = new Set(); 
 let currentTab = null;
 
+// Módulos del menú "Más" (no forman parte de los 4 destinos primarios)
+const SECONDARY_TABS = ['checklists', 'recordatorios'];
+const PRIMARY_TAB_IDS = ['tab-dashboard', 'tab-actividades', 'tab-finanzas', 'tab-notas'];
+
+// --- TEMA CLARO/OSCURO (DESIGN_SPEC.md §2) ---
+window.toggleTheme = () => {
+    const root = document.documentElement;
+    const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('taskify-theme', next); } catch (e) {}
+    const btn = document.getElementById('btnThemeToggle');
+    if (btn) btn.innerHTML = next === 'light' ? '☀️ Tema: Claro' : '🌙 Tema: Oscuro';
+};
+const savedTheme = (() => { try { return localStorage.getItem('taskify-theme'); } catch (e) { return null; } })();
+if (savedTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    const btn = document.getElementById('btnThemeToggle');
+    if (btn) btn.innerHTML = '☀️ Tema: Claro';
+}
+
+// --- MENÚ "MÁS" ---
+window.toggleNavMore = (e) => {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('navMoreMenu');
+    const btn = document.getElementById('btnNavMore');
+    if (!menu) return;
+    const open = !menu.hidden;
+    menu.hidden = open;
+    if (btn) btn.setAttribute('aria-expanded', String(!open));
+};
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('navMoreMenu');
+    const wrap = document.querySelector('.nav-more-wrap');
+    if (menu && wrap && !menu.hidden && !wrap.contains(e.target)) window.toggleNavMore();
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const menu = document.getElementById('navMoreMenu');
+        if (menu && !menu.hidden) window.toggleNavMore();
+    }
+});
+
 // --- SISTEMA DE PESTAÑAS ---
 window.switchTab = async (tabName) => {
     currentTab = tabName;
@@ -15,11 +57,21 @@ window.switchTab = async (tabName) => {
         if (btn.getAttribute('role') === 'tab') btn.setAttribute('aria-selected', 'false');
     });
     const tabBtn = document.getElementById(`tab-${tabName}`);
-    tabBtn.classList.add('active');
-    if (tabBtn.getAttribute('role') === 'tab') tabBtn.setAttribute('aria-selected', 'true');
+    if (tabBtn) {
+        tabBtn.classList.add('active');
+        if (tabBtn.getAttribute('role') === 'tab') tabBtn.setAttribute('aria-selected', 'true');
+    }
+    // Estado activo en el menú "Más"
+    const moreBtn = document.getElementById('btnNavMore');
+    if (moreBtn) moreBtn.classList.toggle('active', SECONDARY_TABS.includes(tabName));
+    document.querySelectorAll('.more-item[id^="tab-"]').forEach(item => {
+        item.classList.toggle('active', item.id === `tab-${tabName}`);
+    });
+    const navMenu = document.getElementById('navMoreMenu');
+    if (navMenu && !navMenu.hidden) window.toggleNavMore();
     
     const container = document.getElementById('tab-content-container');
-    container.innerHTML = '<div style="text-align:center; padding: 40px; color: #aaa;">Cargando interfaz...</div>';
+    container.innerHTML = '<div style="text-align:center; padding: var(--space-10); color: var(--text-secondary);">Cargando interfaz...</div>';
 
     try {
         if (!loadedCSS.has(tabName)) {
@@ -39,13 +91,14 @@ window.switchTab = async (tabName) => {
             window.dispatchEvent(new Event('stateChanged'));
         }
     } catch (e) {
-        container.innerHTML = `<div style="color:var(--warning); padding:20px;">Error cargando el módulo ${tabName}. <button onclick="switchTab('${tabName}')" style="margin-left:10px;">Reintentar</button></div>`;
+        container.innerHTML = `<div style="color:var(--status-error); padding:var(--space-5);">Error cargando el módulo ${tabName}. <button onclick="switchTab('${tabName}')" style="margin-left:10px;">Reintentar</button></div>`;
     }
 };
 
-// --- DRAG AND DROP ---
+// --- DRAG AND DROP (solo los 4 destinos primarios, orden persistente) ---
 Sortable.create(document.getElementById('tabContainer'), { 
     animation: 150, ghostClass: 'sortable-ghost', 
+    filter: '#btnNavMore, .nav-more-wrap', 
     onEnd: function () { 
         state.tabOrder = Array.from(document.getElementById('tabContainer').children).map(btn => btn.id); 
         saveDataToCloud(); 
@@ -55,7 +108,8 @@ Sortable.create(document.getElementById('tabContainer'), {
 window.addEventListener('stateChanged', () => {
     if (state.tabOrder && state.tabOrder.length > 0) { 
         const container = document.getElementById('tabContainer'); 
-        state.tabOrder.forEach(id => { const btn = document.getElementById(id); if (btn) container.appendChild(btn); }); 
+        // Solo reordenar los 4 primarios: evita mover botones del menú "Más"
+        state.tabOrder.forEach(id => { const btn = document.getElementById(id); if (btn && PRIMARY_TAB_IDS.includes(id) && btn.parentElement === container) container.appendChild(btn); }); 
     } 
 });
 

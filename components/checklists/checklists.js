@@ -147,7 +147,7 @@ window.renderEditClItems = () => {
     container.innerHTML = '';
 
     if (currentEditItems.length === 0) {
-        container.innerHTML = '<div style="color: #666; font-size: 0.9em; text-align: center; padding: 10px;">No hay elementos aún. Añade uno abajo.</div>';
+        container.innerHTML = '<div style="color: var(--text-tertiary); font-size: var(--text-sm); text-align: center; padding: var(--space-3);">No hay elementos aún. Añade uno abajo.</div>';
         return;
     }
 
@@ -159,8 +159,8 @@ window.renderEditClItems = () => {
 
         div.innerHTML = `
             <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleEditClItem(${i})" style="transform: scale(1.3); margin-right: 5px;">
-            <input type="text" value="${esc(item.text)}" oninput="updateEditClItemText(${i}, this.value)" style="flex-grow: 1; padding: 8px; background: #2c2c2c; border: 1px solid #444; color: white; border-radius: 4px;">
-            <button onclick="removeEditClItem(${i})" style="background: #cf6679; padding: 8px 12px; font-weight: bold; border-radius: 4px;">X</button>
+            <input type="text" value="${esc(item.text)}" oninput="updateEditClItemText(${i}, this.value)" style="flex-grow: 1; padding: var(--space-2); background: var(--bg-surface-raised); border: 1px solid var(--border-strong); color: var(--text-primary); border-radius: var(--radius-sm);">
+            <button onclick="removeEditClItem(${i})" style="background: var(--status-error); padding: var(--space-2) 12px; font-weight: bold; border-radius: var(--radius-sm);">X</button>
         `;
 
         container.appendChild(div);
@@ -218,46 +218,46 @@ const renderChecklistCard = ({ cl, clIndex }) => {
     const itemsHtml = (cl.items || [])
         .map(
             (item, i) => `
-        <div class="checklist-item" style="flex-direction: row; align-items: center; background: #222; margin-bottom: 5px; padding: 10px; border-radius: 6px;">
+        <div class="checklist-item" style="flex-direction: row; align-items: center; background: var(--bg-surface-raised); margin-bottom: var(--space-1); padding: var(--space-3); border-radius: var(--radius-sm);">
             <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleClItem(${clIndex}, ${i})" style="transform: scale(1.3); margin-right: 10px;">
-            <span style="${item.checked ? 'text-decoration: line-through; color: #666;' : 'color: white;'} flex-grow: 1; font-size: 1.1em;">${esc(item.text)}</span>
+            <span style="${item.checked ? 'text-decoration: line-through; color: var(--text-tertiary);' : 'color: var(--text-primary);'} flex-grow: 1; font-size: 1.1em;">${esc(item.text)}</span>
         </div>
     `,
         )
         .join('');
 
     const normalizedItemsHtml = (cl.items || []).length === 0
-        ? '<div style="color:#666; font-size:0.9em; margin-bottom: 10px;">Lista vacía.</div>'
+        ? '<div style="color:var(--text-tertiary); font-size:var(--text-sm); margin-bottom: var(--space-3);">Lista vacía.</div>'
         : itemsHtml;
 
     card.innerHTML = `
-        <div style="margin-bottom: 10px;">
-            <div style="font-size: 0.78em; color: var(--secondary); background: rgba(3, 218, 198, 0.12); border: 1px solid rgba(3, 218, 198, 0.35); padding: 4px 10px; border-radius: 999px; display: inline-block;">
+        <div style="margin-bottom: var(--space-3);">
+            <div style="font-size: var(--text-xs); color: var(--accent-secondary); background: var(--tint-teal); border: 1px solid var(--tint-teal); padding: 4px 10px; border-radius: 999px; display: inline-block;">
                 ${formatDateKey(cl.createdAt)}
             </div>
 
             <h2 style="margin: 8px 0 10px 0; font-size: 1.25em;">
                 ${cl.title}
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
-                    <button onclick="openEditClModal(${clIndex})" style="font-size: 0.7em; padding: 6px 12px; background: rgba(3, 218, 198, 0.2); border: 1px solid var(--secondary); color: var(--secondary);">✏️ Editar</button>
-                    <button onclick="deleteChecklist(${clIndex})" style="font-size: 0.7em; padding: 6px 12px; background: #cf6679; color: black;">🗑️</button>
+                    <button onclick="openEditClModal(${clIndex})" style="font-size: var(--text-xs); padding: var(--space-2) 12px; background: var(--tint-teal); border: 1px solid var(--secondary); color: var(--secondary);">✏️ Editar</button>
+                    <button onclick="deleteChecklist(${clIndex})" style="font-size: var(--text-xs); padding: var(--space-2) 12px; background: var(--status-error); color: var(--text-on-accent);">🗑️</button>
                 </div>
             </h2>
         </div>
 
-        <div style="margin-bottom: 10px; max-height: 300px; overflow-y: auto;">
+        <div style="margin-bottom: var(--space-3); max-height: 300px; overflow-y: auto;">
             ${normalizedItemsHtml}
         </div>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 10px; flex-wrap: wrap;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap;">
             <div style="flex: 1; min-width: 240px;" class="input-group">
                 <input type="text" id="clItemInput-${clIndex}" placeholder="Nuevo elemento rápido..." onkeypress="if(event.key === 'Enter') addClItem(${clIndex})">
                 <button onclick="addClItem(${clIndex})">Añadir</button>
             </div>
 
             <div style="display:flex; gap:8px; align-items:center;">
-                <div style="color:#aaa; font-size:0.85em; white-space:nowrap;">${getCategoryName(cl.categoryId)}</div>
-                <button onclick="window.__openClassifyMenu(${clIndex}, event)" draggable="false" style="font-size: 0.78em; padding: 7px 10px; background: rgba(3, 218, 198, 0.2); border: 1px solid var(--secondary); color: var(--secondary);">🏷️ Clasificar en...</button>
+                <div style="color:var(--text-secondary); font-size:var(--text-xs); white-space:nowrap;">${getCategoryName(cl.categoryId)}</div>
+                <button onclick="window.__openClassifyMenu(${clIndex}, event)" draggable="false" style="font-size: var(--text-xs); padding: 7px 10px; background: var(--tint-teal); border: 1px solid var(--secondary); color: var(--secondary);">🏷️ Clasificar en...</button>
             </div>
         </div>
     `;
@@ -295,10 +295,10 @@ window.__openClassifyMenu = (clIndex, ev) => {
     menu.style.minWidth = '320px';
     menu.style.maxWidth = '90vw';
     menu.style.padding = '14px';
-    menu.style.background = '#1e1e1e';
+    menu.style.background = 'var(--bg-surface)';
     menu.style.border = '1px solid var(--secondary)';
     menu.style.borderRadius = '10px';
-    menu.style.boxShadow = '0 18px 60px rgba(0,0,0,0.6)';
+    menu.style.boxShadow = '0 18px 60px var(--shadow-color)';
     menu.style.backdropFilter = 'blur(6px)';
 
     const cats = Array.isArray(state.checklistCategories) ? state.checklistCategories : [];
@@ -309,27 +309,27 @@ window.__openClassifyMenu = (clIndex, ev) => {
         <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
             <div>
                 <div style="color: var(--secondary); font-weight: bold;">Clasificar</div>
-                <div style="color:#ddd; font-size:0.95em; margin-top:6px;">${esc(cl.title)}</div>
+                <div style="color:var(--text-secondary); font-size:var(--text-sm); margin-top:6px;">${esc(cl.title)}</div>
             </div>
-            <button id="clClassifyClose" style="background: transparent; color:#aaa; border:1px solid #444; padding:6px 10px; border-radius:8px; cursor:pointer;">✕</button>
+            <button id="clClassifyClose" style="background: transparent; color:var(--text-secondary); border:1px solid var(--border-strong); padding:var(--space-2) 10px; border-radius:var(--radius-md); cursor:pointer;">✕</button>
         </div>
 
-        <div style="margin-top:12px; color:#aaa; font-size:0.85em;">Arrastra o elige una categoría</div>
+        <div style="margin-top:12px; color:var(--text-secondary); font-size:var(--text-xs);">Arrastra o elige una categoría</div>
 
-        <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
-            <button onclick="window.__classifyChecklist(${clIndex}, null)" style="background:${currentCatId===null ? 'rgba(3, 218, 198, 0.25)' : '#2b2b2b'}; color: var(--secondary); border: 1px solid var(--secondary); padding:10px; border-radius:10px; cursor:pointer; text-align:left;">⬚ Sin clasificar</button>
+        <div style="margin-top:12px; display:flex; flex-direction:column; gap:var(--space-3);">
+            <button onclick="window.__classifyChecklist(${clIndex}, null)" style="background:${currentCatId===null ? 'var(--tint-teal)' : 'var(--bg-surface-raised)'}; color: var(--secondary); border: 1px solid var(--secondary); padding:var(--space-3); border-radius:var(--radius-md); cursor:pointer; text-align:left;">⬚ Sin clasificar</button>
             ${cats.map((c) => `
-                <button onclick="window.__classifyChecklist(${clIndex}, '${c.id}')" style="background:${currentCatId===c.id ? 'rgba(3, 218, 198, 0.25)' : '#2b2b2b'}; color: var(--secondary); border: 1px solid var(--secondary); padding:10px; border-radius:10px; cursor:pointer; text-align:left;">
+                <button onclick="window.__classifyChecklist(${clIndex}, '${c.id}')" style="background:${currentCatId===c.id ? 'var(--tint-teal)' : 'var(--bg-surface-raised)'}; color: var(--secondary); border: 1px solid var(--secondary); padding:var(--space-3); border-radius:var(--radius-md); cursor:pointer; text-align:left;">
                     🗂️ ${esc(c.name)}
                 </button>
             `).join('')}
         </div>
 
-        <div style="margin-top:14px; padding-top:12px; border-top: 1px solid #333;">
-            <div style="color:#aaa; font-size:0.85em; margin-bottom:8px;">Crear nueva clasificación</div>
+        <div style="margin-top:14px; padding-top:12px; border-top: 1px solid var(--border-subtle);">
+            <div style="color:var(--text-secondary); font-size:var(--text-xs); margin-bottom:8px;">Crear nueva clasificación</div>
             <div style="display:flex; gap:8px;">
-                <input id="clNewCategoryName" type="text" placeholder="Ej: Trabajo, Casa, Salud" style="flex:1; background:#2c2c2c; border:1px solid #444; color:#fff; padding:10px; border-radius:10px;">
-                <button onclick="window.__createChecklistCategoryFromMenu(${clIndex})" style="background: rgba(3, 218, 198, 0.2); color: var(--secondary); border: 1px solid var(--secondary); padding: 10px 12px; border-radius: 10px; cursor:pointer; font-weight: bold;">+ Crear</button>
+                <input id="clNewCategoryName" type="text" placeholder="Ej: Trabajo, Casa, Salud" style="flex:1; background:var(--bg-surface-raised); border:1px solid var(--border-strong); color:var(--text-primary); padding:var(--space-3); border-radius:var(--radius-md);">
+                <button onclick="window.__createChecklistCategoryFromMenu(${clIndex})" style="background: var(--tint-teal); color: var(--secondary); border: 1px solid var(--secondary); padding: var(--space-3) 12px; border-radius: var(--radius-md); cursor:pointer; font-weight: bold;">+ Crear</button>
             </div>
         </div>
     `;
@@ -490,7 +490,7 @@ window.renderChecklists = () => {
     if (notCompleted.length > 0) {
         catsWrap.appendChild(renderCategoriesAndDnD(notCompleted));
     } else {
-        catsWrap.innerHTML = '<div style="color:#666; font-size:0.95em; text-align:center; padding: 16px;">No hay checklists pendientes.</div>';
+        catsWrap.innerHTML = '<div style="color:var(--text-tertiary); font-size:var(--text-sm); text-align:center; padding: 16px;">No hay checklists pendientes.</div>';
     }
 
     root.appendChild(catsWrap);

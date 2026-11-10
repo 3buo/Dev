@@ -27,10 +27,10 @@ window.renderTasks = () => {
             saveDataToCloud(); window.renderTasks(); 
         }; 
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
-        let completedInfo = (task.completed && task.completedAt) ? `<br><span style="font-size: 0.8em; color: var(--secondary);">✅ Completada: ${task.completedAt}</span>` : '';
+        let completedInfo = (task.completed && task.completedAt) ? `<br><span style="font-size: var(--text-xs); color: var(--secondary);">✅ Completada: ${task.completedAt}</span>` : '';
         contentDiv.innerHTML = `<strong>${esc(task.text)}</strong><br><span class="task-date">📅 ${task.date || 'Sin fecha'}</span>${completedInfo}`; 
         const badge = document.createElement('span'); badge.className = `badge pri-${task.priority}`; badge.innerText = task.priority; 
-        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
+        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = 'var(--status-error)'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '10px'; 
         deleteBtn.onclick = () => { state.tasks.splice(index, 1); saveDataToCloud(); window.renderTasks(); }; 
         li.append(checkbox, contentDiv, badge, deleteBtn); 
         task.completed ? (li.classList.add('completed-task'), completedList.appendChild(li)) : pendingList.appendChild(li);
@@ -190,7 +190,7 @@ window.renderRecurringTasks = () => {
         const editBtn = document.createElement('button'); editBtn.innerText = '✏️'; editBtn.style.background = 'var(--secondary)'; editBtn.style.padding = '5px 10px'; editBtn.style.color = 'black';
         editBtn.onclick = () => window.openEditHabitModal(index);
         
-        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = '#cf6679'; deleteBtn.style.padding = '5px 10px'; 
+        const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'X'; deleteBtn.style.background = 'var(--status-error)'; deleteBtn.style.padding = '5px 10px'; 
         deleteBtn.onclick = () => { state.recurringTasks.splice(index, 1); saveDataToCloud(); window.renderRecurringTasks(); }; 
         
         btnBox.append(editBtn, deleteBtn);

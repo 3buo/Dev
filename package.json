@@ -1,0 +1,10 @@
+{
+  "name": "taskify",
+  "version": "1.0.0-beta",
+  "private": true,
+  "type": "module",
+  "description": "Taskify — panel de productividad (SPA vanilla + Firebase)",
+  "scripts": {
+    "start": "npx --yes serve . -l 8080"
+  }
+}

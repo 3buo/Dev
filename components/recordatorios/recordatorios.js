@@ -60,7 +60,7 @@ window.renderReminders = () => {
         
         const deleteBtn = document.createElement('button'); 
         deleteBtn.innerText = 'X'; 
-        deleteBtn.style.background = '#cf6679'; 
+        deleteBtn.style.background = 'var(--status-error)'; 
         deleteBtn.style.padding = '5px 10px'; 
         deleteBtn.style.marginLeft = '10px'; 
         

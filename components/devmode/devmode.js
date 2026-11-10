@@ -247,7 +247,7 @@ function showToast(message) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'dev-toast';
-    toast.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:10000004;background:#0d1b2b;border:1px solid #58a6ff;color:#d8ebff;padding:8px 12px;border-radius:999px;font-weight:700;';
+    toast.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:10000004;background:var(--bg-surface);border:1px solid var(--accent-sky);color:var(--text-primary);padding:var(--space-2) 12px;border-radius:999px;font-weight:700;';
     shadowRootRef.appendChild(toast);
   }
   toast.textContent = message;

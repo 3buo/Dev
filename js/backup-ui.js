@@ -22,58 +22,58 @@ function ensureBackupPanel() {
     max-width: 92vw;
     min-height: 320px;
     max-height: 85vh;
-    background: linear-gradient(180deg, rgba(18,24,39,0.98), rgba(10,14,24,0.98));
+    background: linear-gradient(180deg, var(--bg-surface), var(--bg-canvas));
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(88,166,255,0.28);
-    border-radius: 12px;
+    border: 1px solid var(--accent-sky-border);
+    border-radius: var(--radius-lg);
     z-index: 3000;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 40px var(--shadow-color);
     padding: 14px;
-    color: white;
+    color: var(--text-primary);
     display: none;
     cursor: move;
   `;
 
   panel.innerHTML = `
-    <div id="backupPanelHeader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:6px 6px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
+    <div id="backupPanelHeader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-3); padding:var(--space-2) 6px; border-radius:var(--radius-lg); background:var(--tint-neutral); border:1px solid var(--border-subtle);">
       <div>
-        <div style="font-weight:900; color:#58a6ff; letter-spacing:0.2px;">⛑️ Backups & Restauración</div>
-        <div style="font-size:0.85em; color:#8ba4b5;">Puntos locales (offline) + export/import manual</div>
+        <div style="font-weight:800; color:var(--accent-sky); letter-spacing:0.2px;">⛑️ Backups & Restauración</div>
+        <div style="font-size:var(--text-xs); color:var(--text-secondary);">Puntos locales (offline) + export/import manual</div>
       </div>
-      <button id="backupPanelClose" style="background:transparent; border:none; color:#8ba4b5; cursor:pointer; font-size:1.2em;">×</button>
+      <button id="backupPanelClose" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; font-size:1.2em;">×</button>
     </div>
 
-    <div style="display:flex; gap:10px; margin-bottom:10px;">
-      <button id="btnCreatePoint" style="flex:1; background:rgba(55, 65, 81, 0.55); color:#e5e7eb; border:1px solid rgba(255,255,255,0.10); padding:10px; border-radius:14px; cursor:pointer; font-weight:850; backdrop-filter: blur(10px);">Crear punto</button>
-      <button id="btnRestoreLatest" style="flex:1; background:rgba(88,166,255,0.16); color:#9ecbff; border:1px solid rgba(88,166,255,0.35); padding:10px; border-radius:14px; cursor:pointer; font-weight:950; backdrop-filter: blur(10px);">Restaurar último</button>
+    <div style="display:flex; gap:var(--space-3); margin-bottom:var(--space-3);">
+      <button id="btnCreatePoint" style="flex:1; background:var(--bg-surface-raised); color:var(--text-primary); border:1px solid var(--border-subtle); padding:var(--space-3); border-radius:14px; cursor:pointer; font-weight:800; backdrop-filter: blur(10px);">Crear punto</button>
+      <button id="btnRestoreLatest" style="flex:1; background:var(--tint-sky); color:var(--accent-sky); border:1px solid var(--accent-sky-border); padding:var(--space-3); border-radius:14px; cursor:pointer; font-weight:800; backdrop-filter: blur(10px);">Restaurar último</button>
     </div>
 
-    <div style="margin: 10px 0; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;">
-      <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:8px;">
+    <div style="margin: 10px 0; border-top:1px solid var(--border-subtle); padding-top:10px;">
+      <div style="display:flex; justify-content:space-between; gap:var(--space-3); align-items:center; margin-bottom:8px;">
         <div>
-          <div style="font-size:0.9em; color:#8ba4b5; margin-bottom:2px;">Exportación / Importación</div>
-          <div style="font-size:0.75em; color:#6e7681;">Incluye snapshot + metadatos de puntos</div>
+          <div style="font-size:var(--text-sm); color:var(--text-secondary); margin-bottom:2px;">Exportación / Importación</div>
+          <div style="font-size:var(--text-xs); color:var(--text-tertiary);">Incluye snapshot + metadatos de puntos</div>
         </div>
-        <div style="font-size:0.75em; color:#6e7681;">JSON</div>
+        <div style="font-size:var(--text-xs); color:var(--text-tertiary);">JSON</div>
       </div>
 
-      <div style="display:flex; gap:10px; margin-bottom:10px;">
-        <button id="btnExport" style="flex:1; background:rgba(255,255,255,0.04); color:#e5e7eb; border:1px solid rgba(255,255,255,0.10); padding:10px; border-radius:14px; cursor:pointer; font-weight:900;">Descargar</button>
-        <button id="btnImport" style="flex:1; background:rgba(255,77,77,0.12); color:#ff9aa2; border:1px solid rgba(255,77,77,0.30); padding:10px; border-radius:14px; cursor:pointer; font-weight:900;">Importar</button>
+      <div style="display:flex; gap:var(--space-3); margin-bottom:var(--space-3);">
+        <button id="btnExport" style="flex:1; background:var(--tint-neutral); color:var(--text-primary); border:1px solid var(--border-subtle); padding:var(--space-3); border-radius:14px; cursor:pointer; font-weight:800;">Descargar</button>
+        <button id="btnImport" style="flex:1; background:var(--tint-error); color:var(--status-error); border:1px solid var(--tint-error); padding:var(--space-3); border-radius:14px; cursor:pointer; font-weight:800;">Importar</button>
       </div>
 
       <input type="file" id="backupImportFile" accept="application/json" style="display:none;" />
-      <div style="margin-bottom:10px; font-size:0.75em; color:#6e7681;">Importar reemplaza únicamente los puntos guardados en tu navegador (no toca Firestore directamente).</div>
+      <div style="margin-bottom:var(--space-3); font-size:var(--text-xs); color:var(--text-tertiary);">Importar reemplaza únicamente los puntos guardados en tu navegador (no toca Firestore directamente).</div>
     </div>
 
-    <div style="margin: 10px 0; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;">
-      <div style="font-size:0.9em; color:#8ba4b5; margin-bottom:8px;">Historial</div>
+    <div style="margin: 10px 0; border-top:1px solid var(--border-subtle); padding-top:10px;">
+      <div style="font-size:var(--text-sm); color:var(--text-secondary); margin-bottom:8px;">Historial</div>
       <ul id="backupList" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;"></ul>
     </div>
 
-    <div id="backupErr" style="display:none; margin-top:10px; color:#ff7b72; font-weight:700;"></div>
-    <div id="backupOk" style="display:none; margin-top:10px; color:#39ff14; font-weight:800;"></div>
-    <div style="margin-top:10px; font-size:0.75em; color:#6e7681;">Auto-snapshots cuando la app guarda. Sin internet se mantienen localmente.</div>
+    <div id="backupErr" style="display:none; margin-top:var(--space-3); color:var(--status-error); font-weight:700;"></div>
+    <div id="backupOk" style="display:none; margin-top:var(--space-3); color:var(--status-success); font-weight:800;"></div>
+    <div style="margin-top:var(--space-3); font-size:var(--text-xs); color:var(--text-tertiary);">Auto-snapshots cuando la app guarda. Sin internet se mantienen localmente.</div>
   `;
 
   document.body.appendChild(panel);
@@ -249,40 +249,40 @@ async function refreshBackupList() {
   ul.innerHTML = '';
 
   if (!state.currentUid) {
-    ul.innerHTML = `<li style="color:#8ba4b5; font-size:0.9em;">Inicia sesión para ver backups.</li>`;
+    ul.innerHTML = `<li style="color:var(--text-secondary); font-size:var(--text-sm);">Inicia sesión para ver backups.</li>`;
     return;
   }
 
   const snaps = await getSnapshotsForUid(state.currentUid, 25);
   if (!snaps || snaps.length === 0) {
-    ul.innerHTML = `<li style="color:#8ba4b5; font-size:0.9em;">Aún no hay puntos de restauración.</li>`;
+    ul.innerHTML = `<li style="color:var(--text-secondary); font-size:var(--text-sm);">Aún no hay puntos de restauración.</li>`;
     return;
   }
 
   snaps.forEach((snap) => {
     const li = document.createElement('li');
     li.style.cssText = `
-      background:#111a28;
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:12px;
-      padding:10px;
+      background:var(--bg-surface);
+      border:1px solid var(--border-subtle);
+      border-radius:var(--radius-lg);
+      padding:var(--space-3);
       display:flex;
       flex-direction:column;
       gap:8px;
     `;
 
     li.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-3);">
         <div>
-          <div style="font-weight:800; color:white; font-size:0.95em;">${new Date(snap.createdAt).toLocaleString('es-ES')}</div>
-          <div style="font-size:0.8em; color:#8ba4b5;">${snap.reason || 'auto'} • ${Math.max(0, Math.round((snap.sizeBytes||0)/1024))} KB</div>
+          <div style="font-weight:800; color:var(--text-primary); font-size:var(--text-sm);">${new Date(snap.createdAt).toLocaleString('es-ES')}</div>
+          <div style="font-size:var(--text-xs); color:var(--text-secondary);">${snap.reason || 'auto'} • ${Math.max(0, Math.round((snap.sizeBytes||0)/1024))} KB</div>
         </div>
-        <button style="background:transparent; border:none; color:#ff7b72; cursor:pointer; font-weight:900;" title="Borrar">🗑️</button>
+        <button style="background:transparent; border:none; color:var(--status-error); cursor:pointer; font-weight:800;" title="Borrar">🗑️</button>
       </div>
 
       <div style="display:flex; gap:8px;">
-        <button style="flex:1; background:#2d3446; color:#8ba4b5; border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:800;">Restaurar</button>
-        <button style="width:44px; background:transparent; color:#8ba4b5; border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:800;">↩</button>
+        <button style="flex:1; background:var(--bg-surface-raised); color:var(--text-secondary); border:1px solid var(--border-subtle); padding:var(--space-2) 10px; border-radius:var(--radius-md); cursor:pointer; font-weight:800;">Restaurar</button>
+        <button style="width:44px; background:transparent; color:var(--text-secondary); border:1px solid var(--border-subtle); padding:var(--space-2) 10px; border-radius:var(--radius-md); cursor:pointer; font-weight:800;">↩</button>
       </div>
     `;
 
@@ -350,14 +350,14 @@ export function initBackupUI() {
       right: 20px;
       width: 58px;
       height: 58px;
-      border-radius: 16px;
-      border: 1px solid rgba(88,166,255,0.38);
-      background: linear-gradient(160deg, rgba(18,28,45,0.96), rgba(8,14,26,0.96));
-      color: #9ecbff;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--accent-sky-border);
+      background: linear-gradient(160deg, var(--bg-surface), var(--bg-canvas));
+      color: var(--accent-sky);
       font-size: 1.2em;
       cursor: pointer;
       z-index: 2500;
-      box-shadow: 0 10px 34px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+      box-shadow: 0 10px 34px var(--shadow-color), inset 0 1px 0 var(--border-subtle);
       backdrop-filter: blur(8px);
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, color 180ms ease;
     `;
@@ -368,18 +368,18 @@ export function initBackupUI() {
 
     btn.onmouseenter = () => {
       btn.style.transform = 'translateY(-2px) scale(1.03)';
-      btn.style.borderColor = 'rgba(88,166,255,0.75)';
-      btn.style.boxShadow = '0 14px 40px rgba(0,0,0,0.55), 0 0 20px rgba(88,166,255,0.18)';
-      btn.style.color = '#c7e2ff';
+      btn.style.borderColor = 'var(--accent-sky)';
+      btn.style.boxShadow = '0 14px 40px var(--shadow-color), 0 0 20px var(--glow-sky)';
+      btn.style.color = 'var(--accent-sky)';
     };
     btn.onmouseleave = () => {
       const isOpen = btn.classList.contains('backup-launcher-open');
       btn.style.transform = isOpen ? 'scale(1.02)' : 'none';
-      btn.style.borderColor = isOpen ? 'rgba(88,166,255,0.9)' : 'rgba(88,166,255,0.38)';
+      btn.style.borderColor = isOpen ? 'var(--accent-sky)' : 'var(--accent-sky-border)';
       btn.style.boxShadow = isOpen
-        ? '0 16px 42px rgba(0,0,0,0.6), 0 0 24px rgba(88,166,255,0.22)'
-        : '0 10px 34px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)';
-      btn.style.color = isOpen ? '#e8f3ff' : '#9ecbff';
+        ? '0 16px 42px var(--shadow-color), 0 0 24px var(--glow-sky)'
+        : '0 10px 34px var(--shadow-color), inset 0 1px 0 var(--border-subtle)';
+      btn.style.color = isOpen ? 'var(--text-primary)' : 'var(--accent-sky)';
     };
 
     btn.onclick = () => window.toggleBackupPanel?.();

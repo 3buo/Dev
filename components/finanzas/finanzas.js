@@ -3,6 +3,12 @@ import { esc } from '../../js/escape.js';
 import { hashPin, verifyPin } from '../../js/pin.js';
 import { toast } from '../../js/feedback.js';
 
+// --- TOKENS CSS EN CANVAS (única fuente de color: tokens.css) ---
+const cssVar = (name, fallback) => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+};
+
 // --- CORE ---
 window.rateBcvVal = window.rateBcvVal || 0; 
 window.rateBinanceVal = window.rateBinanceVal || 0; 
@@ -80,15 +86,15 @@ window.renderWallets = () => {
     container.innerHTML = '';
     state.wallets.forEach(w => {
         const isBs = w.id === 'bs';
-        const equivDiv = isBs ? `<div id="bsEquiv" style="font-size: 0.85em; color: #8ba4b5; margin-top: 5px;">≈ Sincroniza tasas</div>` : '';
-        const deleteBtn = !isBs ? `<button onclick="deleteWallet('${w.id}')" style="background:transparent; color:#ff4d4d; border:none; padding:0; font-size:1.2em; cursor:pointer;">🗑️</button>` : '';
+        const equivDiv = isBs ? `<div id="bsEquiv" style="font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1);">≈ Sincroniza tasas</div>` : '';
+        const deleteBtn = !isBs ? `<button onclick="deleteWallet('${w.id}')" style="background:transparent; color:var(--status-error); border:none; padding:0; font-size:1.2em; cursor:pointer;">🗑️</button>` : '';
 
         const card = document.createElement('div'); card.className = 'balance-card';
-        card.style.background = '#111a28'; card.style.border = `1px solid rgba(255,255,255,0.1)`; card.style.borderTop = `3px solid ${w.color}`;
+        card.style.background = 'var(--bg-surface)'; card.style.border = `1px solid var(--border-subtle)`; card.style.borderTop = `3px solid ${w.color}`;
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;"><span class="b-title" style="color:#fff;">${w.name}</span>${deleteBtn}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;"><span class="b-title" style="color:var(--text-primary);">${w.name}</span>${deleteBtn}</div>
             <span class="b-amount" id="bal-${w.id}" style="color:${w.color};">${w.symbol} 0.00</span>${equivDiv}
-            <button class="b-btn" onclick="updateBalance('${w.id}', '${w.name}')" style="background:rgba(255,255,255,0.05); color:#8ba4b5;">Actualizar</button>`;
+            <button class="b-btn" onclick="updateBalance('${w.id}', '${w.name}')" style="background:var(--tint-neutral); color:var(--text-secondary);">Actualizar</button>`;
         container.appendChild(card);
     });
 
@@ -230,7 +236,7 @@ window.buildSmartFilterUI = () => {
 
                 html += `
                     <div class="sf-week-item" onclick="applySmartFilter('${sDate}', '${eDate}', '${w.name} de ${monthNames[m]}')">
-                        <span>↳ ${w.name}</span> <span style="font-size:0.85em; opacity:0.6;">(Día ${w.start} al ${wEnd})</span>
+                        <span>↳ ${w.name}</span> <span style="font-size:var(--text-xs); opacity:0.6;">(Día ${w.start} al ${wEnd})</span>
                     </div>
                 `;
             }
@@ -303,23 +309,23 @@ window.renderExpenses = () => {
         if(chartSums[exp.account] !== undefined) chartSums[exp.account] += parseFloat(exp.amount);
         else chartSums[exp.account] = parseFloat(exp.amount);
 
-        const walletInfo = state.wallets.find(w => w.id === exp.account) || { name: 'Eliminada', symbol: '¤', color: '#444' };
+        const walletInfo = state.wallets.find(w => w.id === exp.account) || { name: 'Eliminada', symbol: '¤', color: 'var(--border-strong)' };
         const li = document.createElement('li'); li.className = 'expense-item'; li.style.borderLeftColor = walletInfo.color; 
-        li.style.background = '#111a28'; li.style.borderTop = '1px solid #1a273a'; li.style.borderRight = '1px solid #1a273a'; li.style.borderBottom = '1px solid #1a273a';
+        li.style.background = 'var(--bg-surface)'; li.style.borderTop = '1px solid var(--border-subtle)'; li.style.borderRight = '1px solid var(--border-subtle)'; li.style.borderBottom = '1px solid var(--border-subtle)';
         
         let equivHtml = ''; 
         if (exp.account === 'bs' && (exp.eqUsd || exp.eqUsdt || exp.eqEur)) { 
-            equivHtml = `<br><span style="font-size: 0.75em; color: #8ba4b5;">≈ $${(exp.eqUsd||0).toFixed(2)} BCV | ₮${(exp.eqUsdt||0).toFixed(2)} BIN | €${(exp.eqEur||0).toFixed(2)} EUR</span>`; 
+            equivHtml = `<br><span style="font-size: var(--text-xs); color: var(--text-secondary);">≈ $${(exp.eqUsd||0).toFixed(2)} BCV | ₮${(exp.eqUsdt||0).toFixed(2)} BIN | €${(exp.eqEur||0).toFixed(2)} EUR</span>`; 
         } 
         
         const contentDiv = document.createElement('div'); contentDiv.className = 'task-content'; 
-        contentDiv.innerHTML = `<strong style="color:white;">${esc(exp.desc)}</strong><br><span class="task-date" style="color:#8ba4b5;">📅 ${exp.date} | 🏦 ${esc(walletInfo.name.toUpperCase())}</span>${equivHtml}`; 
+        contentDiv.innerHTML = `<strong style="color:var(--text-primary);">${esc(exp.desc)}</strong><br><span class="task-date" style="color:var(--text-secondary);">📅 ${exp.date} | 🏦 ${esc(walletInfo.name.toUpperCase())}</span>${equivHtml}`; 
         
         const amountSpan = document.createElement('span'); amountSpan.className = 'expense-amount'; 
-        amountSpan.innerText = `-${walletInfo.symbol}${parseFloat(exp.amount).toFixed(2)}`; amountSpan.style.color = '#ff4d4d';
+        amountSpan.innerText = `-${walletInfo.symbol}${parseFloat(exp.amount).toFixed(2)}`; amountSpan.style.color = 'var(--status-error)';
         
         const deleteBtn = document.createElement('button'); deleteBtn.innerText = 'Deshacer'; 
-        deleteBtn.style.background = '#1a273a'; deleteBtn.style.color = '#8ba4b5'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; deleteBtn.style.border = 'none'; deleteBtn.style.borderRadius = '4px';
+        deleteBtn.style.background = 'var(--bg-surface-raised)'; deleteBtn.style.color = 'var(--text-secondary)'; deleteBtn.style.padding = '5px 10px'; deleteBtn.style.marginLeft = '15px'; deleteBtn.style.fontSize = '0.8em'; deleteBtn.style.border = 'none'; deleteBtn.style.borderRadius = '4px';
         deleteBtn.onclick = () => { 
             if(confirm("¿Devolver gasto al saldo?")) { 
                 if(state.balances[exp.account] !== undefined) state.balances[exp.account] += parseFloat(exp.amount); 
@@ -328,8 +334,69 @@ window.renderExpenses = () => {
         }; 
         li.append(contentDiv, amountSpan, deleteBtn); list.appendChild(li); 
     }); 
-    if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:#8ba4b5; background: transparent; border:none;">No hay movimientos en este periodo.</li>'; 
+    if(filtered.length === 0) list.innerHTML = '<li style="justify-content:center; color:var(--text-secondary); background: transparent; border:none;">No hay movimientos en este periodo.</li>'; 
     window.updateFinanceChart(chartSums);
+    window.renderInsights();
+};
+
+// --- INSIGHTS (DESIGN_SPEC.md §5.2) — render puro, no cambia el modelo de datos ---
+window.renderInsights = () => {
+    const grid = document.getElementById('insightsGrid');
+    if (!grid) return;
+    const expenses = state.expenses || [];
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    const monthKey = (d) => {
+        const dt = parseVeDate(d);
+        if (isNaN(dt)) return '';
+        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    };
+    const norm = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    const now = new Date();
+    const curKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevKey = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+
+    const sumOf = (key) => expenses.reduce((s, e) => s + (monthKey(e.date) === key ? parseFloat(e.amount || 0) : 0), 0);
+    const curTotal = sumOf(curKey), prevTotal = sumOf(prevKey);
+
+    let trendHtml;
+    if (prevTotal > 0) {
+        const pct = ((curTotal - prevTotal) / prevTotal) * 100;
+        trendHtml = `<span class="${pct >= 0 ? 'insight-trend-up' : 'insight-trend-down'}">${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(0)}%</span> vs ${monthNames[prev.getMonth()]}`;
+    } else {
+        trendHtml = 'Primer mes con registros';
+    }
+
+    const freq = {};
+    expenses.forEach(e => { const k = norm(e.desc); if (k) freq[k] = (freq[k] || 0) + 1; });
+    const top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+    const byConcept = {};
+    expenses.forEach(e => {
+        const k = norm(e.desc), mk = monthKey(e.date);
+        if (!k || !mk) return;
+        byConcept[k] = byConcept[k] || { months: new Set(), total: 0 };
+        byConcept[k].months.add(mk);
+        byConcept[k].total += parseFloat(e.amount || 0);
+    });
+    const subs = Object.entries(byConcept).filter(([, v]) => v.months.size >= 2).sort((a, b) => b[1].months.size - a[1].months.size).slice(0, 3);
+
+    grid.innerHTML = `
+        <div class="insight-item">
+            <div class="insight-label">Gasto de ${monthNames[now.getMonth()]}</div>
+            <div class="insight-value">${curTotal.toFixed(2)}</div>
+            <div class="insight-sub">${trendHtml}</div>
+        </div>
+        <div class="insight-item">
+            <div class="insight-label">Top conceptos</div>
+            ${top.length ? top.map(([k, n]) => `<div class="insight-subscription"><span>${esc(k)}</span><span class="sub-amount">×${n}</span></div>`).join('') : '<div class="insight-sub">Sin movimientos aún</div>'}
+        </div>
+        <div class="insight-item">
+            <div class="insight-label">Suscripciones probables</div>
+            ${subs.length ? subs.map(([k, v]) => `<div class="insight-subscription"><span>${esc(k)}</span><span class="sub-amount">${v.months.size} meses</span></div>`).join('') : '<div class="insight-sub">No detectadas (mismo concepto en ≥2 meses)</div>'}
+        </div>`;
 };
 
 window.updateFinanceChart = (chartSums) => {
@@ -343,12 +410,18 @@ window.updateFinanceChart = (chartSums) => {
     if(financeChartInstance) { financeChartInstance.destroy(); financeChartInstance = null; }
     let labels = []; let dataSets = []; let bgColors = []; let borderColors = []; let totalDataSum = 0;
 
-    const palettes = {
-        neon: ['#00d2ff', '#ff4d4d', '#39ff14', '#fbc02d', '#b100e8'],
-        pastel: ['#a8e6cf', '#ff8b94', '#dcedc1', '#ffd3b6', '#ffaaa5'],
-        monochrome: ['#1a365d', '#2b6cb0', '#4299e1', '#63b3ed', '#bee3f8']
-    };
-    const currentPalette = palettes[theme];
+    // Paletas definidas como tokens en tokens.css (DESIGN_SPEC.md §2)
+    const paletteNames = { neon: '--chart', pastel: '--chart-pastel', monochrome: '--chart-mono' };
+    const base = paletteNames[theme] || '--chart';
+    const currentPalette = [1, 2, 3, 4, 5, 6].map(i => cssVar(`${base}-${i}`, '#7c6cf0'));
+
+    const textSecondary = cssVar('--text-secondary', '#a9b3c8');
+    const surfaceRaised = cssVar('--bg-surface-raised', '#1c2330');
+    const borderStrong = cssVar('--border-strong', '#3d4a61');
+    const borderSubtle = cssVar('--border-subtle', '#272f40');
+    const bgInset = cssVar('--bg-inset', '#0a0d13');
+    const accentSky = cssVar('--accent-sky', '#4cc3ff');
+    const chartFade = cssVar('--chart-fade', 'rgba(4,8,18,0.35)');
 
     state.wallets.forEach((w, index) => {
         labels.push(`${w.name} (${w.symbol})`);
@@ -357,7 +430,7 @@ window.updateFinanceChart = (chartSums) => {
         let colorBase = theme !== 'neon' ? currentPalette[index % currentPalette.length] : w.color;
         const grad = ctx.createLinearGradient(0, 0, 0, 400); 
         grad.addColorStop(0, colorBase); 
-        grad.addColorStop(1, type === 'bar' || type === 'polarArea' ? 'rgba(0,0,0,0.5)' : colorBase);
+        grad.addColorStop(1, type === 'bar' || type === 'polarArea' ? chartFade : colorBase);
         bgColors.push(grad); borderColors.push(colorBase);
     });
 
@@ -369,15 +442,15 @@ window.updateFinanceChart = (chartSums) => {
             datasets: [{ 
                 label: 'Distribución de Capital',
                 data: hasData ? dataSets : labels.map(() => 0.1), 
-                backgroundColor: hasData ? bgColors : labels.map(() => '#1a273a'), 
-                borderColor: hasData ? borderColors : labels.map(() => '#2d3446'),
+                backgroundColor: hasData ? bgColors : labels.map(() => surfaceRaised), 
+                borderColor: hasData ? borderColors : labels.map(() => borderStrong),
                 borderWidth: type === 'bar' ? 0 : 2, borderRadius: type === 'bar' ? 4 : 0,
             }] 
         }, 
         options: { 
             responsive: true, maintainAspectRatio: true, 
-            plugins: { legend: { display: showLegend, position: 'bottom', labels: { color: '#8ba4b5', font: { family: 'system-ui' } } }, tooltip: { enabled: hasData, backgroundColor: 'rgba(10, 15, 24, 0.9)', titleColor: '#00d2ff', padding: 10, cornerRadius: 8 } },
-            scales: (type === 'bar' || type === 'line') ? { y: { beginAtZero: true, grid: { color: showGrid ? '#1a273a' : 'transparent' }, ticks: { color: '#8ba4b5' } }, x: { grid: { display: false }, ticks: { color: '#8ba4b5' } } } : (type === 'polarArea' ? { r: { grid: { color: showGrid ? '#1a273a' : 'transparent'}, ticks: { display: false } } } : {})
+            plugins: { legend: { display: showLegend, position: 'bottom', labels: { color: textSecondary, font: { family: 'Inter, system-ui, sans-serif', size: 12 } } }, tooltip: { enabled: hasData, backgroundColor: bgInset, titleColor: accentSky, padding: 10, cornerRadius: 8 } },
+            scales: (type === 'bar' || type === 'line') ? { y: { beginAtZero: true, grid: { color: showGrid ? borderSubtle : 'transparent' }, ticks: { color: textSecondary } }, x: { grid: { display: false }, ticks: { color: textSecondary } } } : (type === 'polarArea' ? { r: { grid: { color: showGrid ? borderSubtle : 'transparent'}, ticks: { display: false } } } : {})
         } 
     }); 
 };
@@ -475,8 +548,17 @@ window.downloadChartPNG = () => {
 
 export function init() {
     if(!isUnlocked) return;
-    if(!state.wallets) { state.wallets = [ { id: 'facebank', name: 'Facebank', symbol: '$', color: '#00d2ff' }, { id: 'binance', name: 'Binance', symbol: '₮', color: '#fbc02d' }, { id: 'bs', name: 'Bolívares', symbol: 'Bs.', color: '#39ff14' } ]; if(!state.balances) state.balances = { facebank: 0, binance: 0, bs: 0 }; saveDataToCloud(); }
-    initVoiceEngine(); window.renderWallets(); window.renderBalances(); window.renderExpenses();
+    if(!state.wallets) {
+        // Colores por defecto resueltos desde los tokens CSS (--chart-*)
+        const [cSky, cAmber, cGreen] = ['--chart-2', '--chart-4', '--chart-3'].map(n => cssVar(n, '#7c6cf0'));
+        state.wallets = [ { id: 'facebank', name: 'Facebank', symbol: '$', color: cSky }, { id: 'binance', name: 'Binance', symbol: '₮', color: cAmber }, { id: 'bs', name: 'Bolívares', symbol: 'Bs.', color: cGreen } ];
+        if(!state.balances) state.balances = { facebank: 0, binance: 0, bs: 0 };
+        saveDataToCloud();
+    }
+    // El selector de color de "Nueva Cartera" usa el token de acento como valor por defecto
+    const colorPicker = document.getElementById('newWalletColor');
+    if (colorPicker) colorPicker.value = cssVar('--accent-sky', '#4cc3ff');
+    initVoiceEngine(); window.renderWallets(); window.renderBalances(); window.renderExpenses(); window.renderInsights();
     if(window.rateBcvVal === 0 || window.rateBinanceVal === 0) window.fetchExchangeRates(true); 
 }
 window.addEventListener('stateChanged', () => {
@@ -525,13 +607,13 @@ window.updateBulkInput = () => {
     
     // Update the preview display
     if(parsedBulkRecords.length === 0) {
-        previewEl.innerHTML = '<span style="color:#8ba4b5; font-size:0.9em;">Escribe en formato: monto - descripcion</span>';
+        previewEl.innerHTML = '<span style="color:var(--text-secondary); font-size:var(--text-sm);">Escribe en formato: monto - descripcion</span>';
         if(countEl) countEl.innerText = '0 registros listos para agregar';
     } else {
         previewEl.innerHTML = parsedBulkRecords.map((r, i) => `
-            <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px; font-size:0.9em;">
-                <span style="color:#fff;"><strong>${i+1}.</strong> ${r.desc}</span>
-                <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
+            <div style="display:flex; justify-content:space-between; padding:var(--space-2) 8px; background:var(--bg-surface-raised); margin-bottom:4px; border-radius:var(--radius-sm); font-size:var(--text-sm);">
+                <span style="color:var(--text-primary);"><strong>${i+1}.</strong> ${r.desc}</span>
+                <span style="color:var(--status-error);">-${r.amount.toFixed(2)}</span>
             </div>`).join('');
         if(countEl) countEl.innerText = `${parsedBulkRecords.length} registro(s) listo(s) para agregar`;
     }
@@ -596,14 +678,14 @@ function updatePreviewDisplay() {
     const btnConfirm = document.getElementById('btnBulkConfirm');
     
     if(parsedBulkRecords.length === 0) {
-        previewEl.innerHTML = '<span style="color:#8ba4b5; font-size:0.9em;">Escribe algo para ver la previsualización...</span>';
+        previewEl.innerHTML = '<span style="color:var(--text-secondary); font-size:var(--text-sm);">Escribe algo para ver la previsualización...</span>';
         if(btnPreview) { btnPreview.disabled = false; btnPreview.style.opacity = '0.5'; }
         if(btnConfirm) { btnConfirm.disabled = true; btnConfirm.style.opacity = '0.5'; }
     } else {
         previewEl.innerHTML = parsedBulkRecords.map((r, i) => `
-            <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px; font-size:0.9em;">
-                <span style="color:#fff;"><strong>${i+1}.</strong> ${r.desc}</span>
-                <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
+            <div style="display:flex; justify-content:space-between; padding:var(--space-2) 8px; background:var(--bg-surface-raised); margin-bottom:4px; border-radius:var(--radius-sm); font-size:var(--text-sm);">
+                <span style="color:var(--text-primary);"><strong>${i+1}.</strong> ${r.desc}</span>
+                <span style="color:var(--status-error);">-${r.amount.toFixed(2)}</span>
             </div>`).join('');
         
         if(btnPreview) { btnPreview.disabled = true; btnPreview.style.opacity = '0.5'; }
@@ -622,29 +704,29 @@ window.confirmBulkAdd = () => {
     window.bulkConfirmModal.id = 'bulkConfirmModal';
     window.bulkConfirmModal.style.cssText = `
         position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: #1a273a; border: 2px solid #ff4d4d; border-radius: 12px;
-        padding: 25px; min-width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        background: var(--bg-surface-raised); border: 2px solid var(--status-error); border-radius: var(--radius-lg);
+        padding: var(--space-6); min-width: 320px; box-shadow: 0 8px 32px var(--shadow-color);
         z-index: 2000; display: flex; flex-direction: column; align-items: center;
     `;
     
     window.bulkConfirmModal.innerHTML = `
-        <h3 style="color:#ff4d4d; margin-bottom:10px;">✅ Confirmar Entrada Masiva</h3>
-        <p style="color:#8ba4b5; text-align:center; margin-bottom:20px;">
+        <h3 style="color:var(--status-error); margin-bottom:var(--space-3);">✅ Confirmar Entrada Masiva</h3>
+        <p style="color:var(--text-secondary); text-align:center; margin-bottom:var(--space-5);">
             ¿Agregar <strong>${parsedBulkRecords.length}</strong> gasto(s) a la cartera de <strong>${walletName.toUpperCase()}</strong>?
         </p>
-        <div id="bulkConfirmList" style="width:100%; max-height:400px; overflow-y:auto; background:#111a28; border:1px solid #2d3446; padding:10px; margin-bottom:15px; font-size:0.9em;">
+        <div id="bulkConfirmList" style="width:100%; max-height:400px; overflow-y:auto; background:var(--bg-surface); border:1px solid var(--border-strong); padding:var(--space-3); margin-bottom:var(--space-4); font-size:var(--text-sm);">
             ${parsedBulkRecords.map((r, i) => `
-                <div style="display:flex; justify-content:space-between; padding:6px 8px; background:#1a273a; margin-bottom:4px; border-radius:4px;">
-                    <span style="color:#fff;">${i+1}. ${r.desc}</span>
-                    <span style="color:#ff4d4d;">-${r.amount.toFixed(2)}</span>
+                <div style="display:flex; justify-content:space-between; padding:var(--space-2) 8px; background:var(--bg-surface-raised); margin-bottom:4px; border-radius:var(--radius-sm);">
+                    <span style="color:var(--text-primary);">${i+1}. ${r.desc}</span>
+                    <span style="color:var(--status-error);">-${r.amount.toFixed(2)}</span>
                 </div>`).join('')}
         </div>
         <button onclick="executeBulkAdd('${walletId}')"
-            style="background:#ff4d4d; color:#fff; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px; margin-bottom:10px;">
+            style="background:var(--status-error); color:var(--text-on-accent); border:none; padding:var(--space-3) 30px; font-size:1em; cursor:pointer; border-radius:var(--radius-sm); margin-bottom:var(--space-3);">
             ✅ Agregar Todos
         </button>
         <button onclick="window.bulkConfirmModal.remove()"
-            style="background:#2d3446; color:#8ba4b5; border:none; padding:10px 30px; font-size:1em; cursor:pointer; border-radius:6px;">
+            style="background:var(--bg-surface-raised); color:var(--text-secondary); border:none; padding:var(--space-3) 30px; font-size:1em; cursor:pointer; border-radius:var(--radius-sm);">
             Cancelar
         </button>
     `;
@@ -675,7 +757,7 @@ window.executeBulkAdd = (walletId) => {
     const previewEl = document.getElementById('bulkPreview');
     if(previewEl) {
         // For bulk-input.html style
-        previewEl.innerHTML = '<span style="color:#8ba4b5; font-size:0.9em;">Escribe en formato: monto - descripcion</span>';
+        previewEl.innerHTML = '<span style="color:var(--text-secondary); font-size:var(--text-sm);">Escribe en formato: monto - descripcion</span>';
         const countEl = document.getElementById('bulkCount');
         if(countEl) countEl.innerText = '0 registros listos para agregar';
         const btnConfirm = document.getElementById('btnBulkConfirm');

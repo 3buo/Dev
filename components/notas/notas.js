@@ -43,13 +43,51 @@ function parseMarkdown(text) {
         .replace(/`([^`]+)`/g, '<span class="md-code-inline">$1</span>')
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
         .replace(/^## (.*$)/gim, '<h3>$1</h3>')
-        .replace(/^# (.*$)/gim, '<h3 style="color:var(--note-accent); font-size:1.3em;">$1</h3>')
+        .replace(/^# (.*$)/gim, '<h3 style="color:var(--accent-sky); font-size:1.3em;">$1</h3>')
         .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
         .replace(/_(.*)_/gim, '<em>$1</em>')
         .replace(/^\- (.*$)/gim, '• $1<br>')
         .replace(/\n/g, '<br>');
     return `<div class="md-content">${html}</div>`;
 }
+
+// --- CAPTURA RÁPIDA (DESIGN_SPEC.md §5.1) ---
+// Misma persistencia que el editor zen: state.notes + saveDataToCloud + renderNotes.
+window.quickCaptureNote = () => {
+    const input = document.getElementById('quickCaptureInput');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!state.notes) state.notes = [];
+    state.notes.unshift({
+        id: Date.now(),
+        title: text.split('\n')[0].slice(0, 80) || 'Sin Título',
+        content: text,
+        tables: [],
+        date: new Date().toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' }),
+        tags: analyzeSemantics(text)
+    });
+
+    input.value = '';
+    recordActivity();
+    saveDataToCloud();
+    window.renderNotes();
+    updateMindGraph();
+    toast('Nota capturada');
+};
+
+// Enter crea la nota; Shift+Enter inserta salto de línea
+window.initQuickCapture = () => {
+    const input = document.getElementById('quickCaptureInput');
+    if (!input) return;
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            window.quickCaptureNote();
+        }
+    });
+};
 
 window.toggleZenPreview = () => {
     const editor = document.getElementById('noteContent');
@@ -64,10 +102,10 @@ window.toggleZenPreview = () => {
         
         let htmlPreview = parseMarkdown(editor.value);
         if(tempMainTables.length > 0) htmlPreview += buildReadOnlyTablesHTML(tempMainTables);
-        previewArea.innerHTML = htmlPreview || '<span style="color:#8b949e; font-style:italic;">Nota vacía...</span>';
+        previewArea.innerHTML = htmlPreview || '<span style="color:var(--text-tertiary); font-style:italic;">Nota vacía...</span>';
         
         btn.innerHTML = '✏️ Seguir editando';
-        btn.style.color = 'white'; btn.style.borderColor = 'var(--note-accent)';
+        btn.style.color = 'var(--text-primary)'; btn.style.borderColor = 'var(--accent-sky)';
     } else {
         editor.style.display = 'block';
         tableContainer.style.display = 'block';
@@ -110,9 +148,9 @@ function buildEditableTableHTML(tablesArray, containerId, prefix) {
         controls.innerHTML = `
             <button class="md-tool-btn" onclick="addCol('${prefix}', ${tIndex})">+ Col</button>
             <button class="md-tool-btn" onclick="addRow('${prefix}', ${tIndex})">+ Fila</button>
-            <button class="md-tool-btn" onclick="delCol('${prefix}', ${tIndex})" style="color:#ff7b72;">- Col</button>
-            <button class="md-tool-btn" onclick="delRow('${prefix}', ${tIndex})" style="color:#ff7b72;">- Fila</button>
-            <button class="md-tool-btn" onclick="deleteTable('${prefix}', ${tIndex})" style="background:#da3633; color:white; margin-left:auto; border:none;">🗑️ Eliminar</button>
+            <button class="md-tool-btn" onclick="delCol('${prefix}', ${tIndex})" style="color:var(--status-error);">- Col</button>
+            <button class="md-tool-btn" onclick="delRow('${prefix}', ${tIndex})" style="color:var(--status-error);">- Fila</button>
+            <button class="md-tool-btn" onclick="deleteTable('${prefix}', ${tIndex})" style="background:var(--status-error); color:var(--text-on-accent); margin-left:auto; border:none;">🗑️ Eliminar</button>
         `;
         
         const tableContainer = document.createElement('div');
@@ -141,12 +179,12 @@ function buildReadOnlyTablesHTML(tablesArray) {
     if(!tablesArray || tablesArray.length === 0) return '';
     let html = '';
     tablesArray.forEach(matrix => {
-        html += `<div class="note-table-container" style="margin-top:10px;"><table class="note-table">`;
+        html += `<div class="note-table-container" style="margin-top:var(--space-3);"><table class="note-table">`;
         matrix.forEach((row, rIndex) => {
             html += `<tr>`;
             row.forEach(cell => {
                 if(rIndex === 0) html += `<th>${esc(cell)}</th>`;
-                else html += `<td><div style="padding: 10px; font-size:0.95em;">${esc(cell)}</div></td>`;
+                else html += `<td><div style="padding: var(--space-3); font-size:var(--text-sm);">${esc(cell)}</div></td>`;
             });
             html += `</tr>`;
         });
@@ -194,7 +232,7 @@ window.renderNotes = () => {
     grid.innerHTML = '';
 
     if (!state.notes || state.notes.length === 0) {
-        grid.innerHTML = '<div style="color: #8b949e; width: 100%; text-align: center; grid-column: 1 / -1; padding: 40px;">No hay notas registradas.</div>';
+        grid.innerHTML = '<div style="color: var(--text-tertiary); width: 100%; text-align: center; grid-column: 1 / -1; padding: var(--space-10);">No hay notas registradas.</div>';
         return;
     }
 
@@ -203,7 +241,7 @@ window.renderNotes = () => {
         card.onclick = () => openNoteModal(index);
 
         const header = document.createElement('div'); header.className = 'card-header';
-        header.innerHTML = `<div style="font-weight:bold; color:white; font-size:1.1em; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(note.title)}</div><div style="font-size:0.75em; color:#8b949e;">${note.date}</div>`;
+        header.innerHTML = `<div style="font-weight:bold; color:var(--text-primary); font-size:1.1em; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(note.title)}</div><div style="font-size:var(--text-xs); color:var(--text-tertiary);">${note.date}</div>`;
 
         const body = document.createElement('div'); body.className = 'card-body';
         let htmlContent = parseMarkdown(note.content);
@@ -213,7 +251,7 @@ window.renderNotes = () => {
         const footer = document.createElement('div'); footer.className = 'card-footer';
         let tagsHtml = '';
         if(note.tags && note.tags.length > 0) note.tags.forEach(t => tagsHtml += `<span class="tag-chip">${t}</span>`);
-        else tagsHtml = `<span class="tag-chip" style="color:#8b949e; border-color:transparent; background:rgba(255,255,255,0.05);">📝 Nota</span>`;
+        else tagsHtml = `<span class="tag-chip" style="color:var(--text-tertiary); border-color:transparent; background:var(--tint-neutral);">📝 Nota</span>`;
         footer.innerHTML = tagsHtml;
 
         card.append(header, body, footer); grid.appendChild(card);
@@ -264,10 +302,20 @@ function handleTimeCapsule() {
 }
 
 let graphAnimFrame, isGraphActive = false;
+// Colores del canvas resueltos desde los tokens CSS (única fuente de color)
+const cssToken = (name, fallback) => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+};
+const hexToRgba = (hex, alpha) => {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+};
 function updateMindGraph() {
     const canvas = document.getElementById('mindGraph'); if (!canvas) return; const ctx = canvas.getContext('2d');
     canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
     document.getElementById('graphStats').innerText = `${state.notes ? state.notes.length : 0} notas en tu red`;
+    const skyColor = cssToken('--accent-sky', '#4cc3ff');
     let particles = [];
     for(let i=0; i < Math.min((state.notes?.length||5), 40); i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, size: Math.random() * 2 + 1 });
     function animate() {
@@ -275,10 +323,10 @@ function updateMindGraph() {
         for(let i=0; i < particles.length; i++) {
             let p = particles[i]; p.x += p.vx; p.y += p.vy;
             if(p.x < 0 || p.x > canvas.width) p.vx *= -1; if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fillStyle = 'rgba(88, 166, 255, 0.8)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fillStyle = hexToRgba(skyColor, 0.8); ctx.fill();
             for(let j=i+1; j < particles.length; j++) {
                 let dist = Math.sqrt(Math.pow(p.x - particles[j].x, 2) + Math.pow(p.y - particles[j].y, 2));
-                if(dist < 100) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(88, 166, 255, ${1 - dist/100})`; ctx.lineWidth = 0.5; ctx.stroke(); }
+                if(dist < 100) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = hexToRgba(skyColor, 1 - dist/100); ctx.lineWidth = 0.5; ctx.stroke(); }
             }
         }
         graphAnimFrame = requestAnimationFrame(animate);
@@ -289,6 +337,7 @@ function updateMindGraph() {
 export function init() { 
     window.renderNotes(); 
     window.changeViewFormat(window.currentNotesView); // Aplicar vista guardada
+    window.initQuickCapture();
     updateMindGraph(); 
 }
 

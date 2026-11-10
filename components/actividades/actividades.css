@@ -1,124 +1,96 @@
-/* Importar una fuente única solo para este módulo */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+/* ==========================================================================
+   MÓDULO DE ACTIVIDADES (DESIGN_SPEC.md) — consume solo tokens de tokens.css
+   Tipografía global Inter (se eliminó Poppins para coherencia §3).
+   ========================================================================== */
 
-/* =========================================
-   ESTILO GLOBAL DEL FONDO PARA ESTA PESTAÑA
-   ========================================= */
-body[data-theme="actividades"] {
-    background-color: #303135; /* Un fondo súper oscuro casi negro */
-    /* Un degradado radial azul oscuro en la parte superior para dar profundidad */
-    background-image: radial-gradient(circle at top center, #1e2733 15%, #303135 60%);
-    background-attachment: fixed; /* Evita que el gradiente se mueva al hacer scroll */
+/* Contenedores */
+#view-actividades {
+    font-family: var(--font-sans);
+    color: var(--text-primary);
 }
 
-/* 1. PERSONALIZACIÓN DEL BOTÓN DE LA PESTAÑA SUPERIOR */
-#tab-actividades.active {
-    background-color: #1a1c23 !important;
-    color: #00a8ff !important; /* Azul eléctrico */
-    border-bottom: 3px solid #00a8ff !important;
-    font-family: 'Poppins', sans-serif !important;
-    font-weight: 700 !important;
+#view-actividades .container,
+#view-actividades .section-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+}
+
+/* Títulos de segmentos */
+#view-actividades h2 {
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    text-transform: uppercase;
+    font-size: var(--text-lg);
     letter-spacing: 0.5px;
 }
+#view-actividades h2.title-heatmap { color: var(--status-success); }
+#view-actividades h2.title-habits { color: var(--status-error); }
 
-/* 2. ESTILO BASE DEL MÓDULO (Aislado) */
-#view-actividades {
-    font-family: 'Poppins', sans-serif;
-    color: #e2e8f0; /* Texto base más claro/azulado */
-}
-
-/* 3. CONTENEDORES (Fondo y Bordes) */
-#view-actividades .container {
-    background: linear-gradient(145deg, #1a1c23 0%, #15161c 100%);
-    border: 1px solid #2d3446;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-}
-
-/* 4. TÍTULOS DE SEGMENTOS */
-#view-actividades h2 {
-    color: #00a8ff;
-    border-bottom: 1px dashed #2d3446;
-    text-transform: uppercase;
-    font-size: 1.1em;
-    letter-spacing: 1px;
-}
-
-/* Colores específicos para títulos particulares */
-#view-actividades h2.title-heatmap {
-    color: #4cd137; /* Verde vibrante */
-}
-#view-actividades h2.title-habits {
-    color: #e84118; /* Naranja/Rojo intenso */
-}
-
-/* 5. INPUTS Y CAMPOS DE TEXTO */
-#view-actividades input, 
+/* Inputs */
+#view-actividades input,
 #view-actividades select {
-    background: #000000;
-    border: 1px solid #ffffff;
-    color: #fff;
-    border-radius: 6px;
-    font-family: 'Poppins', sans-serif;
-    transition: box-shadow 0.3s ease;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    transition: box-shadow var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
 }
-
-#view-actividades input:focus, 
+#view-actividades input:focus,
 #view-actividades select:focus {
     outline: none;
-    box-shadow: 0 0 10px rgba(0, 168, 255, 0.3);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--ring-color);
 }
 
-/* 6. BOTONES GLOBALES DEL MÓDULO */
+/* Botones del módulo */
 #view-actividades button {
-    background-color: #00a8ff;
-    color: #0a0f18;
+    background-color: var(--accent-primary);
+    color: var(--text-on-accent);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(0, 168, 255, 0.3);
-    transition: transform 0.1s ease, background 0.3s;
+    letter-spacing: 0.5px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-1);
+    transition: transform var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
-
 #view-actividades button:hover {
-    background-color: #0097e6;
-    transform: translateY(-2px);
+    background-color: var(--accent-primary-hover);
+    transform: translateY(-1px);
 }
+#view-actividades button:active { transform: translateY(0) scale(0.98); }
 
-/* Botón específico de Hábitos */
 #view-actividades button.btn-habits {
-    background-color: #e84118;
-    box-shadow: 0 4px 10px rgba(232, 65, 24, 0.3);
+    background-color: var(--status-error);
 }
 #view-actividades button.btn-habits:hover {
-    background-color: #c23616;
+    background-color: var(--accent-primary);
 }
 
-/* 7. ESTILOS DE LA LISTA DE TAREAS */
+/* Lista de tareas */
 #view-actividades li {
-    background: #22252e;
-    border-left: 4px solid #00a8ff;
-    border-radius: 8px;
-    margin-bottom: 12px;
+    background: var(--bg-surface-raised);
+    border: 1px solid var(--border-subtle);
+    border-left: 4px solid var(--accent-sky);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-3);
 }
-
 #view-actividades li.completed-task {
-    background: #15161c;
-    border-left: 4px solid #4cd137; /* Tarea completada = Verde */
-    opacity: 0.6;
+    background: var(--bg-inset);
+    border-left: 4px solid var(--status-success);
+    opacity: var(--opacity-muted);
 }
-
 #view-actividades .task-content strong {
-    font-size: 1.05em;
-    color: #fff;
+    font-size: var(--text-base);
+    color: var(--text-primary);
 }
-
 #view-actividades .task-date {
-    color: #8ba4b5;
-    font-size: 0.8em;
+    color: var(--text-tertiary);
+    font-size: var(--text-xs);
 }
 
-/* 8. BADGES (Etiquetas de prioridad) */
-#view-actividades .badge.pri-Alta { background-color: #e84118; color: white; }
-#view-actividades .badge.pri-Media { background-color: #fbc531; color: black; }
-#view-actividades .badge.pri-Baja { background-color: #00a8ff; color: white; }
+/* Badges de prioridad */
+#view-actividades .badge.pri-Alta { background-color: var(--tint-error); color: var(--status-error); }
+#view-actividades .badge.pri-Media { background-color: var(--tint-warning); color: var(--status-warning); }
+#view-actividades .badge.pri-Baja { background-color: var(--tint-teal); color: var(--accent-secondary); }

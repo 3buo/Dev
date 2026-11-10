@@ -1,13 +1,13 @@
 <style>
     /* Estilos Nativos del Calendario */
     .cal-day {
-        background: #2a2a2a; padding: 10px 5px; border-radius: 4px; 
-        text-align: center; position: relative; cursor: pointer; font-size: 0.9em;
+        background: var(--bg-surface-raised); padding: var(--space-3) 5px; border-radius: var(--radius-sm); 
+        text-align: center; position: relative; cursor: pointer; font-size: var(--text-sm);
         transition: transform 0.2s;
     }
     .cal-day:hover { transform: scale(1.05); }
     .cal-day.has-activities {
-        background: rgba(3, 218, 198, 0.2); color: var(--secondary); font-weight: bold; border: 1px solid var(--secondary);
+        background: var(--tint-teal); color: var(--secondary); font-weight: bold; border: 1px solid var(--secondary);
         animation: blink-soft 2.5s infinite;
     }
     @keyframes blink-soft {
@@ -17,56 +17,56 @@
     }
     .cal-tooltip {
         visibility: hidden; width: max-content; min-width: 120px; max-width: 200px;
-        background-color: #111; color: #fff; text-align: left; border-radius: 6px; padding: 8px;
+        background-color: var(--bg-inset); color: var(--text-primary); text-align: left; border-radius: var(--radius-sm); padding: var(--space-2);
         position: absolute; z-index: 1000; bottom: 125%; left: 50%; transform: translateX(-50%);
-        opacity: 0; transition: opacity 0.3s; font-size: 0.85em; font-weight: normal;
-        border: 1px solid var(--secondary); box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        opacity: 0; transition: opacity 0.3s; font-size: var(--text-xs); font-weight: normal;
+        border: 1px solid var(--secondary); box-shadow: 0 10px 20px var(--shadow-color);
         pointer-events: none; line-height: 1.5; white-space: pre-wrap;
     }
-    .cal-day.has-activities:hover { animation: none; opacity: 1; background: var(--secondary); color: black; }
+    .cal-day.has-activities:hover { animation: none; opacity: 1; background: var(--secondary); color: var(--text-on-accent); }
     .cal-day.has-activities:hover .cal-tooltip { visibility: visible; opacity: 1; }
 </style>
  
 <div id="view-actividades" class="container-fluid">
     
-    <div style="margin-bottom: 20px; padding: 0 10px;">
+    <div style="margin-bottom: var(--space-5); padding: 0 10px;">
         <h2 style="border: none; margin: 0; font-size: 1.5em; color: var(--primary);">Panel de Actividades</h2>
     </div>
     
-    <div class="section-card" style="padding: 15px; margin-bottom: 20px; border-radius: 12px; background: var(--dashboard-card); border: 1px solid var(--dashboard-border);">
+    <div class="section-card" style="padding: var(--space-4); margin-bottom: var(--space-5); border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-subtle);">
         <h2 style="margin: 0 0 15px 0; font-size: 1.2em;">Nueva Actividad <span id="syncStatus" class="cloud-status">Conectando...</span></h2>
         <div class="input-group" style="display: flex; flex-direction: column; gap: 12px;">
-            <input type="text" id="taskInput" placeholder="¿Qué necesitas lograr hoy?" style="padding: 12px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white; width: 100%;">
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <input type="date" id="dateInput" style="padding: 8px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white; flex: 1;">
-                <select id="priorityInput" style="padding: 8px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white; flex: 1;">
+            <input type="text" id="taskInput" placeholder="¿Qué necesitas lograr hoy?" style="padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary); width: 100%;">
+            <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+                <input type="date" id="dateInput" style="padding: var(--space-2); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary); flex: 1;">
+                <select id="priorityInput" style="padding: var(--space-2); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary); flex: 1;">
                     <option value="Alta">Alta</option>
                     <option value="Media" selected>Media</option>
                     <option value="Baja">Baja</option>
                 </select>
-                <button id="btnAddTask" onclick="addTask()" style="padding: 12px 24px; border-radius: 8px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; flex: 0 0 auto;">Agregar</button>
+                <button id="btnAddTask" onclick="addTask()" style="padding: var(--space-3) 24px; border-radius: var(--radius-md); border: none; background: var(--primary); color: var(--text-on-accent); font-weight: bold; cursor: pointer; flex: 0 0 auto;">Agregar</button>
             </div>
         </div>
-        <ul id="pendingList" class="pending-list-style" style="margin-top: 20px;"></ul>
+        <ul id="pendingList" class="pending-list-style" style="margin-top: var(--space-5);"></ul>
     </div>
     
-    <div class="section-card" style="padding: 15px; margin-bottom: 20px; border-radius: 12px; background: var(--dashboard-card); border: 1px solid var(--dashboard-border);">
+    <div class="section-card" style="padding: var(--space-4); margin-bottom: var(--space-5); border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-subtle);">
         <h2 class="title-habits" style="margin: 0 0 15px 0; font-size: 1.2em;">
             Programar Hábito o Rutina 
             <div class="tooltip">?<span class="tooltiptext">Puedes elegir fechas pasadas. El sistema simulará el paso del tiempo y te dará la próxima fecha en el futuro basándose en tu intervalo.</span></div>
         </h2>
         
-        <div style="display: flex; flex-direction: column; align-items: stretch; background: #0f1015; padding: 15px; border-radius: 8px; border: 1px dashed #2d3446; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; flex-direction: column; align-items: stretch; background: var(--bg-inset); padding: var(--space-4); border-radius: var(--radius-md); border: 1px dashed var(--border-strong); box-sizing: border-box; width: 100%;">
             
-            <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap; box-sizing: border-box; margin-bottom: 15px;">
-                <input type="text" id="recTaskInput" placeholder="Nombre de la rutina (Ej: Gimnasio, Leer)" style="flex-grow: 1; min-width: 200px; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white;">
-                <input type="date" id="recTaskDate" title="Fecha de primer inicio" style="box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white;">
-                <input type="time" id="recTaskTime" title="Hora exacta de la alarma" style="box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white;">
+            <div style="display: flex; gap: var(--space-3); width: 100%; flex-wrap: wrap; box-sizing: border-box; margin-bottom: var(--space-4);">
+                <input type="text" id="recTaskInput" placeholder="Nombre de la rutina (Ej: Gimnasio, Leer)" style="flex-grow: 1; min-width: 200px; box-sizing: border-box; padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary);">
+                <input type="date" id="recTaskDate" title="Fecha de primer inicio" style="box-sizing: border-box; padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary);">
+                <input type="time" id="recTaskTime" title="Hora exacta de la alarma" style="box-sizing: border-box; padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary);">
             </div>
             
-            <div style="margin-top: 15px; width: 100%; box-sizing: border-box;">
-                <span style="font-size: 0.85em; color: #8ba4b5; display: block; margin-bottom: 8px;">Selecciona los días (opcional):</span>
-                <div class="day-checkboxes" id="recTaskDays" style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div style="margin-top: var(--space-4); width: 100%; box-sizing: border-box;">
+                <span style="font-size: var(--text-xs); color: var(--text-secondary); display: block; margin-bottom: 8px;">Selecciona los días (opcional):</span>
+                <div class="day-checkboxes" id="recTaskDays" style="display: flex; flex-wrap: wrap; gap: var(--space-3);">
                     <label><input type="checkbox" value="1"> L</label>
                     <label><input type="checkbox" value="2"> M</label>
                     <label><input type="checkbox" value="3"> X</label>
@@ -77,22 +77,22 @@
                 </div>
             </div>
             
-            <div style="display: flex; gap: 10px; align-items: center; width: 100%; margin-top: 20px; border-top: 1px solid #2d3446; padding-top: 15px; flex-wrap: wrap; box-sizing: border-box;">
-                <span style="font-size: 0.85em; color: #8ba4b5;">O usar intervalo clásico:</span>
-                <input type="number" id="recTaskInterval" min="1" value="1" style="width: 70px; box-sizing: border-box; padding: 8px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white;">
-                <select id="recTaskFreq" style="width: 120px; padding: 8px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white;">
+            <div style="display: flex; gap: var(--space-3); align-items: center; width: 100%; margin-top: var(--space-5); border-top: 1px solid var(--border-strong); padding-top: 15px; flex-wrap: wrap; box-sizing: border-box;">
+                <span style="font-size: var(--text-xs); color: var(--text-secondary);">O usar intervalo clásico:</span>
+                <input type="number" id="recTaskInterval" min="1" value="1" style="width: 70px; box-sizing: border-box; padding: var(--space-2); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary);">
+                <select id="recTaskFreq" style="width: 120px; padding: var(--space-2); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary);">
                     <option value="minutos">Minutos</option>
                     <option value="horas" selected>Horas</option>
                     <option value="dias">Días</option>
                     <option value="meses">Meses</option>
                 </select>
-                <button onclick="addRecurringTask()" class="btn-habits" style="margin-left: auto; padding: 10px 20px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;">Programar</button>
+                <button onclick="addRecurringTask()" class="btn-habits" style="margin-left: auto; padding: var(--space-3) 20px; border-radius: var(--radius-md); background: var(--primary); color: var(--text-on-accent); border: none; font-weight: bold; cursor: pointer;">Programar</button>
             </div>
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-            <h3 style="margin: 0; color: #ccc; font-size: 1.1em;">Tus Hábitos Activos</h3>
-            <button onclick="openCalendarModal()" style="background: rgba(187, 134, 252, 0.15); color: var(--primary); border: 1px solid var(--primary); display: flex; gap: 8px; align-items: center; font-size: 0.85em; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: var(--space-8); margin-bottom: var(--space-3); border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+            <h3 style="margin: 0; color: var(--text-secondary); font-size: 1.1em;">Tus Hábitos Activos</h3>
+            <button onclick="openCalendarModal()" style="background: var(--tint-accent); color: var(--primary); border: 1px solid var(--primary); display: flex; gap: 8px; align-items: center; font-size: var(--text-xs); padding: var(--space-2) 12px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease;">
                 📅 Ver Calendario
             </button>
         </div>
@@ -100,41 +100,41 @@
         <ul id="recurringList" class="pending-list-style"></ul>
     </div>
     
-    <div class="section-card" style="padding: 15px; margin-bottom: 20px; border-radius: 12px; background: var(--dashboard-card); border: 1px solid var(--dashboard-border);">
+    <div class="section-card" style="padding: var(--space-4); margin-bottom: var(--space-5); border-radius: var(--radius-lg); background: var(--bg-surface); border: 1px solid var(--border-subtle);">
         <h2 style="margin: 0 0 10px 0; font-size: 1.2em;">Actividades Completadas</h2>
         <ul id="completedList" style="padding: 0; list-style: none;"></ul>
     </div>
     
-    <div id="calendarModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
-        <div class="container" style="max-width: 400px; width: 90%; background: #1e1e1e; border: 1px solid var(--primary); border-radius: 12px; padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <button onclick="changeMonth(-1)" style="background: #333; padding: 5px 15px; font-size: 1.2em; border: none; border-radius: 4px; color: white;">&lt;</button>
-                <h3 id="calendarMonthYear" style="margin: 0; color: white;">Mes Año</h3>
-                <button onclick="changeMonth(1)" style="background: #333; padding: 5px 15px; font-size: 1.2em; border: none; border-radius: 4px; color: white;">&gt;</button>
+    <div id="calendarModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; align-items: center; justify-content: center; background: var(--overlay-strong); backdrop-filter: blur(5px);">
+        <div class="container" style="max-width: 400px; width: 90%; background: var(--bg-surface); border: 1px solid var(--primary); border-radius: var(--radius-lg); padding: var(--space-5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5);">
+                <button onclick="changeMonth(-1)" style="background: var(--bg-surface-raised); padding: var(--space-1) 15px; font-size: 1.2em; border: none; border-radius: var(--radius-sm); color: var(--text-primary);">&lt;</button>
+                <h3 id="calendarMonthYear" style="margin: 0; color: var(--text-primary);">Mes Año</h3>
+                <button onclick="changeMonth(1)" style="background: var(--bg-surface-raised); padding: var(--space-1) 15px; font-size: 1.2em; border: none; border-radius: var(--radius-sm); color: var(--text-primary);">&gt;</button>
             </div>
             
-            <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px;">
+            <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); margin-bottom: var(--space-5);">
                 <!-- Inyectado por JS -->
             </div>
             
-            <button onclick="closeCalendarModal()" style="width: 100%; background: transparent; color: #aaa; border: 1px solid #444; padding: 10px; border-radius: 8px; cursor: pointer;">Cerrar Calendario</button>
+            <button onclick="closeCalendarModal()" style="width: 100%; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-strong); padding: var(--space-3); border-radius: var(--radius-md); cursor: pointer;">Cerrar Calendario</button>
         </div>
     </div>
     
-    <div id="editHabitModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; align-items: center; justify-content: center; background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(5px);">
-        <div class="container" style="max-width: 350px; width: 90%; background: #1e1e1e; border: 1px solid var(--secondary); border-radius: 12px; padding: 20px;">
+    <div id="editHabitModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; align-items: center; justify-content: center; background: var(--overlay-strong); backdrop-filter: blur(5px);">
+        <div class="container" style="max-width: 350px; width: 90%; background: var(--bg-surface); border: 1px solid var(--secondary); border-radius: var(--radius-lg); padding: var(--space-5);">
             <h2 style="color: var(--primary); margin-top: 0;">Editar Hábito</h2>
             <input type="hidden" id="editHabitIndex">
             
-            <label style="font-size: 0.85em; color: #aaa; margin-bottom: 5px; display: block;">Título:</label>
-            <input type="text" id="editHabitName" placeholder="Nombre" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white; margin-bottom: 15px;">
+            <label style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1); display: block;">Título:</label>
+            <input type="text" id="editHabitName" placeholder="Nombre" style="width: 100%; box-sizing: border-box; padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary); margin-bottom: var(--space-4);">
             
-            <label style="font-size: 0.85em; color: #aaa; margin-bottom: 5px; display: block;">Próxima Fecha de Alarma:</label>
-            <input type="date" id="editHabitDate" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white; margin-bottom: 10px;">
-            <input type="time" id="editHabitTime" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #2d3446; background: #0a0f18; color: white; margin-bottom: 20px;">
+            <label style="font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-1); display: block;">Próxima Fecha de Alarma:</label>
+            <input type="date" id="editHabitDate" style="width: 100%; box-sizing: border-box; padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary); margin-bottom: var(--space-3);">
+            <input type="time" id="editHabitTime" style="width: 100%; box-sizing: border-box; padding: var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--bg-inset); color: var(--text-primary); margin-bottom: var(--space-5);">
             
-            <button onclick="saveEditHabit()" style="width: 100%; margin-bottom: 10px; padding: 12px; border-radius: 8px; background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer;">Guardar Cambios</button>
-            <button onclick="closeEditHabitModal()" style="width: 100%; background: transparent; color: #aaa; border: 1px solid #444; padding: 10px; border-radius: 8px; cursor: pointer;">Cancelar</button>
+            <button onclick="saveEditHabit()" style="width: 100%; margin-bottom: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); background: var(--primary); color: var(--text-on-accent); border: none; font-weight: bold; cursor: pointer;">Guardar Cambios</button>
+            <button onclick="closeEditHabitModal()" style="width: 100%; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-strong); padding: var(--space-3); border-radius: var(--radius-md); cursor: pointer;">Cancelar</button>
         </div>
     </div>
     

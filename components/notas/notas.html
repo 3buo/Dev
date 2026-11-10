@@ -2,17 +2,23 @@
 
 <div class="notes-wrapper" id="view-notas">
 
+    <div class="quick-capture">
+        <textarea id="quickCaptureInput" rows="1" placeholder="Captura rápida… escribe una idea y pulsa Enter" aria-label="Captura rápida de nota"></textarea>
+        <button class="quick-capture-btn" onclick="quickCaptureNote()" aria-label="Crear nota al instante">✚ Crear</button>
+    </div>
+    <div class="quick-capture-hint">Enter crea la nota al instante · Shift+Enter para salto de línea</div>
+
     <div class="graph-container">
         <div class="graph-overlay">
-            <h3 style="margin:0; font-size:1.1em; text-shadow: 0 2px 4px black;">🌌 Red de pensamiento</h3>
-            <span style="font-size: 0.75em; color: #8b949e;" id="graphStats">0 notas en tu red</span>
+            <h3 style="margin:0; font-size:1.1em; text-shadow: 0 2px 4px var(--shadow-color);">🌌 Red de pensamiento</h3>
+            <span style="font-size: var(--text-xs); color: var(--text-tertiary);" id="graphStats">0 notas en tu red</span>
         </div>
         <canvas id="mindGraph"></canvas>
     </div>
 
     <div id="timeCapsule" class="time-capsule" style="display: none;" onclick="openTimeCapsule()">
-        <div style="font-size: 0.8em; color: #b392f0; font-weight: bold; margin-bottom: 5px;">⏳ Recuerdo desbloqueado</div>
-        <div id="tcContent" style="color: white; font-style: italic; font-size: 0.95em;">"Cargando..."</div>
+        <div style="font-size: var(--text-xs); color: var(--accent-primary); font-weight: bold; margin-bottom: var(--space-1);">⏳ Recuerdo desbloqueado</div>
+        <div id="tcContent" style="color: var(--text-primary); font-style: italic; font-size: var(--text-sm);">"Cargando..."</div>
     </div>
 
     <div class="zen-editor">
@@ -31,17 +37,17 @@
         
         <div id="mainTablesContainer"></div>
 
-        <div id="zenPreviewArea" class="preview-box" style="display: none; margin-top: 15px; min-height: 80px;"></div>
+        <div id="zenPreviewArea" class="preview-box" style="display: none; margin-top: var(--space-4); min-height: 80px;"></div>
 
-        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: var(--space-3); margin-top: var(--space-4); border-top: 1px solid var(--border-subtle); padding-top: 15px;">
             <button id="btnTogglePreview" class="btn-secondary" onclick="toggleZenPreview()">👁️ Previsualizar nota</button>
             <button class="btn-primary" onclick="saveNote()">Guardar nota</button>
         </div>
     </div>
 
     <div class="view-controls">
-        <h3 style="color: white; margin: 0; font-size: 1.2em;">Tus notas</h3>
-        <div style="display: flex; gap: 5px;">
+        <h3 style="color: var(--text-primary); margin: 0; font-size: var(--text-lg);">Tus notas</h3>
+        <div style="display: flex; gap: var(--space-1);">
             <button id="btnViewGrid" class="view-toggle-btn active" onclick="changeViewFormat('grid')">🔲 Cuadrícula</button>
             <button id="btnViewList" class="view-toggle-btn" onclick="changeViewFormat('list')">📄 Lista detallada</button>
         </div>
@@ -52,20 +58,20 @@
 
     <div id="noteModal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
-            <div style="padding: 20px 20px 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px;">
+            <div style="padding: var(--space-5) 20px 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px;">
                 <input type="text" id="editNoteTitle" class="zen-input-title" style="margin: 0;" placeholder="Título">
-                <button onclick="closeNoteModal()" style="background: transparent; border: none; color: #8b949e; font-size: 1.5em; cursor: pointer; line-height: 1;">✖</button>
+                <button onclick="closeNoteModal()" style="background: transparent; border: none; color: var(--text-tertiary); font-size: 1.5em; cursor: pointer; line-height: 1; min-width: var(--target-min); min-height: var(--target-min);">✖</button>
             </div>
             
             <input type="hidden" id="editNoteId">
             
             <div class="modal-body-split">
                 <div class="modal-pane">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <span style="font-size: 0.8em; color: var(--note-accent); font-weight: bold;">EDITOR MARKDOWN</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-1);">
+                        <span style="font-size: var(--text-xs); color: var(--accent-sky); font-weight: bold;">EDITOR MARKDOWN</span>
                     </div>
                     
-                    <div class="md-toolbar" style="margin-bottom: 10px; padding-bottom: 5px;">
+                    <div class="md-toolbar" style="margin-bottom: var(--space-3); padding-bottom: 5px;">
                         <button class="md-tool-btn" onclick="insertMD('**', '**', 'editNoteContent')">B</button>
                         <button class="md-tool-btn" onclick="insertMD('_', '_', 'editNoteContent')">I</button>
                         <button class="md-tool-btn" onclick="insertMD('### ', '', 'editNoteContent')">H3</button>
@@ -73,21 +79,21 @@
                         <button class="md-tool-btn" onclick="addEditTable()">+ Tabla</button>
                     </div>
 
-                    <textarea id="editNoteContent" class="zen-input-body" style="flex-grow: 1; min-height: 150px; background: #010409; padding: 10px; border-radius: 6px; border: 1px solid #30363d;" oninput="updateLivePreview()"></textarea>
-                    <div id="editTablesContainer" style="margin-top: 10px; display: flex; flex-direction: column; gap: 15px;"></div>
+                    <textarea id="editNoteContent" class="zen-input-body" style="flex-grow: 1; min-height: 150px; background: var(--bg-inset); padding: var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--border-strong);" oninput="updateLivePreview()"></textarea>
+                    <div id="editTablesContainer" style="margin-top: var(--space-3); display: flex; flex-direction: column; gap: var(--space-4);"></div>
                 </div>
 
                 <div class="modal-pane">
-                    <span style="font-size: 0.8em; color: #8b949e; font-weight: bold; margin-bottom: 5px; display: block;">VISTA PREVIA EN VIVO</span>
+                    <span style="font-size: var(--text-xs); color: var(--text-tertiary); font-weight: bold; margin-bottom: var(--space-1); display: block;">VISTA PREVIA EN VIVO</span>
                     <div class="preview-box">
                         <div id="livePreviewMarkdown" class="md-content"></div>
-                        <div id="livePreviewTables" style="margin-top: 15px;"></div>
+                        <div id="livePreviewTables" style="margin-top: var(--space-4);"></div>
                     </div>
                 </div>
             </div>
             
-            <div style="padding: 15px 20px; background: #0d1117; border-top: 1px solid #30363d; display: flex; justify-content: space-between;">
-                <button onclick="deleteNote()" style="background: #da3633; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
+            <div style="padding: var(--space-4) 20px; background: var(--bg-inset); border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+                <button onclick="deleteNote()" style="background: var(--status-error); color: var(--text-on-accent); border: none; padding: var(--space-2) 15px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
                 <button onclick="updateNote()" class="btn-primary" style="margin: 0;">Guardar cambios</button>
             </div>
         </div>

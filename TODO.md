@@ -1,34 +1,40 @@
-# DevMode SaaS Upgrade TODO
+# Taskify — Roadmap post-auditoría
 
-## FASE 1 — Visual Flexbox Engine
-- [x] Revisar arquitectura actual en `components/devmode` (shadow UI + lógica + persistencia local).
-- [x] Diseñar controles visuales Flexbox en inspector flotante.
-- [x] Implementar UI encapsulada (Shadow DOM) para Row/Column, Wrap, Justify, Align, Gap.
-- [x] Conectar eventos para aplicar cambios en tiempo real al nodo seleccionado.
-- [x] Persistir estilos flex en `state.dynamicStylesById` sin romper compatibilidad.
-- [x] Sincronizar controles flex desde estilos actuales (computed + overrides).
-- [ ] Validación funcional en ejecución (pendiente confirmación de compilación por el usuario).
+## Design System "Cero Fricción" (DESIGN_SPEC.md, 2026-11-10)
+- [x] `DESIGN_SPEC.md` creado (filosofía, tokens, tipografía Inter, layout, componentes, QA).
+- [x] `tokens.css` v3: tokens day/night completos (--bg-canvas, --text-primary, --accent-primary…), tints, paletas de gráficos, aliases legacy, reduced-motion.
+- [x] Tipografía Inter (Google Fonts) global; eliminado Poppins; nada < 12px.
+- [x] Navegación ≤4 destinos primarios: Bottom Bar móvil / Sidebar desktop + menú "Más" (Checklists, Recordatorios, tema, logout).
+- [x] Modo claro operativo: toggle "Más → Tema" persiste en localStorage, aplica `[data-theme]` en <html>.
+- [x] ~300 colores hardcodeados migrados a tokens (0 hex/rgba fuera de tokens.css, salvo fallbacks defensivos de canvas documentados).
+- [x] Notas: input de Captura Rápida (Enter crea la nota, misma persistencia).
+- [x] Finanzas: saldos en `--text-2xl`; contenedor Insights (gasto del mes, top conceptos, suscripciones probables).
+- [x] Alarmas: botones Posponer/Entendido ≥48×48px; microinteracciones 150–200ms en transform/opacity.
+- [x] QA: node --check OK (18 .js), 0 mojibake, contraste AA verificado en ambos temas, 0 texto <12px.
 
-## FASE 2 — Dynamic Data Binding
-- [x] Añadir UI de “Vincular Dato Dinámico” en inspector.
-- [x] Implementar popover de variables dinámicas.
-- [x] Persistir binding por nodo sin romper contenido local.
-- [x] Renderizar tokens `{{...}}` en tiempo real.
+## Correcciones aplicadas (auditoría Fase 2, 2026-11-10)
+- [x] Boot: `js/store.js` reescrito vanilla sin zustand (Proxy vivo, exports para backup-ui, fecha local en actividad).
+- [x] XSS: nuevo `js/escape.js`; escapado en notas, checklists, recordatorios, actividades, finanzas.
+- [x] PIN: nuevo `js/pin.js` (PBKDF2 WebCrypto); modal de cambio de PIN; sin `masterPin` en claro (migración en store).
+- [x] Credenciales dev: eliminadas del bundle (allowlist vacía en `devmode.js`).
+- [x] Finanzas: bloque duplicado (219-300) eliminado; toast en vez de alert; timeout 8s en tasas; CSV anti-fórmulas.
+- [x] Snooze persistente (`snoozeUntil`) en alarm.js + app.js.
+- [x] Timezone: `nextTrigger` en ISO real; calendario compara en hora local.
+- [x] A11y: tabs con role/aria, labels en auth/PIN, aria-labels, focus trap (`feedback.js`), reduced-motion, targets 44px, safe-areas.
+- [x] Color: `tokens.css` v2 (pares WCAG AA); contrastes corregidos (botones azul/naranja, textos tenues); fondo claro de actividades corregido.
+- [x] Copy: marca unificada a Taskify, errores de auth mapeados, "Checklist", "Vacío.", pluralización, locales es-VE.
+- [x] Perf: eliminados marked y vis-network (~740 KB muertos); pretext pineado a 1.0.0; MutationObserver de devmode solo con sesión dev.
+- [x] Export de datos disponible para usuarios autenticados (GDPR Art.20); import sigue gated a dev.
+- [x] Dashboard itera `state.wallets`; microcopys y color de vacíos corregidos.
+- [x] Purga: theme.js, voice.js, security.js, alarm.html, devmode.html/css, bulk-input.html eliminados.
+- [x] `package.json` (type:module) y `firestore.rules` (dueño único, prohíbe masterPin) creados.
 
-## FASE 3 — Element Tree Navigator
-- [x] Añadir panel Tree Navigator encapsulado.
-- [x] Construir árbol jerárquico desde DOM actual.
-- [x] Sincronizar selección árbol ↔ lienzo.
-
-## FASE 4 — Auto-Save & UX Feedback
-- [x] Implementar autosave con debounce (1500ms).
-- [x] Estado visual premium de guardado (gris/pulsante/verde).
-- [x] Mantener compatibilidad con flujo manual existente.
-
-## Correcciones solicitadas (post-fases)
-- [x] Diagnóstico del bug de guardado de texto.
-- [ ] Corregir persistencia de texto manual en `Guardar cambios`.
-- [ ] Implementar drag de elemento seleccionado con snap a grilla.
-- [ ] Persistir `position/left/top` en estilos dinámicos.
-- [ ] Añadir controles UI para mover + tamaño de grilla.
-- [ ] Verificación final por usuario (sin testing automático, por instrucción).
+## Pendientes (requieren servicios externos o refactor mayor)
+- [ ] F06 Billing: Stripe Checkout + Customer Portal + webhook (necesita cuenta Stripe).
+- [ ] F21 Datos: mover expenses/notes/activityLog a subcolecciones paginadas (límite 1 MiB por doc).
+- [ ] F38 Auditoría: eventos con timestamp en vez de contador por día.
+- [ ] Firebase: desplegar `firestore.rules`; habilitar App Check y verificación de email en Auth.
+- [ ] Medición: Lighthouse CI / PageSpeed para LCP/INP/CLS reales.
+- [ ] F27 restantes: prompts numéricos no sensibles (saldo, tasa manual) → modales.
+- [ ] F31: vía táctil para clasificar checklists (el menú Clasificar ya funciona en touch; falta DnD táctil).
+- [ ] Cobertura de tests (hoy 0): al menos smoke test de store.js y de los parsers.

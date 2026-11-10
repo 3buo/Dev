@@ -1,14 +1,14 @@
 const DEV_SHADOW_HOST_ID = 'devmode-shadow-host';
 
 const LEGACY_MARKUP = `
-<div id="devLoginModal" style="display: none; position: fixed; inset: 0; z-index: 9999999; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-  <div style="background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #58a6ff; width: 300px; box-shadow: 0 0 50px rgba(88, 166, 255, 0.2);">
-      <h2 style="color: #58a6ff; margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
-      <input type="text" id="devUser" placeholder="Usuario" style="width: 100%; margin-bottom: 15px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
-      <input type="password" id="devPass" placeholder="Contraseña" style="width: 100%; margin-bottom: 20px; padding: 10px; background: #010409; border: 1px solid #30363d; color: white; border-radius: 6px; box-sizing: border-box;">
-      <div style="display: flex; gap: 10px;">
-          <button id="devLoginSubmit" style="flex: 1; background: #58a6ff; color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">Ingresar</button>
-          <button id="devLoginCancel" style="flex: 1; background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 10px; border-radius: 6px; cursor: pointer;">Cancelar</button>
+<div id="devLoginModal" style="display: none; position: fixed; inset: 0; z-index: 9999999; background: var(--overlay-strong); align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+  <div style="background: var(--bg-surface); padding: 30px; border-radius: var(--radius-lg); border: 1px solid var(--accent-sky); width: 300px; box-shadow: 0 0 50px var(--tint-sky);">
+      <h2 style="color: var(--accent-sky); margin-top: 0; text-align: center;">⚡ Modo Developer</h2>
+      <input type="text" id="devUser" placeholder="Usuario" style="width: 100%; margin-bottom: var(--space-4); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+      <input type="password" id="devPass" placeholder="Contraseña" style="width: 100%; margin-bottom: var(--space-5); padding: var(--space-3); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: var(--radius-sm); box-sizing: border-box;">
+      <div style="display: flex; gap: var(--space-3);">
+          <button id="devLoginSubmit" style="flex: 1; background: var(--accent-sky); color: var(--text-on-accent); border: none; padding: var(--space-3); border-radius: var(--radius-sm); font-weight: bold; cursor: pointer;">Ingresar</button>
+          <button id="devLoginCancel" style="flex: 1; background: transparent; color: var(--text-tertiary); border: 1px solid var(--border-subtle); padding: var(--space-3); border-radius: var(--radius-sm); cursor: pointer;">Cancelar</button>
       </div>
   </div>
 </div>
@@ -24,16 +24,16 @@ const LEGACY_MARKUP = `
 <div id="devEditorPanel" class="dev-panel" role="dialog" aria-label="DevMode UI Builder">
   <div class="dev-panel-header">
       <span>🛠️ UI Builder</span>
-      <button id="btnInspectorToggle" style="background: transparent; border: 1px solid #58a6ff; color: #58a6ff; border-radius: 4px; cursor: pointer; padding: 4px 8px; font-size: 0.8em;">Inspeccionar: ON</button>
-      <button id="devPanelClose" style="background: transparent; border: none; color: #8b949e; cursor: pointer; font-size: 1.2em;">✖</button>
+      <button id="btnInspectorToggle" style="background: transparent; border: 1px solid var(--accent-sky); color: var(--accent-sky); border-radius: var(--radius-sm); cursor: pointer; padding: 4px 8px; font-size: var(--text-xs);">Inspeccionar: ON</button>
+      <button id="devPanelClose" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 1.2em;">✖</button>
   </div>
 
   <div class="dev-panel-body">
-      <div style="font-size: 0.85em; color: #8b949e;">Editando Elemento:</div>
+      <div style="font-size: var(--text-xs); color: var(--text-tertiary);">Editando Elemento:</div>
       <div id="devTargetSelector" class="dev-target-badge">Ninguno</div>
 
       <div class="dev-control-group dev-feature-box dev-feature-box-highlight" id="devTextGroup" style="display: none;">
-          <label style="color: var(--note-accent);">📝 Texto del Elemento</label>
+          <label style="color: var(--accent-sky);">📝 Texto del Elemento</label>
           <input type="text" id="devElementText" class="dev-input" placeholder="Sobreescribir texto original...">
           <button type="button" id="devDataBindingBtn" class="dev-btn dev-btn-secondary dev-pill-btn">🔗 Vincular Dato Dinámico</button>
           <div id="devDataBindingPopover" class="dev-popover" style="display: none;">
@@ -51,7 +51,7 @@ const LEGACY_MARKUP = `
           <label>Fondo (Background)</label>
           <div class="dev-color-wrapper">
               <input type="color" id="devBgColor" class="dev-color-input">
-              <input type="text" id="devBgText" class="dev-input" style="flex: 1;" placeholder="#000000 o rgba()">
+              <input type="text" id="devBgText" class="dev-input" style="flex: 1;" placeholder="#RRGGBB o rgba()">
           </div>
       </div>
 
@@ -67,13 +67,13 @@ const LEGACY_MARKUP = `
           <label>Color de Borde (Global)</label>
           <div class="dev-color-wrapper">
               <input type="color" id="devBorderColor" class="dev-color-input">
-              <input type="text" id="devBorderText" class="dev-input" style="flex: 1;" placeholder="Ej: #ffffff">
+              <input type="text" id="devBorderText" class="dev-input" style="flex: 1;" placeholder="Ej: var(--text-primary)">
           </div>
       </div>
 
       <div class="dev-control-group">
           <label>Línea Inferior</label>
-          <input type="text" id="devBorderBottom" class="dev-input" placeholder="Ej: 3px solid #b392f0">
+          <input type="text" id="devBorderBottom" class="dev-input" placeholder="Ej: 3px solid var(--accent-primary)">
       </div>
 
       <div class="dev-control-group">
@@ -92,7 +92,7 @@ const LEGACY_MARKUP = `
       </div>
 
       <div id="devFlexGroup" class="dev-control-group dev-feature-box" style="display: none;">
-          <label style="color: #58a6ff;">📐 Layout Flex</label>
+          <label style="color: var(--accent-sky);">📐 Layout Flex</label>
 
           <div class="dev-flex-row">
               <span class="dev-flex-caption">Dirección</span>
@@ -140,11 +140,11 @@ const LEGACY_MARKUP = `
       </div>
 
       <div id="devAnimGroup" class="dev-control-group dev-feature-box" style="display: none;">
-          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: white;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary);">
               <input type="checkbox" id="devAnimEnable">
               ✨ Animación al hacer Clic
           </label>
-          <select id="devAnimType" class="dev-input" style="display: none; margin-top: 10px; width: 100%; cursor: pointer;">
+          <select id="devAnimType" class="dev-input" style="display: none; margin-top: var(--space-3); width: 100%; cursor: pointer;">
               <option value="scale-down">Hundimiento Suave (Scale Down)</option>
               <option value="scale-up">Salto 3D (Scale Up)</option>
               <option value="pulse-glow">Resplandor Neón (Glow Pulse)</option>
@@ -154,7 +154,7 @@ const LEGACY_MARKUP = `
       <div id="devSaveStatus" class="dev-save-status is-idle">Guardado</div>
       <button id="devBtnSave" class="dev-btn">💾 Guardar Cambios</button>
       <button id="devBtnResetTarget" class="dev-btn dev-btn-danger">🔄 Revertir Elemento</button>
-      <button id="devBtnFactoryReset" class="dev-btn dev-btn-danger" style="margin-top: 5px; border-style: dashed;">⚠️ Borrar TODO (CSS y Textos)</button>
+      <button id="devBtnFactoryReset" class="dev-btn dev-btn-danger" style="margin-top: var(--space-1); border-style: dashed;">⚠️ Borrar TODO (CSS y Textos)</button>
   </div>
 </div>
 `;
@@ -165,55 +165,55 @@ const SHADOW_SCOPED_CSS = `
   font-family: Inter, system-ui, sans-serif;
 }
 .dev-hover-target {
-  outline: 2px dashed #00d2ff !important;
+  outline: 2px dashed var(--accent-sky) !important;
   outline-offset: 2px !important;
   cursor: crosshair !important;
 }
 .dev-selected-target {
-  outline: 3px solid #ff4d4d !important;
+  outline: 3px solid var(--status-error) !important;
   outline-offset: 2px !important;
 }
 .dev-panel {
   position: fixed; right: 20px; top: 20px; width: 340px;
-  background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(10px);
-  border: 1px solid rgba(88, 166, 255, 0.4); border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 999999;
-  color: #c9d1d9; font-family: Inter, system-ui, sans-serif;
+  background: var(--bg-surface); backdrop-filter: blur(10px);
+  border: 1px solid var(--glow-sky); border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px var(--shadow-color); z-index: 999999;
+  color: var(--text-primary); font-family: Inter, system-ui, sans-serif;
   display: none; flex-direction: column; overflow: hidden;
 }
 .dev-panel-header {
-  background: #161b22; padding: 15px; border-bottom: 1px solid #30363d;
+  background: var(--bg-surface); padding: var(--space-4); border-bottom: 1px solid var(--border-subtle);
   display: flex; justify-content: space-between; align-items: center;
-  font-weight: bold; color: white;
+  font-weight: bold; color: var(--text-primary);
 }
 .dev-panel-body {
-  padding: 15px; display: flex; flex-direction: column; gap: 15px;
+  padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4);
   max-height: 75vh; overflow-y: auto;
 }
 .dev-target-badge {
-  background: rgba(88, 166, 255, 0.1); color: #58a6ff;
-  padding: 5px 10px; border-radius: 4px; font-family: monospace;
-  font-size: 0.85em; word-break: break-all;
+  background: var(--tint-sky); color: var(--accent-sky);
+  padding: var(--space-1) 10px; border-radius: var(--radius-sm); font-family: monospace;
+  font-size: var(--text-xs); word-break: break-all;
 }
-.dev-control-group { display: flex; flex-direction: column; gap: 5px; }
-.dev-control-group label { font-size: 0.8em; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+.dev-control-group { display: flex; flex-direction: column; gap: var(--space-1); }
+.dev-control-group label { font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; }
 .dev-input {
-  background: #010409; border: 1px solid #30363d; color: white;
-  padding: 8px; border-radius: 6px; font-family: monospace;
+  background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary);
+  padding: var(--space-2); border-radius: var(--radius-sm); font-family: monospace;
   outline: none; transition: 0.2s; width: 100%; box-sizing: border-box;
 }
-.dev-input:focus { border-color: #58a6ff; }
-.dev-color-wrapper { display: flex; gap: 10px; align-items: center; }
+.dev-input:focus { border-color: var(--accent-sky); }
+.dev-color-wrapper { display: flex; gap: var(--space-3); align-items: center; }
 .dev-color-input {
   width: 35px; height: 35px; border: none; border-radius: 50%;
   cursor: pointer; background: transparent; padding: 0;
 }
 .dev-feature-box {
-  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1);
-  padding: 12px; border-radius: 8px; margin-top: 5px;
+  background: var(--tint-neutral); border: 1px solid var(--border-subtle);
+  padding: var(--space-3); border-radius: var(--radius-md); margin-top: var(--space-1);
 }
 .dev-feature-box-highlight {
-  background: rgba(88, 166, 255, 0.05); border: 1px dashed rgba(88, 166, 255, 0.3);
+  background: var(--tint-sky); border: 1px dashed var(--tint-sky);
 }
 .dev-flex-row {
   display: flex;
@@ -221,8 +221,8 @@ const SHADOW_SCOPED_CSS = `
   gap: 6px;
 }
 .dev-flex-caption {
-  font-size: 0.72em;
-  color: #8b949e;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -235,37 +235,37 @@ const SHADOW_SCOPED_CSS = `
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .dev-seg-btn {
-  border: 1px solid #30363d;
-  background: #0d1117;
-  color: #c9d1d9;
-  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
   min-height: 30px;
   cursor: pointer;
   font-weight: 700;
   transition: 0.2s ease;
 }
 .dev-seg-btn:hover {
-  border-color: #58a6ff;
-  color: #58a6ff;
+  border-color: var(--accent-sky);
+  color: var(--accent-sky);
 }
 .dev-seg-btn.is-active {
-  background: rgba(88, 166, 255, 0.14);
-  border-color: #58a6ff;
-  color: #79c0ff;
-  box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.25);
+  background: var(--tint-sky);
+  border-color: var(--accent-sky);
+  color: var(--accent-sky);
+  box-shadow: inset 0 0 0 1px var(--accent-sky-border);
 }
 .dev-popover {
-  border: 1px solid #30363d;
-  border-radius: 8px;
-  padding: 8px;
-  background: rgba(1, 4, 9, 0.96);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: var(--bg-inset);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .dev-popover-title {
-  font-size: 0.75em;
-  color: #79c0ff;
+  font-size: var(--text-xs);
+  color: var(--accent-sky);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   font-weight: 700;
@@ -278,19 +278,19 @@ const SHADOW_SCOPED_CSS = `
   overflow-y: auto;
 }
 .dev-binding-item {
-  border: 1px solid #30363d;
-  background: #0d1117;
-  color: #c9d1d9;
-  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
   min-height: 30px;
   cursor: pointer;
   text-align: left;
-  padding: 6px 8px;
-  font-size: 0.82em;
+  padding: var(--space-2) 8px;
+  font-size: var(--text-xs);
 }
 .dev-binding-item:hover {
-  border-color: #58a6ff;
-  color: #79c0ff;
+  border-color: var(--accent-sky);
+  color: var(--accent-sky);
 }
 .dev-popover-row {
   display: flex;
@@ -307,79 +307,79 @@ const SHADOW_SCOPED_CSS = `
   top: 20px;
   width: 280px;
   max-height: 80vh;
-  background: rgba(13, 17, 23, 0.95);
-  border: 1px solid rgba(88, 166, 255, 0.4);
-  border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+  background: var(--bg-surface);
+  border: 1px solid var(--glow-sky);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px var(--shadow-color);
   z-index: 999998;
-  color: #c9d1d9;
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .dev-tree-header {
-  background: #161b22;
-  padding: 10px 12px;
-  border-bottom: 1px solid #30363d;
+  background: var(--bg-surface);
+  padding: var(--space-3) 12px;
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: 700;
 }
 .dev-tree-content {
-  padding: 10px;
+  padding: var(--space-3);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 .dev-tree-node {
-  border: 1px solid #30363d;
-  background: #0d1117;
-  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-canvas);
+  border-radius: var(--radius-sm);
   padding: 4px 8px;
   cursor: pointer;
-  font-size: 0.8em;
-  color: #c9d1d9;
+  font-size: var(--text-xs);
+  color: var(--text-primary);
 }
 .dev-tree-node:hover {
-  border-color: #58a6ff;
-  color: #79c0ff;
+  border-color: var(--accent-sky);
+  color: var(--accent-sky);
 }
 .dev-tree-node.is-active {
-  border-color: #58a6ff;
-  background: rgba(88, 166, 255, 0.14);
-  color: #79c0ff;
+  border-color: var(--accent-sky);
+  background: var(--tint-sky);
+  color: var(--accent-sky);
 }
 .dev-tree-icon-btn {
-  border: 1px solid #30363d;
-  background: #0d1117;
-  color: #c9d1d9;
-  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
   min-width: 28px;
   min-height: 28px;
   cursor: pointer;
 }
 .dev-save-status {
-  border: 1px solid #30363d;
+  border: 1px solid var(--border-subtle);
   border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 0.75em;
+  padding: var(--space-2) 10px;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-align: center;
-  color: #8b949e;
-  background: rgba(139, 148, 158, 0.08);
+  color: var(--text-tertiary);
+  background: var(--tint-neutral);
   margin-top: 8px;
 }
 .dev-save-status.is-syncing {
-  color: #79c0ff;
-  border-color: #58a6ff;
+  color: var(--accent-sky);
+  border-color: var(--accent-sky);
   animation: devPulse 1s ease-in-out infinite;
 }
 .dev-save-status.is-saved {
-  color: #3fb950;
-  border-color: #238636;
-  background: rgba(35, 134, 54, 0.15);
+  color: var(--status-success);
+  border-color: var(--status-success);
+  background: var(--tint-success);
 }
 @keyframes devPulse {
   0% { opacity: 0.6; }
@@ -387,21 +387,21 @@ const SHADOW_SCOPED_CSS = `
   100% { opacity: 0.6; }
 }
 .dev-btn {
-  background: #238636; color: white; border: none; padding: 10px;
-  border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; text-align: center;
+  background: var(--status-success); color: var(--text-primary); border: none; padding: var(--space-3);
+  border-radius: var(--radius-sm); font-weight: bold; cursor: pointer; margin-top: var(--space-3); transition: 0.2s; text-align: center;
 }
-.dev-btn:hover { background: #2ea043; }
+.dev-btn:hover { background: var(--status-success); }
 .dev-btn-secondary {
   background: transparent;
-  border: 1px solid #58a6ff;
-  color: #58a6ff;
+  border: 1px solid var(--accent-sky);
+  color: var(--accent-sky);
 }
 .dev-btn-secondary:hover {
-  background: rgba(88, 166, 255, 0.12);
+  background: var(--tint-sky);
 }
-.dev-btn-success { background: #39ff14 !important; color: #000 !important; box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); }
-.dev-btn-danger { background: transparent; border: 1px solid #da3633; color: #da3633; margin-top: 0; }
-.dev-btn-danger:hover { background: #da3633; color: white; }
+.dev-btn-success { background: var(--status-success) !important; color: var(--text-on-accent) !important; box-shadow: 0 0 15px var(--glow-success); }
+.dev-btn-danger { background: transparent; border: 1px solid var(--status-error); color: var(--status-error); margin-top: 0; }
+.dev-btn-danger:hover { background: var(--status-error); color: var(--text-primary); }
 `;
 
 export function ensureDevModeShadowRoot() {

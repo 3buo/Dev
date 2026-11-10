@@ -5,7 +5,7 @@ export function toast(msg) {
     toastEl = document.createElement('div');
     toastEl.setAttribute('role', 'status');
     toastEl.setAttribute('aria-live', 'polite');
-    toastEl.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000005;background:#1e1e1e;color:#e0e0e0;border:1px solid #03dac6;padding:10px 16px;border-radius:8px;font-size:14px;max-width:90vw;';
+    toastEl.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000005;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--accent-secondary);padding:var(--space-3) 16px;border-radius:var(--radius-md);font-size:14px;max-width:90vw;';
     document.body.appendChild(toastEl);
   }
   toastEl.textContent = msg;

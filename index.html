@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taskify</title>
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="var(--bg-canvas)">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f7fb">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="tokens.css">
     <link rel="stylesheet" href="components/alarm/alarm.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer integrity="sha256-Pn59f+s+XVjLbIBPaKtcJMx+XrYnD9bly7kSRzkhfQw=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer integrity="sha256-ymhDBwPE9ZYOkHNYZ8bpTSm1o943EH2BAOWjAQB+nm4=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer integrity="sha256-1G2Xof0CLF+yn6L0Xry8MiAtc67r8HbOX3JI9UmPx9c=" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/vis-network@10.0.0/standalone/umd/vis-network.min.js" defer integrity="sha256-iuntqvd+wu1Cy33pbDtMOcio_6ZoEbvA7LGYoWKRRJc=" crossorigin="anonymous"></script>
 </head>
 <body>
     
@@ -24,9 +28,11 @@
     
     <div id="authScreen">
         <div class="auth-container">
-            <h1 style="color: var(--primary); margin-top: 0;">Meta-OS <span style="font-size: 0.4em; color: #aaa;">Modular</span></h1>
-            <p style="color: #aaa; margin-bottom: 25px;">Accede a tu instancia segura</p>
+            <h1 style="color: var(--accent-primary); margin-top: 0;">Taskify <span style="font-size: var(--text-sm); color: var(--text-tertiary); font-weight: var(--font-medium);">Productividad</span></h1>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">Accede a tu instancia segura</p>
+            <label class="sr-only" for="authEmail">Correo electrónico</label>
             <input type="email" id="authEmail" class="auth-input" placeholder="Correo electrónico" required>
+            <label class="sr-only" for="authPassword">Contraseña</label>
             <input type="password" id="authPassword" class="auth-input" placeholder="Contraseña" required>
             <button class="auth-btn" onclick="appLogin()">Iniciar Sesión</button>
             <button class="auth-btn auth-btn-sec" onclick="appRegister()">Crear Cuenta Nueva</button>
@@ -42,18 +48,28 @@
             <button class="md-btn" onmousedown="applyMd(event, '- ', '')" title="Lista">Lista</button>
             <button class="md-btn" onmousedown="applyMd(event, '[[', ']]')" title="Enlace Zettelkasten">[[ ]]</button> 
             <button class="md-btn" onmousedown="applyMd(event, '### ', '')" title="Título">H3</button>
-            <button class="md-btn" onmousedown="applyMdTable(event)" style="color: var(--secondary);">📊 Tabla</button>
+            <button class="md-btn" onmousedown="applyMdTable(event)" style="color: var(--accent-secondary);">📊 Tabla</button>
         </div>
         
-        <div class="tabs" id="tabContainer">
-            <button class="tab-btn active" id="tab-actividades" onclick="switchTab('actividades')">📝 Actividades</button>
-            <button class="tab-btn" id="tab-checklists" onclick="switchTab('checklists')">☑️ Check-list</button>
-            <button class="tab-btn" id="tab-recordatorios" onclick="switchTab('recordatorios')">🔔 Recordatorios</button>
-            <button class="tab-btn" id="tab-finanzas" onclick="switchTab('finanzas')">🔒 Finanzas</button>
-            <button class="tab-btn" id="tab-dashboard" onclick="switchTab('dashboard')">🏠 Dashboard</button>
-            <button class="tab-btn" id="tab-notas" onclick="switchTab('notas')">📓 Notas</button>
-            <button class="tab-btn" onclick="appLogout()" style="flex-grow: 0; background-color: #cf6679; color: black; font-weight: bold; border-radius: 8px 8px 0 0;">🚪</button>
-        </div>
+        <nav class="app-nav" aria-label="Navegación principal">
+            <div class="tabs nav-items" id="tabContainer" role="tablist" aria-label="Módulos de Taskify">
+                <button class="tab-btn" id="tab-dashboard" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('dashboard')"><span class="tab-ico">🏠</span><span class="tab-label">Inicio</span></button>
+                <button class="tab-btn active" id="tab-actividades" role="tab" aria-selected="true" aria-controls="tab-content-container" onclick="switchTab('actividades')"><span class="tab-ico">📝</span><span class="tab-label">Tareas</span></button>
+                <button class="tab-btn" id="tab-finanzas" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('finanzas')"><span class="tab-ico">🔒</span><span class="tab-label">Finanzas</span></button>
+                <button class="tab-btn" id="tab-notas" role="tab" aria-selected="false" aria-controls="tab-content-container" onclick="switchTab('notas')"><span class="tab-ico">📓</span><span class="tab-label">Notas</span></button>
+            </div>
+            <div class="nav-more-wrap">
+                <button class="tab-btn nav-more-btn" id="btnNavMore" aria-haspopup="true" aria-expanded="false" aria-controls="navMoreMenu" onclick="toggleNavMore(event)">
+                    <span class="tab-ico">⋯</span><span class="tab-label">Más</span>
+                </button>
+                <div class="nav-more-menu" id="navMoreMenu" role="menu" hidden>
+                    <button class="more-item" id="tab-checklists" role="menuitem" onclick="switchTab('checklists')">☑️ Checklists</button>
+                    <button class="more-item" id="tab-recordatorios" role="menuitem" onclick="switchTab('recordatorios')">🔔 Recordatorios</button>
+                    <button class="more-item" id="btnThemeToggle" role="menuitem" onclick="toggleTheme()">🌙 Tema: Oscuro</button>
+                    <button class="more-item more-danger" role="menuitem" onclick="appLogout()">🚪 Cerrar sesión</button>
+                </div>
+            </div>
+        </nav>
         
         <div id="tab-content-container"></div>
         
@@ -62,12 +78,12 @@
         
         </div>
         
-        <button class="alarm-floating-btn" onclick="window.toggleAlarmConfig()" title="Configurar sonido de alertas">🔊</button>
+        <button class="alarm-floating-btn" onclick="window.toggleAlarmConfig()" aria-label="Configurar sonido de alertas" title="Configurar sonido de alertas">🔊</button>
         
         <div id="alarmConfigPanel" class="alarm-config-panel">
             <h3>⚙️ Sonido de Alertas</h3>
             
-            <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; flex-direction: column; gap: var(--space-1);">
                 <label>Tono de Aviso</label>
                 <select id="alarmSoundSelect" class="alarm-select" onchange="window.previewAndSaveAlarmSettings()">
                     <option value="digital">Reloj Digital</option>
@@ -76,22 +92,22 @@
                 </select>
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; flex-direction: column; gap: var(--space-1);">
                 <label>Volumen</label>
                 <input type="range" id="alarmVolumeSlider" class="alarm-slider" min="0" max="1" step="0.1" value="0.5" onchange="window.previewAndSaveAlarmSettings()">
             </div>
             
-            <button onclick="window.toggleAlarmConfig()" style="background: transparent; border: 1px solid #30363d; color: white; padding: 8px; border-radius: 6px; cursor: pointer; margin-top: 5px;">Cerrar</button>
+            <button onclick="window.toggleAlarmConfig()" style="background: transparent; border: 1px solid var(--border-subtle); color: var(--text-primary); padding: var(--space-2); border-radius: var(--radius-sm); cursor: pointer; margin-top: var(--space-1);">Cerrar</button>
         </div>
         
         <div id="sysAlarmModal" class="alarm-overlay" style="display: none;">
             <div class="alarm-content">
-                <h1 style="color: #b392f0; margin-top: 0;">⏰ ¡Es Hora!</h1>
-                <h2 id="sysAlarmTitle" style="color: white; font-size: 1.5em; margin: 15px 0;">Recordatorio</h2>
-                <div id="sysAlarmDesc" style="font-size: 1em; color: #aaa; margin-bottom: 25px;"></div>
+                <h1 style="color: var(--accent-primary); margin-top: 0;">⏰ ¡Es Hora!</h1>
+                <h2 id="sysAlarmTitle" style="color: var(--text-primary); font-size: 1.5em; margin: 15px 0;">Recordatorio</h2>
+                <div id="sysAlarmDesc" style="font-size: 1em; color: var(--text-secondary); margin-bottom: var(--space-6);"></div>
                 
                 <div class="alarm-buttons">
-                    <button class="alarm-btn alarm-btn-outline" onclick="window.snoozeSystemAlarm()">Posponer 5m</button>
+                    <button class="alarm-btn alarm-btn-outline" onclick="window.snoozeSystemAlarm()">Posponer 5 min</button>
                     <button class="alarm-btn alarm-btn-solid" onclick="window.completeSystemAlarm()">¡Entendido!</button>
                 </div>
             </div>
@@ -131,7 +147,7 @@
         </script>
         
         <script type="module">
-            import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@latest';
+            import { prepare, layout } from 'https://esm.sh/@chenglou/pretext@1.0.0';
             
             console.log("🚀 Pretext activado: Optimizando cajas de texto en segundo plano.");
             

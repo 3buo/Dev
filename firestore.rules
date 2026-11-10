@@ -1,0 +1,14 @@
+// firestore.rules — desplegar con firebase deploy --only firestore:rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /userData/{uid} {
+      // Dueño único: solo el usuario autenticado toca su documento
+      allow read: if request.auth != null && request.auth.uid == uid;
+      // Prohíbe persistir el PIN en claro (campo legacy masterPin)
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && !('masterPin' in request.resource.data);
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
